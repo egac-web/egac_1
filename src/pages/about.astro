@@ -1,6 +1,21 @@
 ---
 import Layout from "../components/Layout.astro";
 import Card from "../components/ui/Card.astro";
+import { directus } from "../lib/directus";
+import { onMount } from 'astro/client';
+
+let aboutArticles = [];
+
+try {
+  const response = await directus.items("about").readByQuery({
+    filter: { status: { _eq: "published" } },
+    sort: ["id"],
+    limit: 10
+  });
+  aboutArticles = response.data || [];
+} catch (e) {
+  aboutArticles = [];
+}
 ---
 
 <Layout>
@@ -10,17 +25,11 @@ import Card from "../components/ui/Card.astro";
       <p class="egac-section-lead">
         Discover our history, training locations, Academy, and how to join East Grinstead AC.
       </p>
-      <Card class="card--padded" title="East Grinstead AC">
-        <p>
-          Formed in 1978, East Grinstead Athletics Club is a friendly athletics club with a 50+ year legacy, now home to 100+ members. We welcome all newcomers—everyone has a chance to sprint, throw, jump, run on roads or cross-country, and be part of our community.
-        </p>
-        <p>
-          We provide athletics opportunities in East Grinstead for all ages and abilities, from primary school children through to masters athletes. Our club has a rich history of success across all age groups and disciplines.
-        </p>
-        <p>
-          Our club is affiliated with UK Athletics and follows all relevant policies and codes of conduct to ensure a safe and enjoyable environment for all members.
-        </p>
-      </Card>
+      {aboutArticles.filter(a => a.slug === 'about_us').map(article => (
+        <Card class="card--padded" title={article.title}>
+          <div set:html={article.content} />
+        </Card>
+      ))}
 
       <div class="your-club-tabs">
         <div class="tab-list" role="tablist">
@@ -57,7 +66,9 @@ import Card from "../components/ui/Card.astro";
           <div class="tab-panel" id="panel-academy" role="tabpanel" aria-labelledby="tab-academy" hidden>
             <div class="tab-content-box">
               <h2 class="tab-section-title">Academy</h2>
-              <p>Our Academy is an introduction to athletics for children in school years 4 and 5. We train and work towards the Sussex Quadkids Competition which takes place at the K2 in Crawley. Quadkids encompasses all key aspects of athletics: endurance, speed, agility and strength. The events are: 75m sprint, howler throw, standing jump and 600m. We accept 40 children and hold a waiting list.</p>
+              {aboutArticles.filter(a => a.slug === 'academy').map(article => (
+                <div set:html={article.content} />
+              ))}
             </div>
           </div>
           <div class="tab-panel" id="panel-fees" role="tabpanel" aria-labelledby="tab-fees" hidden>

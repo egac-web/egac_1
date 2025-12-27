@@ -1,0 +1,51 @@
+---
+import Layout from "../../components/Layout.astro";
+
+import { directus } from "../../lib/directus";
+import { readItems } from '@directus/sdk';
+
+// Helper to decode HTML entities if content is double-escaped
+function decodeHTMLEntities(text) {
+  if (!text) return '';
+  return text.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+}
+
+let constitution = null;
+try {
+  const response = await directus.request(
+    readItems("policies", {
+      filter: { slug: { _eq: "constitution" } },
+      limit: 1
+    })
+  );
+  console.log('Directus response:', response);
+  constitution = response && response.length > 0 ? response[0] : null;
+  if (constitution) {
+    console.log('Fetched constitution:', constitution);
+  }
+} catch (e) {
+  console.error('Directus fetch error:', e);
+  constitution = null;
+}
+---
+
+<Layout>
+  <div style="max-width:900px;margin:0 auto;padding:0 1.5rem;">
+    <section style="padding:3rem 0 2rem 0;">
+      <h1 class="egac-section-title">{constitution ? constitution.policy_title : "Constitution"}</h1>
+      {constitution && constitution.policy_content ? (
+        <div set:html={decodeHTMLEntities(constitution.policy_content)} />
+      ) : (
+        <p>Constitution not found.</p>
+      )}
+    </Layout>
+
+    ---
+    // Helper to decode HTML entities if content is double-escaped
+    function decodeHTMLEntities(text) {
+      if (!text) return '';
+      return text.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+    }
+    </section>
+  </div>
+</Layout>
