@@ -12,6 +12,179 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/styles/tokens.css" />
+    <style>
+      .footer-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.3rem;
+        justify-content: center;
+        margin-bottom: 0.7rem;
+      }
+      .footer-nav a {
+        color: var(--yellow);
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 1.01rem;
+        letter-spacing: 0.04em;
+        padding: 0.2rem 0.1rem;
+        border-radius: 4px;
+        transition: color 0.18s, background 0.18s;
+      }
+      .footer-nav a:hover, .footer-nav a:focus-visible {
+        color: var(--white);
+        background: rgba(253,185,19,0.10);
+        outline: none;
+      }
+      .egac-header {
+        position: relative;
+        z-index: 10;
+        background: var(--blue);
+        border-bottom: 1.5px solid rgba(253,185,19,0.13);
+        box-shadow: 0 8px 32px rgba(20,95,186,0.10);
+      }
+      .header-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 1.8rem 1.5rem 1.1rem 1.5rem;
+      }
+      .header-logo {
+        font-family: var(--font-heading);
+        font-size: 2.5rem;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        color: var(--white);
+        text-transform: uppercase;
+        margin: 0 0 0.5rem 0;
+        text-shadow: 0 2px 12px rgba(20,95,186,0.18);
+      }
+      .logo-ac {
+        color: var(--yellow);
+        text-shadow: 0 2px 12px rgba(253,185,19,0.18);
+      }
+      .header-nav {
+        display: flex;
+        gap: 2.2rem;
+        font-weight: 700;
+        font-size: 1.08rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        align-items: center;
+        margin-top: 0.2rem;
+      }
+      .header-nav a {
+        color: var(--white);
+        text-decoration: none;
+        padding: 0.3rem 0.1rem;
+        border-radius: 6px;
+        transition: color 0.18s, background 0.18s, box-shadow 0.18s, transform 0.18s;
+        position: relative;
+      }
+      .header-nav a:hover, .header-nav a:focus-visible {
+        color: var(--yellow);
+        background: rgba(253,185,19,0.08);
+        box-shadow: 0 2px 12px rgba(253,185,19,0.13);
+        outline: none;
+        transform: translateY(-2px) scale(1.04);
+      }
+      .nav-cta {
+        background: linear-gradient(90deg, var(--yellow) 0%, #ffe066 100%);
+        color: var(--blue) !important;
+        font-weight: 900;
+        border-radius: 2rem;
+        box-shadow: 0 4px 18px rgba(253,185,19,0.18);
+        margin-left: 0.8rem;
+        padding: 0.7rem 1.5rem;
+        letter-spacing: 0.08em;
+        transition: background 0.18s, color 0.18s, box-shadow 0.18s, transform 0.18s;
+      }
+      .nav-cta:hover, .nav-cta:focus-visible {
+        background: linear-gradient(90deg, #ffe066 0%, var(--yellow) 100%);
+        color: var(--blue);
+        box-shadow: 0 8px 32px rgba(253,185,19,0.22);
+        transform: translateY(-3px) scale(1.06);
+      }
+      @media (max-width: 800px) {
+        .header-inner { padding: 1.2rem 0.7rem 0.7rem 0.7rem; }
+        .header-logo { font-size: 2rem; }
+        .header-nav { gap: 1.1rem; font-size: 0.98rem; }
+        .nav-cta { padding: 0.6rem 1.1rem; font-size: 0.98rem; }
+      }
+      .egac-footer {
+        background: rgba(20,95,186,0.82);
+        backdrop-filter: blur(14px) saturate(1.2);
+        border-top: 1.5px solid rgba(253,185,19,0.13);
+        box-shadow: 0 -8px 32px rgba(20,95,186,0.10);
+        padding: 2.2rem 0 1.2rem 0;
+        margin-top: 3rem;
+      }
+      .footer-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.1rem;
+      }
+      .footer-copyright {
+        color: var(--white);
+        font-weight: 700;
+        font-size: 1.08rem;
+        letter-spacing: 0.02em;
+        margin: 0 0 0.5rem 0;
+        text-shadow: 0 2px 12px rgba(20,95,186,0.18);
+      }
+      .footer-socials {
+        display: flex;
+        gap: 1.1rem;
+      }
+      .footer-social {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.7rem;
+        height: 2.7rem;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.10);
+        box-shadow: 0 2px 12px rgba(253,185,19,0.10);
+        color: var(--yellow);
+        font-size: 1.35rem;
+        transition: background 0.18s, color 0.18s, box-shadow 0.18s, transform 0.18s;
+      }
+      .footer-social:hover, .footer-social:focus-visible {
+        background: linear-gradient(135deg, var(--yellow) 0%, var(--blue) 100%);
+        color: var(--white);
+        box-shadow: 0 6px 24px rgba(253,185,19,0.18);
+        outline: none;
+        transform: scale(1.13) translateY(-2px);
+      }
+      @media (max-width: 800px) {
+        .footer-inner { padding: 0 0.7rem; }
+        .footer-copyright { font-size: 0.98rem; }
+        .footer-social { width: 2.1rem; height: 2.1rem; font-size: 1.05rem; }
+      }
+
+      /* Minimal reveal for hero text: adds .is-visible unless the user prefers reduced motion */
+      (function () {
+        try {
+          if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+          window.addEventListener('DOMContentLoaded', function () {
+            requestAnimationFrame(function () {
+              document.querySelectorAll('.hero-text').forEach(function (el) {
+                el.classList.add('is-visible');
+              });
+            });
+          });
+        } catch (e) { /* silent */ }
+      })();
+
+      /* Utility */
+      body, *, *::before, *::after {
+        box-sizing: border-box;
+      }
+    </style>
     <slot name="head" />
   </head>
   <body style="margin:0; font-family: 'Open Sans', 'Arial', sans-serif; min-height:100vh;">
@@ -22,12 +195,11 @@
         </h1>
         <nav class="header-nav">
           <a href="/">Home</a>
-          <a href="/about">About</a>
+          <a href="/about">Your Club</a>
           <a href="/fixtures">Fixtures</a>
           <a href="/records">Records</a>
           <a href="/volunteering">Volunteering</a>
           <a href="/policies">Policies</a>
-          <a href="/contact">Contact</a>
           <a href="/enquiry" class="btn btn-secondary nav-cta">Enquiry</a>
         </nav>
       </div>
@@ -40,6 +212,17 @@
         <p class="footer-copyright">
           &copy; {new Date().getFullYear()} East Grinstead Athletics Club
         </p>
+        <nav class="footer-nav">
+          <a href="/">Home</a>
+          <a href="/about">Your Club</a>
+          <a href="/fixtures">Fixtures</a>
+          <a href="/records">Records</a>
+          <a href="/volunteering">Volunteering</a>
+          <a href="/policies">Policies</a>
+          <a href="/enquiry">Enquiry</a>
+        </nav>
+    
+<style>
         <div class="footer-socials">
           <a href="#" aria-label="Facebook" class="footer-social">
             <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M22.675 0h-21.35C.595 0 0 .592 0 1.326v21.348C0 23.408.595 24 1.325 24h11.495v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.797.143v3.24l-1.918.001c-1.504 0-1.797.715-1.797 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116C23.406 24 24 23.408 24 22.674V1.326C24 .592 23.406 0 22.675 0"/></svg>
@@ -51,14 +234,38 @@
             <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.633.334 3.608 1.308.974.974 1.246 2.242 1.308 3.608.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.062 1.366-.334 2.633-1.308 3.608-.974.974-2.242 1.246-3.608 1.308-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.366-.062-2.633-.334-3.608-1.308-.974-.974-1.246-2.242-1.308-3.608C2.175 15.647 2.163 15.267 2.163 12s.012-3.584.07-4.85c.062-1.366.334-2.633 1.308-3.608.974-.974 2.242-1.246 3.608-1.308C8.416 2.175 8.796 2.163 12 2.163zm0-2.163C8.741 0 8.332.013 7.052.072 5.771.131 4.659.363 3.678 1.344c-.98.98-1.213 2.092-1.272 3.373C2.013 8.332 2 8.741 2 12c0 3.259.013 3.668.072 4.948.059 1.281.292 2.393 1.272 3.373.98.98 2.092 1.213 3.373 1.272C8.332 23.987 8.741 24 12 24s3.668-.013 4.948-.072c1.281-.059 2.393-.292 3.373-1.272.98-.98 1.213-2.092 1.272-3.373.059-1.28.072-1.689.072-4.948 0-3.259-.013-3.668-.072-4.948-.059-1.281-.292-2.393-1.272-3.373-.98-.98-2.092-1.213-3.373-1.272C15.668.013 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zm0 10.162a3.999 3.999 0 1 1 0-7.998 3.999 3.999 0 0 1 0 7.998zm6.406-11.845a1.44 1.44 0 1 0 0 2.88 1.44 1.44 0 0 0 0-2.88z"/></svg>
           </a>
         </div>
+
+    </footer>
+    <style>
+      .footer-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.3rem;
+        justify-content: center;
+        margin-bottom: 0.7rem;
+      }
+      .footer-nav a {
+        color: var(--yellow);
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 1.01rem;
+        letter-spacing: 0.04em;
+        padding: 0.2rem 0.1rem;
+        border-radius: 4px;
+        transition: color 0.18s, background 0.18s;
+      }
+      .footer-nav a:hover, .footer-nav a:focus-visible {
+        color: var(--white);
+        background: rgba(253,185,19,0.10);
+        outline: none;
+      }
       </div>
     </footer>
     <style>
       .egac-header {
         position: relative;
         z-index: 10;
-        background: rgba(20,95,186,0.82);
-        backdrop-filter: blur(16px) saturate(1.2);
+        background: var(--blue);
         border-bottom: 1.5px solid rgba(253,185,19,0.13);
         box-shadow: 0 8px 32px rgba(20,95,186,0.10);
       }

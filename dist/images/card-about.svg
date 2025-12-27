@@ -1,8 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" preserveAspectRatio="xMidYMid meet">
   <rect width="100%" height="100%" rx="10" fill="#145FBA"/>
-  <g fill="#FFF" opacity="0.95">
-    <circle cx="40" cy="40" r="18" />
-    <rect x="75" y="28" width="95" height="8" rx="3" />
-    <rect x="75" y="46" width="60" height="8" rx="3" />
+  <g fill="#FDB913" opacity="0.95">
+    <circle cx="60" cy="35" r="12" />
+    <ellipse cx="60" cy="55" rx="8" ry="16" />
+    <path d="M52 60 L45 85 L40 90" stroke="#FDB913" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M68 60 L80 85 L85 90" stroke="#FDB913" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M52 52 L35 65" stroke="#FDB913" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M68 52 L82 48" stroke="#FDB913" stroke-width="5" fill="none" stroke-linecap="round"/>
   </g>
+  <text x="130" y="65" fill="#FFF" font-size="42" font-weight="900" font-family="'Montserrat', sans-serif">AC</text>
 </svg>

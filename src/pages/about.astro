@@ -6,37 +6,256 @@ import Card from "../components/ui/Card.astro";
 <Layout>
   <div style="max-width:900px;margin:0 auto;padding:0 1.5rem;">
     <section style="padding:3rem 0 2rem 0;">
-      <h1 class="egac-section-title">About Us</h1>
+      <h1 class="egac-section-title">Your Club</h1>
       <p class="egac-section-lead">
-        Learn more about our club, our history, and our values
+        Discover our history, training locations, Academy, and how to join East Grinstead AC.
       </p>
       <Card class="card--padded" title="East Grinstead AC">
         <p>
-          Formed in 1978, East Grinstead Athletics Club is a friendly athletics
-          club where we all know each other and welcome all newcomers. Everyone
-          has a chance to sprint, throw a discus, jump as high or as far as they
-          can, run on roads or run over cross-country.
+          Formed in 1978, East Grinstead Athletics Club is a friendly athletics club with a 50+ year legacy, now home to 100+ members. We welcome all newcomers—everyone has a chance to sprint, throw, jump, run on roads or cross-country, and be part of our community.
         </p>
         <p>
-          We provide athletics opportunities in East Grinstead for athletes of
-          all ages and abilities, from primary school children through to
-          masters athletes. Our club has a rich history of success across all
-          age groups and disciplines.
+          We provide athletics opportunities in East Grinstead for all ages and abilities, from primary school children through to masters athletes. Our club has a rich history of success across all age groups and disciplines.
         </p>
         <p>
-          Training takes place at Imberhorne Upper School on Tuesdays and
-          Thursdays, with sessions tailored to different age groups and
-          abilities. We participate in local, regional, and national
-          competitions throughout the year.
-        </p>
-        <p>
-          Our club is affiliated with UK Athletics and follows all relevant
-          policies and codes of conduct to ensure a safe and enjoyable
-          environment for all members.
+          Our club is affiliated with UK Athletics and follows all relevant policies and codes of conduct to ensure a safe and enjoyable environment for all members.
         </p>
       </Card>
+
+      <div class="your-club-tabs">
+        <div class="tab-list" role="tablist">
+          <button class="tab-btn" id="tab-locations" role="tab" aria-selected="true" aria-controls="panel-locations" tabindex="0" onclick="showTab('locations')">Training Locations</button>
+          <button class="tab-btn" id="tab-academy" role="tab" aria-selected="false" aria-controls="panel-academy" tabindex="-1" onclick="showTab('academy')">Academy</button>
+          <button class="tab-btn" id="tab-fees" role="tab" aria-selected="false" aria-controls="panel-fees" tabindex="-1" onclick="showTab('fees')">Membership & Fees</button>
+        </div>
+        <div class="tab-panels">
+          <div class="tab-panel" id="panel-locations" role="tabpanel" aria-labelledby="tab-locations">
+            <div class="tab-content-box">
+              <h2 class="tab-section-title">Training Locations</h2>
+              <div class="locations-grid">
+                <div class="location-card">
+                  <div class="location-info">
+                    <div class="location-name">Imberhorne Ln</div>
+                    <a href="https://maps.google.com/?q=Imberhorne+Ln,+East+Grinstead+RH19+1QY" target="_blank" rel="noopener" class="location-link">East Grinstead RH19 1QY</a>
+                  </div>
+                  <div class="location-map-wrap">
+                    <iframe class="location-map" src="https://www.google.com/maps?q=Imberhorne+School,+East+Grinstead+RH19+1QY&output=embed" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                  </div>
+                </div>
+                <div class="location-card">
+                  <div class="location-info">
+                    <div class="location-name">Lewes Rd</div>
+                    <a href="https://maps.google.com/?q=Lewes+Rd,+East+Grinstead+RH19+3TY" target="_blank" rel="noopener" class="location-link">East Grinstead RH19 3TY</a>
+                  </div>
+                  <div class="location-map-wrap">
+                    <iframe class="location-map" src="https://www.google.com/maps?q=Sackville+School,+East+Grinstead+RH19+3TY&output=embed" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="tab-panel" id="panel-academy" role="tabpanel" aria-labelledby="tab-academy" hidden>
+            <div class="tab-content-box">
+              <h2 class="tab-section-title">Academy</h2>
+              <p>Our Academy is an introduction to athletics for children in school years 4 and 5. We train and work towards the Sussex Quadkids Competition which takes place at the K2 in Crawley. Quadkids encompasses all key aspects of athletics: endurance, speed, agility and strength. The events are: 75m sprint, howler throw, standing jump and 600m. We accept 40 children and hold a waiting list.</p>
+            </div>
+          </div>
+          <div class="tab-panel" id="panel-fees" role="tabpanel" aria-labelledby="tab-fees" hidden>
+            <div class="tab-content-box">
+              <h2 class="tab-section-title">Membership Details & Club Fees</h2>
+              <p style="margin-bottom: 1.2rem;">Our club fees for the 2025/26 season (April 2025 to March 2026) are as follows:</p>
+              <div class="fees-table-wrap">
+                <table class="fees-table-classic">
+                  <thead>
+                    <tr>
+                      <th>Joining Period</th>
+                      <th>Club Fees</th>
+                      <th>EA Reg Fees</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>April – June</td><td>£60</td><td>£20</td></tr>
+                    <tr><td>July – September</td><td>£45</td><td>£20</td></tr>
+                    <tr><td>October – December</td><td>£30</td><td>£20</td></tr>
+                    <tr><td>January – March</td><td>£15</td><td>£20</td></tr>
+                    <tr><td>Academy</td><td>£60</td><td>n/a</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <ul class="tab-list-info">
+                <li>Those joining between January and March, the England Athletics Registration Fees continue until March 31st of the following year (max 15 months).</li>
+                <li>England Athletics does not require registration for Academy athletes.</li>
+                <li>All additional family members will attract a one-third discount on club fees.</li>
+                <li>If you are having difficulty affording these fees, please contact the Membership Secretary to discuss options available.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <script is:inline>
+        function showTab(tab) {
+          const tabs = ['locations', 'academy', 'fees'];
+          tabs.forEach(t => {
+            document.getElementById('tab-' + t).setAttribute('aria-selected', t === tab ? 'true' : 'false');
+            document.getElementById('tab-' + t).setAttribute('tabindex', t === tab ? '0' : '-1');
+            document.getElementById('panel-' + t).hidden = t !== tab;
+          });
+        }
+      </script>
     </section>
   </div>
+  <style>
+    .your-club-tabs {
+      margin-top: 2.5rem;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .tab-list {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--blue);
+      font-family: var(--font-heading);
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-bottom: 3px solid transparent;
+      padding: 0.7rem 1.8rem;
+      cursor: pointer;
+      transition: color 0.18s, border 0.18s;
+      outline: none;
+      margin-bottom: -2px;
+    }
+    .tab-btn[aria-selected="true"] {
+      color: var(--yellow);
+      border-bottom: 3px solid var(--yellow);
+      background: none;
+      z-index: 2;
+    }
+    .tab-btn:focus-visible {
+      box-shadow: 0 2px 0 0 var(--yellow);
+    }
+    .tab-panels {
+      background: none;
+    }
+    .tab-panel {
+      padding: 2rem 0 0 0;
+      animation: fadeInTab 0.3s;
+    }
+    .tab-section-title {
+      font-size: 1.4rem;
+      font-family: var(--font-heading);
+      color: var(--blue);
+      margin-bottom: 1rem;
+      text-align: left;
+    }
+    .tab-list-info {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .tab-content-box {
+      background: #f8fafc;
+      border-radius: 1.2rem;
+      box-shadow: 0 2px 12px rgba(20,95,186,0.06);
+      padding: 2rem 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .locations-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      margin-top: 1.2rem;
+    }
+    @media (min-width: 700px) {
+      .locations-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    .location-card {
+      display: flex;
+      flex-direction: column;
+      background: #f4f8fd;
+      border-radius: 1rem;
+      box-shadow: 0 1px 4px rgba(20,95,186,0.06);
+      padding: 1.2rem 1.5rem;
+      min-width: 0;
+      flex: 1 1 0;
+      align-items: flex-start;
+      gap: 1.2rem;
+    }
+    .location-info {
+      min-width: 0;
+    }
+    .location-name {
+      font-family: var(--font-heading);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--blue);
+      margin-bottom: 0.2rem;
+    }
+    .location-link {
+      color: var(--blue);
+      text-decoration: underline;
+      font-size: 1rem;
+      transition: color 0.18s;
+      word-break: break-all;
+    }
+    .location-link:hover, .location-link:focus {
+      color: var(--yellow);
+    }
+    .location-map-wrap {
+      width: 100%;
+      border-radius: 0.7rem;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(20,95,186,0.10);
+      margin-top: 0.5rem;
+    }
+    .location-map {
+      width: 100%;
+      height: 200px;
+      border: 0;
+      display: block;
+    }
+    .fees-table-wrap {
+      width: 100%;
+      margin-bottom: 1rem;
+      overflow-x: auto;
+    }
+    .fees-table-classic {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 0.7rem;
+      overflow: hidden;
+      font-size: 1rem;
+      box-shadow: 0 1px 4px rgba(20,95,186,0.06);
+      border: 1px solid #e0e0e0;
+    }
+    .fees-table-classic th, .fees-table-classic td {
+      text-align: center;
+      padding: 0.8rem 0.7rem;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .fees-table-classic th {
+      background: var(--blue);
+      color: var(--white);
+      font-weight: 700;
+    }
+    .fees-table-classic tr:last-child td {
+      border-bottom: none;
+    }
+    @keyframes fadeInTab {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
   <style>
     .egac-section-title {
       font-size: 3rem;

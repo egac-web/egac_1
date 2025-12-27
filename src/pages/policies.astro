@@ -11,39 +11,29 @@ import Card from "../components/ui/Card.astro";
         Our commitment to safety, inclusion, and good governance
       </p>
       <Card class="card--padded" title="Key Policies">
-        <ul style="margin:0;padding:0 0 0 1.2em;">
-          <li>
-            <a
-              href="/docs/rbac.md"
-              style="color:var(--blue);text-decoration:underline;"
-              >Safeguarding & Welfare</a>
-          </li>
-          <li>
-            <a
-              href="/docs/policies.md"
-              style="color:var(--blue);text-decoration:underline;"
-              >Equality, Diversity & Inclusion</a>
-          </li>
-          <li>
-            <a
-              href="/docs/auth.md"
-              style="color:var(--blue);text-decoration:underline;"
-              >Data Protection & Privacy</a>
-          </li>
-          <li>
-            <a
-              href="/docs/onboarding.md"
-              style="color:var(--blue);text-decoration:underline;"
-              >Onboarding & Induction</a>
-          </li>
-          <li>
-            <a
-              href="/docs/deployment.md"
-              style="color:var(--blue);text-decoration:underline;"
-              >Health & Safety</a>
-          </li>
-        </ul>
-        <p>
+        <div class="policy-quicklinks-grid">
+          <a href="/docs/rbac.md" class="policy-quicklink" title="Safeguarding & Welfare">
+            <span class="policy-quicklink-icon">🔒</span>
+            <span class="policy-quicklink-label">Safeguarding & Welfare</span>
+          </a>
+          <a href="/docs/policies.md" class="policy-quicklink" title="Equality, Diversity & Inclusion">
+            <span class="policy-quicklink-icon">🌈</span>
+            <span class="policy-quicklink-label">Equality, Diversity & Inclusion</span>
+          </a>
+          <a href="/docs/auth.md" class="policy-quicklink" title="Data Protection & Privacy">
+            <span class="policy-quicklink-icon">🛡️</span>
+            <span class="policy-quicklink-label">Data Protection & Privacy</span>
+          </a>
+          <a href="/docs/onboarding.md" class="policy-quicklink" title="Onboarding & Induction">
+            <span class="policy-quicklink-icon">👋</span>
+            <span class="policy-quicklink-label">Onboarding & Induction</span>
+          </a>
+          <a href="/docs/deployment.md" class="policy-quicklink" title="Health & Safety">
+            <span class="policy-quicklink-icon">⚕️</span>
+            <span class="policy-quicklink-label">Health & Safety</span>
+          </a>
+        </div>
+        <p style="margin-top:2rem;">
           We regularly review and update our policies to ensure a safe,
           inclusive, and well-governed club for all members and visitors.
         </p>
@@ -69,6 +59,67 @@ import Card from "../components/ui/Card.astro";
       font-weight: 600;
       text-align: center;
       font-family: var(--font-sans);
+    }
+    .policy-quicklinks-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      margin: 2.5rem 0 0 0;
+      justify-items: center;
+    }
+    @media (min-width: 600px) {
+      .policy-quicklinks-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    @media (min-width: 900px) {
+      .policy-quicklinks-grid {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+    }
+    .policy-quicklink {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #f8fafc;
+      border-radius: 1.2rem;
+      box-shadow: 0 2px 12px rgba(20,95,186,0.08);
+      border: 1.5px solid #e0e0e0;
+      padding: 2.2rem 1.5rem 1.3rem 1.5rem;
+      min-width: 180px;
+      max-width: 260px;
+      width: 100%;
+      text-align: center;
+      text-decoration: none;
+      color: var(--blue);
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 1.08rem;
+      transition: box-shadow 0.18s, border 0.18s, color 0.18s, background 0.18s, transform 0.18s;
+      outline: none;
+    }
+    .policy-quicklink:hover, .policy-quicklink:focus-visible {
+      box-shadow: 0 6px 24px rgba(20,95,186,0.18);
+      border: 1.5px solid var(--yellow);
+      color: var(--yellow);
+      background: #fffbe6;
+      transform: translateY(-3px) scale(1.04);
+      text-decoration: none;
+    }
+    .policy-quicklink-icon {
+      font-size: 2.2rem;
+      margin-bottom: 0.7rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .policy-quicklink-label {
+      font-size: 1.08rem;
+      font-family: var(--font-heading);
+      font-weight: 700;
+      margin-top: 0.2rem;
+      color: inherit;
     }
   </style>
 </Layout>
