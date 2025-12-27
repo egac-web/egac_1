@@ -1,6 +1,21 @@
 ---
 import Layout from "../components/Layout.astro";
 import Card from "../components/ui/Card.astro";
+import { directus } from "../lib/directus";
+import { readItems } from '@directus/sdk';
+
+let policies = [];
+try {
+  const response = await directus.request(
+    readItems("policies", {
+      sort: ["policy_title"],
+      limit: 50
+    })
+  );
+  policies = response || [];
+} catch (e) {
+  policies = [];
+}
 ---
 
 <Layout>
@@ -10,38 +25,74 @@ import Card from "../components/ui/Card.astro";
       <p class="egac-section-lead">
         Our commitment to safety, inclusion, and good governance
       </p>
-      <Card class="card--padded" title="Key Policies">
-        <div class="policy-quicklinks-grid">
-          <a href="/policies/constitution" class="policy-quicklink" title="Constitution">
-            <span class="policy-quicklink-icon">📜</span>
-            <span class="policy-quicklink-label">Constitution</span>
-          </a>
-          <a href="/docs/rbac.md" class="policy-quicklink" title="Safeguarding & Welfare">
-            <span class="policy-quicklink-icon">🔒</span>
-            <span class="policy-quicklink-label">Safeguarding & Welfare</span>
-          </a>
-          <a href="/docs/policies.md" class="policy-quicklink" title="Equality, Diversity & Inclusion">
-            <span class="policy-quicklink-icon">🌈</span>
-            <span class="policy-quicklink-label">Equality, Diversity & Inclusion</span>
-          </a>
-          <a href="/docs/auth.md" class="policy-quicklink" title="Data Protection & Privacy">
-            <span class="policy-quicklink-icon">🛡️</span>
-            <span class="policy-quicklink-label">Data Protection & Privacy</span>
-          </a>
-          <a href="/docs/onboarding.md" class="policy-quicklink" title="Onboarding & Induction">
-            <span class="policy-quicklink-icon">👋</span>
-            <span class="policy-quicklink-label">Onboarding & Induction</span>
-          </a>
-          <a href="/docs/deployment.md" class="policy-quicklink" title="Health & Safety">
-            <span class="policy-quicklink-icon">⚕️</span>
-            <span class="policy-quicklink-label">Health & Safety</span>
-          </a>
+      <Card class="card--padded" title="Club Policies">
+        <div style="overflow-x:auto;">
+          <table class="egac-policies-table">
+            <thead>
+              <tr>
+                <th>Policy / Document</th>
+                <th>Date Approved</th>
+                <th>Review Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {policies.length === 0 && (
+                <tr><td colspan="3">No policies found.</td></tr>
+              )}
+              {policies.map(policy => (
+                <tr>
+                  <td>
+                    {policy.slug === 'constitution' ? (
+                      <a href="/policies/constitution">{policy.policy_title}</a>
+                    ) : (
+                      policy.policy_title
+                    )}
+                  </td>
+                  <td>{policy.date_approved || ''}</td>
+                  <td>{policy.review_date || ''}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
         <p style="margin-top:2rem;">
-          We regularly review and update our policies to ensure a safe,
-          inclusive, and well-governed club for all members and visitors.
+          We regularly review and update our policies to ensure a safe, inclusive, and well-governed club for all members and visitors.
         </p>
       </Card>
+      <style>
+        .egac-policies-table {
+          width: 100%;
+          border-collapse: collapse;
+          background: white;
+          border-radius: 0.7rem;
+          overflow: hidden;
+          font-size: 1rem;
+          box-shadow: 0 1px 4px rgba(20,95,186,0.06);
+          border: 1px solid #e0e0e0;
+          margin-top: 1.5rem;
+        }
+        .egac-policies-table th, .egac-policies-table td {
+          text-align: left;
+          padding: 0.8rem 0.7rem;
+          border-bottom: 1px solid #e0e0e0;
+        }
+        .egac-policies-table th {
+          background: var(--blue);
+          color: var(--white);
+          font-weight: 700;
+        }
+        .egac-policies-table tr:last-child td {
+          border-bottom: none;
+        }
+        .egac-policies-table a {
+          color: var(--blue);
+          text-decoration: underline;
+          font-weight: 600;
+        }
+        .egac-policies-table a:hover {
+          color: var(--yellow);
+        }
+      </style>
     </section>
   </div>
   <style>

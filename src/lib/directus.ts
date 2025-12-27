@@ -1,8 +1,9 @@
 import { createDirectus, rest, staticToken } from '@directus/sdk';
 
-// These values should be set in variables.md and updated here when available
-const DIRECTUS_URL = 'https://egac-admin.themainhost.co.uk';
-const DIRECTUS_TOKEN = 'eU8xb43Id43Ee4eeR_J8OL9ZaGIdBZdP';
+
+// Prefer environment variables for secrets (Astro, Vite, Node, Cloudflare)
+const DIRECTUS_URL = import.meta.env.DIRECTUS_URL || process.env.DIRECTUS_URL;
+const DIRECTUS_TOKEN = import.meta.env.DIRECTUS_TOKEN || process.env.DIRECTUS_TOKEN;
 
 // Only create Directus client if we have a real URL
 export const directus = DIRECTUS_URL.includes('placeholder')

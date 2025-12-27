@@ -38,14 +38,6 @@ try {
       ) : (
         <p>Constitution not found.</p>
       )}
-    </Layout>
-
-    ---
-    // Helper to decode HTML entities if content is double-escaped
-    function decodeHTMLEntities(text) {
-      if (!text) return '';
-      return text.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
-    }
     </section>
   </div>
 </Layout>
