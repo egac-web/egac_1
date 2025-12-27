@@ -1,0 +1,457 @@
+---
+interface Props {
+  webhookUrl?: string;
+  title?: string;
+  showCard?: boolean;
+  defaultArea?: string;
+}
+const {
+  webhookUrl = "/api/enquiry.json",
+  title = "Send an enquiry",
+  showCard = true,
+  defaultArea = "",
+} = Astro.props;
+import Card from "../ui/Card.astro";
+import "../../styles/forms.css";
+---
+
+{showCard ? (
+  <Card class="card--padded enquiry-form-card" title={title}>
+    <form 
+      class="enquiry-form egac-form" 
+      x-data="enquiryForm()" 
+      x-init="prefillArea($el)" 
+      @submit.prevent="submitForm" 
+      aria-live="polite" 
+      data-webhook-url={webhookUrl} 
+      data-default-area={defaultArea}
+    >
+      <!-- Success Message -->
+      <div x-show="success" class="form-success" x-cloak>
+        <strong>✓ Thanks!</strong> Your enquiry has been received. We'll get back to you within 24 hours.
+      </div>
+
+      <!-- Error Message -->
+      <div x-show="error" class="form-error" x-text="error" x-cloak></div>
+
+      <!-- Enquiry For -->
+      <div class="form-group">
+        <label class="form-label">This enquiry is for</label>
+        <div class="radio-group">
+          <label class="radio-label">
+            <input type="radio" name="enquiry_for" value="myself" x-model="form.enquiry_for" required />
+            <span>Myself</span>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="enquiry_for" value="child" x-model="form.enquiry_for" required />
+            <span>My child / someone else</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Contact Details -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="contact_name">Full name *</label>
+          <input 
+            type="text"
+            id="contact_name"
+            name="contact_name" 
+            placeholder="Your full name" 
+            required 
+            x-model="form.contact_name"
+          />
+          <div x-show="errors.contact_name" class="form-field-error" x-text="errors.contact_name" x-cloak></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="contact_email">Email *</label>
+          <input 
+            type="email"
+            id="contact_email"
+            name="contact_email" 
+            placeholder="your.email@example.com" 
+            required 
+            x-model="form.contact_email"
+          />
+          <div x-show="errors.contact_email" class="form-field-error" x-text="errors.contact_email" x-cloak></div>
+        </div>
+
+        <!-- Phone placed inside grid to align under Full name column -->
+        <div class="form-group phone-cell">
+          <label class="form-label" for="contact_phone">Phone (optional)</label>
+          <input 
+            type="tel"
+            id="contact_phone"
+            name="contact_phone" 
+            placeholder="07123 456789" 
+          />
+        </div>
+      </div>
+
+      <!-- Area of Interest -->
+      <div class="form-group">
+        <label class="form-label" for="area_of_interest">What are you interested in? *</label>
+        <select id="area_of_interest" name="area_of_interest" required x-model="form.area_of_interest">
+          <option value="">Please select...</option>
+          <option value="Training">Training / Membership</option>
+          <option value="Coaching">Coaching</option>
+          <option value="Officiating">Officiating</option>
+          <option value="Volunteering">Volunteering</option>
+          <option value="Helping out">General Support</option>
+          <option value="Other">Other</option>
+        </select>
+        <div x-show="errors.area_of_interest" class="form-field-error" x-text="errors.area_of_interest" x-cloak></div>
+      </div>
+
+      <!-- Message -->
+      <div class="form-group">
+        <label class="form-label" for="message">Message *</label>
+        <textarea 
+          id="message"
+          name="message" 
+          rows="5" 
+          placeholder="Tell us a bit more about your enquiry..." 
+          required 
+          x-model="form.message"
+        ></textarea>
+        <div x-show="errors.message" class="form-field-error" x-text="errors.message" x-cloak></div>
+      </div>
+
+      <!-- GDPR Consent -->
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" name="gdpr_consent" required x-model="form.gdpr_consent" />
+          <span>I consent to EGAC storing and processing my data for club purposes. See our <a href="/policies/privacy" class="form-link">Privacy Policy</a>.</span>
+        </label>
+        <div x-show="errors.gdpr_consent" class="form-field-error" x-text="errors.gdpr_consent" x-cloak></div>
+      </div>
+
+      <!-- Honeypot -->
+      <div style="display:none;">
+        <label>Leave this field blank</label>
+        <input type="text" name="honeypot" tabindex="-1" autocomplete="off" />
+      </div>
+
+      <!-- Submit Button -->
+      <div class="form-actions">
+        <button 
+          type="submit" 
+          class="btn btn-cta" 
+          :disabled="submitting" 
+          :class="{ 'btn-loading': submitting }"
+          x-text="submitting ? 'Submitting...' : 'Submit Enquiry'"
+        >
+        </button>
+      </div>
+    </form>
+  </Card>
+) : (
+  <form 
+    class="enquiry-form egac-form" 
+    x-data="enquiryForm()" 
+    x-init="prefillArea($el)" 
+    @submit.prevent="submitForm" 
+    aria-live="polite" 
+    data-webhook-url={webhookUrl} 
+    data-default-area={defaultArea}
+  >
+    <!-- Same form content without Card wrapper -->
+    <div x-show="success" class="form-success" x-cloak>
+      <strong>✓ Thanks!</strong> Your enquiry has been received. We'll get back to you within 24 hours.
+    </div>
+
+    <div x-show="error" class="form-error" x-text="error" x-cloak></div>
+
+    <div class="form-group">
+      <label class="form-label">This enquiry is for</label>
+      <div class="radio-group">
+        <label class="radio-label">
+          <input type="radio" name="enquiry_for" value="myself" x-model="form.enquiry_for" required />
+          <span>Myself</span>
+        </label>
+        <label class="radio-label">
+          <input type="radio" name="enquiry_for" value="child" x-model="form.enquiry_for" required />
+          <span>My child / someone else</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" for="contact_name_alt">Full name *</label>
+        <input 
+          type="text"
+          id="contact_name_alt"
+          name="contact_name" 
+          placeholder="Your full name" 
+          required 
+          x-model="form.contact_name"
+        />
+        <div x-show="errors.contact_name" class="form-field-error" x-text="errors.contact_name" x-cloak></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="contact_email_alt">Email *</label>
+        <input 
+          type="email"
+          id="contact_email_alt"
+          name="contact_email" 
+          placeholder="your.email@example.com" 
+          required 
+          x-model="form.contact_email"
+        />
+        <div x-show="errors.contact_email" class="form-field-error" x-text="errors.contact_email" x-cloak></div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="contact_phone_alt">Phone (optional)</label>
+      <input 
+        type="tel"
+        id="contact_phone_alt"
+        name="contact_phone" 
+        placeholder="07123 456789" 
+      />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="area_of_interest_alt">What are you interested in? *</label>
+      <select id="area_of_interest_alt" name="area_of_interest" required x-model="form.area_of_interest">
+        <option value="">Please select...</option>
+        <option value="Training">Training / Membership</option>
+        <option value="Coaching">Coaching</option>
+        <option value="Officiating">Officiating</option>
+        <option value="Volunteering">Volunteering</option>
+        <option value="Helping out">General Support</option>
+        <option value="Other">Other</option>
+      </select>
+      <div x-show="errors.area_of_interest" class="form-field-error" x-text="errors.area_of_interest" x-cloak></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="message_alt">Message *</label>
+      <textarea 
+        id="message_alt"
+        name="message" 
+        rows="5" 
+        placeholder="Tell us a bit more about your enquiry..." 
+        required 
+        x-model="form.message"
+      ></textarea>
+      <div x-show="errors.message" class="form-field-error" x-text="errors.message" x-cloak></div>
+    </div>
+
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" name="gdpr_consent" required x-model="form.gdpr_consent" />
+        <span>I consent to EGAC storing and processing my data for club purposes. See our <a href="/policies/privacy" class="form-link">Privacy Policy</a>.</span>
+      </label>
+      <div x-show="errors.gdpr_consent" class="form-field-error" x-text="errors.gdpr_consent" x-cloak></div>
+    </div>
+
+    <div style="display:none;">
+      <label>Leave this field blank</label>
+      <input type="text" name="honeypot" tabindex="-1" autocomplete="off" />
+    </div>
+
+    <div class="form-actions">
+      <button 
+        type="submit" 
+        class="btn btn-cta" 
+        :disabled="submitting" 
+        :class="{ 'btn-loading': submitting }"
+      >
+        <span x-show="!submitting">Submit Enquiry</span>
+        <span x-show="submitting">Submitting...</span>
+      </button>
+    </div>
+  </form>
+)}
+
+<script>
+  function prefillArea(el) {
+    const defaultArea = el.dataset.defaultArea || '';
+    const params = typeof location !== 'undefined' ? new URLSearchParams(location.search) : null;
+    const queryArea = params ? params.get('area_of_interest') : null;
+    const area = queryArea || defaultArea;
+    
+    // Small delay to ensure Alpine has initialized
+    setTimeout(() => {
+      if (area) {
+        const select = el.querySelector('[name=area_of_interest]');
+        if (select) select.value = area;
+      }
+    }, 10);
+  }
+
+  function enquiryForm() {
+    return {
+      form: { 
+        enquiry_for: 'myself',
+        contact_name: '',
+        contact_email: '',
+        area_of_interest: '',
+        message: '',
+        gdpr_consent: false
+      },
+      submitting: false,
+      success: false,
+      error: '',
+      errors: {},
+
+      validate() {
+        this.errors = {};
+        
+        if (!this.form.contact_name || !this.form.contact_name.trim()) {
+          this.errors.contact_name = 'Please enter your name.';
+        }
+        
+        if (!this.form.contact_email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.form.contact_email)) {
+          this.errors.contact_email = 'Please enter a valid email address.';
+        }
+        
+        if (!this.form.area_of_interest) {
+          this.errors.area_of_interest = 'Please select an area of interest.';
+        }
+        
+        if (!this.form.message || !this.form.message.trim()) {
+          this.errors.message = 'Please add a message.';
+        }
+        
+        if (!this.form.gdpr_consent) {
+          this.errors.gdpr_consent = 'You must consent to data processing.';
+        }
+        
+        return Object.keys(this.errors).length === 0;
+      },
+
+      async submitForm(e) {
+        this.submitting = true;
+        this.error = '';
+        this.success = false;
+
+        try {
+          if (!this.validate()) {
+            this.error = 'Please fix the highlighted errors.';
+            this.submitting = false;
+            return;
+          }
+
+          const formEl = e.target;
+          const webhook = formEl.dataset.webhookUrl || "/api/enquiry.json";
+          const formData = new FormData(formEl);
+          const data = Object.fromEntries(formData);
+
+          // Honeypot check
+          if (data.honeypot) {
+            this.error = 'Spam detected.';
+            this.submitting = false;
+            return;
+          }
+
+          const res = await fetch(webhook, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+
+          if (!res.ok) {
+            const json = await res.json().catch(() => null);
+            throw new Error((json && json.error) ? json.error : 'Submission failed.');
+          }
+
+          this.success = true;
+          formEl.reset();
+          this.form = { 
+            enquiry_for: 'myself',
+            contact_name: '',
+            contact_email: '',
+            area_of_interest: '',
+            message: '',
+            gdpr_consent: false
+          };
+          this.errors = {};
+        } catch (err) {
+          this.error = err.message || 'Something went wrong — please try again later.';
+        } finally {
+          this.submitting = false;
+        }
+      }
+    };
+  }
+</script>
+
+<style>
+  .enquiry-form-card {
+    box-shadow: 0 10px 40px rgba(20, 95, 186, 0.08);
+  }
+
+  .enquiry-form {
+    font-family: var(--font-sans);
+  }
+
+  .radio-group {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .radio-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--dark-gray);
+    font-size: 0.95rem;
+  }
+
+  .radio-label input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+  }
+
+  .checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--dark-gray);
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  .checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-top: 0.15rem;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .form-link {
+    color: var(--blue);
+    text-decoration: underline;
+    font-weight: 700;
+  }
+
+  .form-link:hover {
+    color: #0d4a8f;
+  }
+
+  .form-actions {
+    padding-top: 0.5rem;
+  }
+
+  .btn-loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  [x-cloak] {
+    display: none !important;
+  }
+</style>

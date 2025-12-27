@@ -1,0 +1,34 @@
+/* Volunteering page styles (shared) */
+.volunteer-grid {
+  margin-bottom: 1.5rem;
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: 1fr 320px;
+  align-items: start;
+}
+
+.volunteer-cta {
+  text-align: center;
+  padding: 2rem 1rem;
+  background: linear-gradient(90deg, rgba(20, 95, 186, 0.06), rgba(253, 185, 19, 0.03));
+  border-radius: 12px;
+  border: 1px solid rgba(20, 95, 186, 0.06);
+  margin-bottom: 1.5rem;
+}
+
+.volunteer-cta h2 {
+  margin: 0 0 0.5rem 0;
+  color: var(--blue);
+  font-family: var(--font-heading);
+}
+
+.volunteer-cta p {
+  margin: 0 0 1rem 0;
+  color: var(--dark-gray);
+}
+
+@media (max-width: 900px) {
+  .volunteer-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,284 @@
+---
+import Layout from "../components/Layout.astro";
+import Card from "../components/ui/Card.astro";
+import EnquiryForm from "../components/forms/EnquiryForm.astro";
+---
+
+<Layout>
+  <div class="volunteer-wrapper">
+    <!-- Hero Section -->
+    <section class="volunteer-hero">
+      <div class="container">
+        <h1>Make a Difference</h1>
+        <p class="hero-subtitle">
+          Join our team of dedicated volunteers and help create amazing experiences for athletes across East Grinstead.
+        </p>
+        <div class="hero-cta">
+          <a href="#volunteer-form" class="btn btn-cta">Get Involved</a>
+          <a href="/contact" class="btn btn-secondary">Learn More</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Content -->
+    <section class="volunteer-content">
+      <div class="container">
+      <div class="volunteer-grid">
+        <Card class="card--padded" title="Get Involved">
+          <p>
+            Our club relies on the dedication of volunteers to run events, coach
+            athletes, and manage club activities. Whether you can help at a
+            single event or want to join our committee, your support is
+            invaluable.
+          </p>
+
+          <ul style="margin:0;padding:0 0 0 1.2em;">
+            <li>Event marshals</li>
+            <li>Coaching assistants</li>
+            <li>Team managers</li>
+            <li>Fundraising and sponsorship</li>
+            <li>Committee roles</li>
+          </ul>
+
+          <p class="mt-4">If you’d like to help, you can:</p>
+          <ol style="margin:0;padding-left:1.2em;">
+            <li>
+              Click the <strong>Volunteer now</strong> button below to send an enquiry.
+            </li>
+            <li>
+              Email us at <a
+                href="mailto:info@egac.org.uk"
+                style="color:var(--blue);text-decoration:underline;"
+                >info@egac.org.uk</a
+              >.
+            </li>
+            <li>Speak to a club official at training.</li>
+          </ol>
+
+          <div
+            style="margin-top:1.25rem;display:flex;gap:0.8rem;flex-wrap:wrap;"
+          >
+            <a
+              href="/enquiry?area_of_interest=Volunteering"
+              class="btn btn-cta"
+              role="button">Volunteer now</a
+            >
+            <a href="/contact" class="btn btn-secondary" role="button"
+              >Contact us</a
+            >
+          </div>
+        </Card>
+
+        <EnquiryForm title="Volunteer enquiry" defaultArea="Volunteering" />
+      </div>
+
+      <Card class="card--padded" title="How to get started">
+        <ol style="margin:0;padding-left:1.2em;">
+          <li>Decide how you’d like to help (events, coaching, admin).</li>
+          <li>
+            Click <strong>Volunteer now</strong> and let us know your interest.
+          </li>
+          <li>We’ll send details on next steps and any training required.</li>
+        </ol>
+        <div style="margin-top:1rem;">
+          <a href="/enquiry?area_of_interest=Volunteering" class="btn btn-cta"
+            >Volunteer now</a
+          >
+        </div>
+      </Card>
+      </div>
+    </section>
+  </div>
+</Layout>
+
+<style>
+  .volunteer-wrapper {
+    min-height: 80vh;
+  }
+
+  .volunteer-hero {
+    background: linear-gradient(135deg, #FDB913 0%, #f5a800 100%);
+    color: var(--dark-gray);
+    padding: 4rem 0 3rem 0;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .volunteer-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg width="60" height="60" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="30" r="1.5" fill="rgba(0,0,0,0.05)"/></svg>');
+    opacity: 0.3;
+  }
+
+  .volunteer-hero .container {
+    position: relative;
+    z-index: 1;
+  }
+
+  .volunteer-hero h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 900;
+    margin: 0 0 1rem 0;
+    letter-spacing: -0.02em;
+    color: var(--dark-gray);
+  }
+
+  .hero-subtitle {
+    font-size: clamp(1rem, 2.5vw, 1.25rem);
+    max-width: 700px;
+    margin: 0 auto 2rem auto;
+    line-height: 1.6;
+    color: #2c2c2c;
+  }
+
+  .hero-cta {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .volunteer-content {
+    padding: 3rem 0 4rem 0;
+    background: var(--muted-1);
+  }
+
+  .why-volunteer {
+    margin-bottom: 3rem;
+  }
+
+  .why-volunteer h2 {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 900;
+    margin: 0 0 2.5rem 0;
+    color: var(--dark-gray);
+  }
+
+  .benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .benefit-card {
+    text-align: center;
+    padding: 2rem 1.5rem !important;
+  }
+
+  .benefit-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    line-height: 1;
+  }
+
+  .benefit-card h3 {
+    margin: 0 0 0.75rem 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--dark-gray);
+  }
+
+  .benefit-card p {
+    margin: 0;
+    color: #6b7280;
+    line-height: 1.6;
+  }
+
+  .opportunities-section {
+    margin-top: 3rem;
+  }
+
+  .opportunities-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .role-list {
+    display: grid;
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+  }
+
+  .role-item {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .role-icon {
+    font-size: 2rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .role-item h3 {
+    margin: 0 0 0.35rem 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--dark-gray);
+  }
+
+  .role-item p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .getting-started {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(20, 95, 186, 0.1);
+  }
+
+  .getting-started h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--dark-gray);
+  }
+
+  .getting-started ol {
+    margin: 0;
+    padding-left: 1.5rem;
+    color: var(--dark-gray);
+  }
+
+  .getting-started li {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 900px) {
+    .opportunities-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .form-column {
+      order: -1;
+    }
+
+    .benefits-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .volunteer-hero {
+      padding: 3rem 0 2rem 0;
+    }
+  }
+</style>

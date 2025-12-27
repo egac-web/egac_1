@@ -1,0 +1,45 @@
+---
+import Layout from "../components/Layout.astro";
+import Button from "../components/ui/Button.astro";
+import Card from "../components/ui/Card.astro";
+import Hero from "../components/ui/Hero.astro";
+---
+
+<Layout>
+  <div style="max-width:1100px;margin:0 auto;padding:2rem;">
+    <h1 style="margin-bottom:1rem;">Style Guide</h1>
+    <h2>Hero</h2>
+    <Hero overline="Style guide" title="Hero component demo — Accent" subtitle="Subtitle and supporting text" />
+
+    <h2 style="margin-top:2rem;">Buttons</h2>
+    
+    <h3 style="font-size:1.4rem;margin-top:1.5rem;margin-bottom:0.75rem;">Variants</h3>
+    <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
+      <Button href="#" variant="cta">CTA Button</Button>
+      <Button href="#" variant="secondary">Secondary Button</Button>
+      <Button href="#" variant="secondary" class="btn-ghost-secondary">Ghost Secondary</Button>
+    </div>
+
+    <h3 style="font-size:1.4rem;margin-top:1.5rem;margin-bottom:0.75rem;">Sizes</h3>
+    <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
+      <Button href="#" variant="cta" size="sm">Small CTA</Button>
+      <Button href="#" variant="cta">Medium CTA</Button>
+      <Button href="#" variant="cta" size="lg">Large CTA</Button>
+    </div>
+
+    <h2 style="margin-top:2rem;">Cards</h2>
+    
+    <h3 style="font-size:1.4rem;margin-top:1.5rem;margin-bottom:0.75rem;">Standard Cards</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;margin-top:1rem;">
+      <Card title="Card sample" image="/images/card-about.svg">This is a card body explaining something important.</Card>
+      <Card title="Another" image="/images/card-training.svg">Quick stat or blurb goes here.</Card>
+    </div>
+
+    <h3 style="font-size:1.4rem;margin-top:1.5rem;margin-bottom:0.75rem;">Card Sizes</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-top:1rem;">
+      <Card title="Small Card" size="sm" image="/images/card-about.svg">Compact card for less important content.</Card>
+      <Card title="Medium Card" image="/images/card-training.svg">Default size, good for most use cases.</Card>
+      <Card title="Large Card" size="lg" image="/images/card-about.svg">Highlighted content or featured sections.</Card>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,100 @@
+---
+interface Props {
+  href?: string;
+  title: string;
+  image?: string;
+  imageAlt?: string;
+  size?: "sm" | "md" | "lg";
+  class?: string;
+}
+const {
+  href,
+  title,
+  image,
+  imageAlt = "",
+  size = "md",
+  class: className = "",
+} = Astro.props;
+const Tag = href ? "a" : "div";
+const sizeClass = size !== "md" ? `card-${size}` : "";
+---
+
+<Tag
+  class={`egac-card card ${href ? "card-link" : ""} ${sizeClass} ${className}`.trim()}
+>
+  {image && <img class="card-image" src={image} alt={imageAlt} />}
+  <h3 class="card-title">{title}</h3>
+  <div class="card-body"><slot /></div>
+</Tag>
+<style>
+  .egac-card {
+    background: rgba(255, 255, 255, 0.18);
+    border: 1.5px solid rgba(20, 95, 186, 0.1);
+    box-shadow:
+      0 8px 32px rgba(20, 95, 186, 0.1),
+      0 1.5px 8px rgba(253, 185, 19, 0.08);
+    border-radius: 1.1rem;
+    backdrop-filter: blur(10px) saturate(1.1);
+    transition:
+      box-shadow 0.18s,
+      transform 0.18s,
+      border 0.18s;
+    color: var(--dark-gray);
+    padding: 2rem 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .egac-card:hover,
+  .egac-card:focus-visible {
+    box-shadow:
+      0 16px 48px rgba(20, 95, 186, 0.16),
+      0 4px 24px rgba(253, 185, 19, 0.13);
+    border: 1.5px solid var(--yellow);
+    transform: translateY(-4px) scale(1.025);
+    outline: none;
+  }
+  .card-title {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--blue);
+    margin: 0 0 0.7rem 0;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .card-image {
+    display: block;
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    object-position: center center;
+    background: var(--muted-2);
+    border-radius: 0.7rem 0.7rem 0.4rem 0.4rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 12px rgba(20, 95, 186, 0.1);
+  }
+  .card-body {
+    color: var(--dark-gray);
+    font-size: 1.08rem;
+    line-height: 1.7;
+  }
+  .card-link {
+    cursor: pointer;
+    text-decoration: none;
+    transition:
+      box-shadow 0.18s,
+      transform 0.18s;
+  }
+  .card-link:hover,
+  .card-link:focus-visible {
+    text-decoration: none;
+    outline: none;
+  }
+  .card-sm {
+    padding: 1.2rem 1rem;
+    font-size: 0.98rem;
+  }
+  .card-lg {
+    padding: 2.5rem 2rem;
+    font-size: 1.18rem;
+  }
+</style>

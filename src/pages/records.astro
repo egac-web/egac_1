@@ -1,0 +1,56 @@
+---
+import Layout from "../components/Layout.astro";
+import Card from "../components/ui/Card.astro";
+---
+
+<Layout>
+  <div style="max-width:900px;margin:0 auto;padding:0 1.5rem;">
+    <section style="padding:3rem 0 2rem 0;">
+      <h1 class="egac-section-title">Club Records</h1>
+      <p class="egac-section-lead">
+        Our all-time best performances across all age groups
+      </p>
+      <Card class="card--padded" title="Records Overview">
+        <p>
+          We celebrate the achievements of our athletes, past and present. Our
+          club records are updated regularly and cover all track, field, and
+          road events for juniors, seniors, and masters.
+        </p>
+        <ul style="margin:0;padding:0 0 0 1.2em;">
+          <li>100m: 10.92s (John Smith, 2019)</li>
+          <li>Long Jump: 6.45m (Jane Doe, 2022)</li>
+          <li>Shot Put: 13.20m (Alex Brown, 2021)</li>
+          <li>5K Road: 15:32 (Chris Green, 2023)</li>
+        </ul>
+        <p>
+          For the full list, see our <a
+            href="/club_records_mgmt.md"
+            style="color:var(--blue);text-decoration:underline;"
+            >records management page</a
+          >.
+        </p>
+      </Card>
+    </section>
+  </div>
+  <style>
+    .egac-section-title {
+      font-size: 3rem;
+      font-weight: 900;
+      color: var(--blue);
+      margin-bottom: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      text-align: center;
+      font-family: var(--font-heading);
+      text-shadow: 0 2px 12px rgba(20, 95, 186, 0.08);
+    }
+    .egac-section-lead {
+      color: var(--dark-gray);
+      margin-bottom: 2.5rem;
+      font-size: 1.2rem;
+      font-weight: 600;
+      text-align: center;
+      font-family: var(--font-sans);
+    }
+  </style>
+</Layout>

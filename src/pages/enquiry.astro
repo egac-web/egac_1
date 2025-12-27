@@ -1,0 +1,234 @@
+---
+export const title = "Enquiry – East Grinstead AC";
+import Layout from "../components/Layout.astro";
+import Card from "../components/ui/Card.astro";
+import EnquiryForm from "../components/forms/EnquiryForm.astro";
+---
+
+<Layout title="Enquiry – East Grinstead AC">
+  <div class="enquiry-wrapper">
+    <!-- Hero Section -->
+    <section class="enquiry-hero">
+      <div class="container">
+        <h1>Get in Touch</h1>
+        <p class="hero-subtitle">
+          Whether you're interested in joining as an athlete, volunteering, or
+          coaching, we'd love to hear from you.
+        </p>
+      </div>
+    </section>
+
+    <!-- Main Content -->
+    <section class="enquiry-content">
+      <div class="container">
+        <div class="enquiry-grid">
+          <!-- Info Column -->
+          <div class="enquiry-info">
+            <Card class="card--padded" title="How can we help?">
+              <h2 style="margin-top:0;font-size:1.5rem;color:var(--dark-gray);">
+                How can we help?
+              </h2>
+              <p style="color:var(--dark-gray);line-height:1.7;">
+                East Grinstead AC welcomes athletes of all ages and abilities.
+                Whether you're looking to join as a member, help out at events,
+                or learn more about coaching opportunities, we're here to help.
+              </p>
+
+              <div class="info-items">
+                <div class="info-item">
+                  <div class="info-icon">🏃</div>
+                  <div>
+                    <h3>Membership</h3>
+                    <p>Join our club and train with us</p>
+                  </div>
+                </div>
+
+                <div class="info-item">
+                  <div class="info-icon">📋</div>
+                  <div>
+                    <h3>Volunteering</h3>
+                    <p>Support events and club activities</p>
+                  </div>
+                </div>
+
+                <div class="info-item">
+                  <div class="info-icon">🎯</div>
+                  <div>
+                    <h3>Coaching</h3>
+                    <p>Help develop the next generation</p>
+                  </div>
+                </div>
+
+                <div class="info-item">
+                  <div class="info-icon">⏱️</div>
+                  <div>
+                    <h3>Fast Response</h3>
+                    <p>We typically reply within 24 hours</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="alt-contact">
+                <h3>Other ways to reach us</h3>
+                <p>
+                  <strong>Email:</strong>
+                  <a href="mailto:info@egac.org.uk">info@egac.org.uk</a>
+                </p>
+                <p>
+                  <strong>Visit:</strong> Come along to training (Tuesdays & Thursdays,
+                  6:30 PM)
+                </p>
+              </div>
+            </Card>
+          </div>
+
+          <!-- Form Column -->
+          <div class="enquiry-form-col">
+            <EnquiryForm
+              title="Send us a message"
+              webhookUrl="/api/enquiry.json"
+              showCard={true}
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</Layout>
+
+<style>
+  .enquiry-wrapper {
+    min-height: 80vh;
+  }
+
+  .enquiry-hero {
+    background: linear-gradient(135deg, var(--blue) 0%, #0d4a8f 100%);
+    color: white;
+    padding: 4rem 0 3rem 0;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .enquiry-hero::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg width="60" height="60" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="30" r="1.5" fill="rgba(255,255,255,0.1)"/></svg>');
+    opacity: 0.3;
+  }
+
+  .enquiry-hero .container {
+    position: relative;
+    z-index: 1;
+  }
+
+  .enquiry-hero h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 900;
+    margin: 0 0 1rem 0;
+    letter-spacing: -0.02em;
+  }
+
+  .hero-subtitle {
+    font-size: clamp(1rem, 2.5vw, 1.25rem);
+    max-width: 600px;
+    margin: 0 auto;
+    opacity: 0.95;
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .enquiry-content {
+    padding: 3rem 0 4rem 0;
+    background: var(--muted-1);
+  }
+
+  .enquiry-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .info-items {
+    margin: 2rem 0;
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  .info-item {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .info-icon {
+    font-size: 2rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .info-item h3 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--dark-gray);
+  }
+
+  .info-item p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.95rem;
+  }
+
+  .alt-contact {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(20, 95, 186, 0.1);
+  }
+
+  .alt-contact h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--dark-gray);
+  }
+
+  .alt-contact p {
+    margin: 0.5rem 0;
+    color: var(--dark-gray);
+  }
+
+  .alt-contact a {
+    color: var(--blue);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .alt-contact a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 900px) {
+    .enquiry-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .enquiry-form-col {
+      order: -1;
+    }
+
+    .enquiry-hero {
+      padding: 3rem 0 2rem 0;
+    }
+  }
+</style>

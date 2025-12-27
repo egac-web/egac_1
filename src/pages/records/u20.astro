@@ -1,0 +1,109 @@
+---
+import Layout from "../../components/Layout.astro";
+import { directus } from "../../lib/directus";
+import { readItems } from "@directus/sdk";
+
+let records: any[] | null = [];
+try {
+  if (directus) {
+    records = await directus.request(
+      readItems("records", {
+        filter: { ageGroup: { _eq: "u20" } },
+        fields: ["athlete", "event", "result", "date"],
+        limit: 10,
+      }),
+    );
+  }
+} catch (err) {
+  // Fallback to dummy data
+  const dummyData = await import("../../../dummy-records.json");
+  records = dummyData.default.filter(
+    (record: any) => record.ageGroup === "u20",
+  );
+}
+---
+
+<Layout>
+  <div style="max-width:1000px;margin:0 auto;padding:0 1.5rem;">
+    <section style="text-align:center;padding:3rem 0 2rem 0;">
+      <h1
+        style="font-size:3rem;font-weight:900;color:var(--blue);margin-bottom:0.8rem;text-transform:uppercase;letter-spacing:0.02em;"
+      >
+        U20 Records
+      </h1>
+      <p
+        style="color:var(--dark-gray);margin-bottom:2.5rem;font-size:1.2rem;font-weight:600;"
+      >
+        Records for U20 age group
+      </p>
+      <div class="card" style="overflow:hidden;">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead style="background:var(--blue);">
+            <tr>
+              <th
+                style="padding:1rem 1.2rem;font-size:1.1rem;color:var(--white);font-weight:800;font-family:'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:0.03em;text-align:left;"
+                >Athlete</th
+              >
+              <th
+                style="padding:1rem 1.2rem;font-size:1.1rem;color:var(--white);font-weight:800;font-family:'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:0.03em;text-align:left;"
+                >Event</th
+              >
+              <th
+                style="padding:1rem 1.2rem;font-size:1.1rem;color:var(--white);font-weight:800;font-family:'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:0.03em;text-align:left;"
+                >Result</th
+              >
+              <th
+                style="padding:1rem 1.2rem;font-size:1.1rem;color:var(--white);font-weight:800;font-family:'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:0.03em;text-align:left;"
+                >Date</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              records === null ? (
+                <tr>
+                  <td
+                    colspan="4"
+                    style="text-align:center;color:#e00;padding:2rem;font-size:1.05rem;"
+                  >
+                    Error loading records.
+                  </td>
+                </tr>
+              ) : records.length === 0 ? (
+                <tr>
+                  <td
+                    colspan="4"
+                    style="text-align:center;color:#aaa;padding:2rem;font-size:1.05rem;"
+                  >
+                    No records found.
+                  </td>
+                </tr>
+              ) : (
+                (records ?? []).map((record: any, idx: number) => (
+                  <tr
+                    style={`background:${idx % 2 === 0 ? "var(--white)" : "var(--muted-2)"};transition:background 0.2s;`}
+                    onmouseover={`this.style.background='var(--muted-3)'`}
+                    onmouseout={`this.style.background='${idx % 2 === 0 ? "var(--white)" : "var(--muted-2)"}'`}
+                  >
+                    <td style="padding:1rem 1.2rem;border-bottom:1px solid var(--muted);font-family:'Open Sans',sans-serif;font-weight:600;color:var(--dark-gray);">
+                      {record.athlete}
+                    </td>
+                    <td style="padding:1rem 1.2rem;border-bottom:1px solid var(--muted);font-family:'Open Sans',sans-serif;color:var(--dark-gray);">
+                      {record.event}
+                    </td>
+                    <td style="padding:1rem 1.2rem;border-bottom:1px solid var(--muted);font-family:'Open Sans',sans-serif;font-weight:700;color:var(--yellow);">
+                      {record.result}
+                    </td>
+                    <td style="padding:1rem 1.2rem;border-bottom:1px solid var(--muted);font-family:'Open Sans',sans-serif;color:var(--dark-gray);">
+                      {record.date}
+                    </td>
+                  </tr>
+                ))
+              )
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</Layout>

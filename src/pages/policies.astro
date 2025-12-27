@@ -1,0 +1,74 @@
+---
+import Layout from "../components/Layout.astro";
+import Card from "../components/ui/Card.astro";
+---
+
+<Layout>
+  <div style="max-width:900px;margin:0 auto;padding:0 1.5rem;">
+    <section style="padding:3rem 0 2rem 0;">
+      <h1 class="egac-section-title">Club Policies</h1>
+      <p class="egac-section-lead">
+        Our commitment to safety, inclusion, and good governance
+      </p>
+      <Card class="card--padded" title="Key Policies">
+        <ul style="margin:0;padding:0 0 0 1.2em;">
+          <li>
+            <a
+              href="/docs/rbac.md"
+              style="color:var(--blue);text-decoration:underline;"
+              >Safeguarding & Welfare</a>
+          </li>
+          <li>
+            <a
+              href="/docs/policies.md"
+              style="color:var(--blue);text-decoration:underline;"
+              >Equality, Diversity & Inclusion</a>
+          </li>
+          <li>
+            <a
+              href="/docs/auth.md"
+              style="color:var(--blue);text-decoration:underline;"
+              >Data Protection & Privacy</a>
+          </li>
+          <li>
+            <a
+              href="/docs/onboarding.md"
+              style="color:var(--blue);text-decoration:underline;"
+              >Onboarding & Induction</a>
+          </li>
+          <li>
+            <a
+              href="/docs/deployment.md"
+              style="color:var(--blue);text-decoration:underline;"
+              >Health & Safety</a>
+          </li>
+        </ul>
+        <p>
+          We regularly review and update our policies to ensure a safe,
+          inclusive, and well-governed club for all members and visitors.
+        </p>
+      </Card>
+    </section>
+  </div>
+  <style>
+    .egac-section-title {
+      font-size: 3rem;
+      font-weight: 900;
+      color: var(--blue);
+      margin-bottom: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      text-align: center;
+      font-family: var(--font-heading);
+      text-shadow: 0 2px 12px rgba(20, 95, 186, 0.08);
+    }
+    .egac-section-lead {
+      color: var(--dark-gray);
+      margin-bottom: 2.5rem;
+      font-size: 1.2rem;
+      font-weight: 600;
+      text-align: center;
+      font-family: var(--font-sans);
+    }
+  </style>
+</Layout>

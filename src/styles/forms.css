@@ -1,0 +1,333 @@
+/* Modern, professional form styles for EGAC */
+
+.egac-form {
+  font-family: var(--font-sans);
+  color: var(--dark-gray);
+}
+
+/* Form structure */
+.egac-form .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.egac-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Remove bottom margin from form-groups inside form-row to prevent misalignment */
+.egac-form .form-row .form-group {
+  margin-bottom: 0;
+}
+
+.egac-form .form-label {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--dark-gray);
+  letter-spacing: 0.01em;
+}
+
+/* Input fields */
+.egac-form input[type="text"],
+.egac-form input[type="email"],
+.egac-form input[type="tel"],
+.egac-form select,
+.egac-form textarea {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  font-size: 1rem;
+  font-family: var(--font-sans);
+  color: var(--dark-gray);
+  border-radius: 10px;
+  border: 2px solid rgba(20, 95, 186, 0.12);
+  background: #ffffff;
+  transition: all 0.2s ease;
+  line-height: 1.5;
+  height: auto;
+  min-height: 3rem;
+}
+
+.egac-form select {
+  height: 3rem;
+}
+
+.egac-form textarea {
+  min-height: 140px;
+  resize: vertical;
+  line-height: 1.6;
+  max-width: 60ch;
+  /* narrower for better visual balance */
+  margin-right: auto;
+  /* align to left of column, avoid centering */
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* Constrain phone input so it doesn't stretch excessively on wide layouts */
+.egac-form input[type="tel"] {
+  max-width: 18ch;
+  /* slightly narrower (~288px) */
+  margin-right: auto;
+  display: block;
+}
+
+/* Phone cell ensures phone sits under first column on md+ screens */
+.egac-form .phone-cell {
+  grid-column: 1 / 2;
+  /* place under first column */
+}
+
+/* On small screens, allow inputs to be full width */
+@media (max-width: 768px) {
+  .egac-form textarea {
+    max-width: none;
+  }
+
+  .egac-form input[type="tel"] {
+    max-width: none;
+  }
+
+  .egac-form .phone-cell {
+    grid-column: auto;
+  }
+}
+
+.egac-form input::placeholder,
+.egac-form textarea::placeholder {
+  color: #9ca3af;
+  opacity: 1;
+}
+
+/* Focus states */
+.egac-form input:focus,
+.egac-form select:focus,
+.egac-form textarea:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(20, 95, 186, 0.1),
+    0 8px 24px rgba(20, 95, 186, 0.08);
+  background: #ffffff;
+}
+
+/* Select dropdown */
+.egac-form select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill="%23374151" d="M4 6l4 4 4-4z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.5rem;
+  color: var(--dark-gray);
+  /* ensure selected value is readable */
+  background-color: #ffffff;
+}
+
+/* When select is showing the placeholder option (required + empty), show muted colour */
+.egac-form select:invalid {
+  color: #9ca3af;
+}
+
+/* Ensure options themselves are readable in the native dropdown */
+.egac-form select option {
+  color: var(--dark-gray);
+  background: #ffffff;
+}
+
+/* Make the placeholder option show muted color */
+.egac-form select option[value=""] {
+  color: #9ca3af;
+}
+
+/* Radio and checkbox groups */
+.egac-form .radio-group,
+.egac-form .inline-controls {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Success & error messages */
+.egac-form .form-success {
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #dcffe8 0%, #e8fff0 100%);
+  border: 2px solid rgba(34, 197, 94, 0.2);
+  color: #065f46;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.08);
+}
+
+.egac-form .form-error {
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #ffebee 0%, #fff0f2 100%);
+  border: 2px solid rgba(239, 68, 68, 0.2);
+  color: #991b1b;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.08);
+}
+
+/* Field-level errors */
+.egac-form .form-field-error {
+  color: #dc2626;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-top: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 1.25rem;
+}
+
+.egac-form .form-field-error::before {
+  content: '⚠';
+  font-size: 0.9rem;
+}
+
+/* Ensure error messages in form-row don't affect column alignment */
+.egac-form .form-row {
+  align-items: start;
+}
+
+.egac-form .form-row .form-group {
+  position: relative;
+  padding-bottom: 1.75rem;
+  /* space for absolute error */
+}
+
+.egac-form .form-row .form-field-error {
+  position: absolute;
+  left: 0;
+  bottom: -1.25rem;
+  margin: 0;
+}
+
+/* Ensure inputs in form-row have consistent heights */
+.egac-form .form-row .form-group input,
+.egac-form .form-row .form-group select {
+  box-sizing: border-box;
+  min-height: 3.25rem;
+}
+
+/* Input error state */
+.egac-form input:invalid:not(:placeholder-shown),
+.egac-form select:invalid:not(:placeholder-shown),
+.egac-form textarea:invalid:not(:placeholder-shown) {
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Form actions */
+.egac-form .form-actions {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(20, 95, 186, 0.08);
+}
+
+.egac-form .btn {
+  padding: 1rem 2rem;
+  font-weight: 800;
+  font-size: 1rem;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 180px;
+}
+
+.egac-form .btn-cta {
+  background: linear-gradient(135deg, var(--blue) 0%, #0d4a8f 100%);
+  color: white;
+  box-shadow: 0 6px 20px rgba(20, 95, 186, 0.25);
+}
+
+.egac-form .btn-cta:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(20, 95, 186, 0.35);
+}
+
+.egac-form .btn-cta:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.egac-form .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Honeypot (hidden spam protection) */
+.egac-form [style*="display:none"],
+.egac-form [style*="display: none"] {
+  position: absolute;
+  left: -9999px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .egac-form .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .egac-form .radio-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .egac-form input[type="text"],
+  .egac-form input[type="email"],
+  .egac-form input[type="tel"],
+  .egac-form select,
+  .egac-form textarea {
+    font-size: 16px;
+    /* Prevents iOS zoom on focus */
+  }
+
+  .egac-form .btn {
+    width: 100%;
+  }
+}
+
+/* Accessibility improvements */
+.egac-form input:focus-visible,
+.egac-form select:focus-visible,
+.egac-form textarea:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .egac-form *,
+  .egac-form *::before,
+  .egac-form *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* Dark mode support (if needed) */
+@media (prefers-color-scheme: dark) {
+
+  .egac-form input[type="text"],
+  .egac-form input[type="email"],
+  .egac-form input[type="tel"],
+  .egac-form select,
+  .egac-form textarea {
+    background: #1f2937;
+    color: #f3f4f6;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .egac-form input::placeholder,
+  .egac-form textarea::placeholder {
+    color: #6b7280;
+  }
+}

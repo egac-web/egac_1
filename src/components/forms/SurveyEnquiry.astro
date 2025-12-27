@@ -1,0 +1,180 @@
+---
+import Card from "../ui/Card.astro";
+import EnquiryForm from "./EnquiryForm.astro";
+---
+
+<Card class="card--padded" title="Quick enquiry">
+  <div id="surveyContainer" style="min-height:160px"></div>
+
+  <!-- Fallback: server-rendered classic EnquiryForm -->
+  <div id="surveyFallback" style="display:none;margin-top:1rem;">
+    <EnquiryForm showCard={false} webhookUrl="/api/enquiry.json" />
+  </div>
+
+  <noscript>
+    <p>
+      Please enable JavaScript to use the enhanced enquiry form, or use the
+      standard <a href="/enquiry">form</a>.
+    </p>
+  </noscript>
+</Card>
+
+<script>
+  // Declare Survey on window to satisfy TypeScript
+  // @ts-ignore
+  // eslint-disable-next-line no-unused-vars
+  declare global {
+    interface Window {
+      Survey: any;
+    }
+  }
+  // load SurveyJS from CDN then render, with robust fallback if loading fails
+  (function loadSurvey() {
+    let loaded = false;
+    const css = document.createElement("link");
+    css.rel = "stylesheet";
+    css.href = "https://surveyjs.azureedge.net/1.9.97/survey.min.css";
+    css.onerror = () => {
+      console.warn("Survey CSS failed to load");
+      showFallback();
+    };
+    document.head.appendChild(css);
+
+    const script = document.createElement("script");
+    script.src = "https://surveyjs.azureedge.net/1.9.97/survey.min.js";
+    script.onload = function () {
+      try {
+        const surveyJSON = {
+          title: "Enquiry",
+          showProgressBar: "top",
+          goNextPageAutomatic: true,
+          pages: [
+            {
+              name: "contact",
+              elements: [
+                {
+                  type: "radiogroup",
+                  name: "enquiry_for",
+                  title: "Is this enquiry for…",
+                  isRequired: true,
+                  choices: ["Myself", "My child / someone else"],
+                },
+                {
+                  type: "text",
+                  name: "contact_name",
+                  title: "Full name",
+                  isRequired: true,
+                },
+                {
+                  type: "text",
+                  inputType: "email",
+                  name: "contact_email",
+                  title: "Email",
+                  isRequired: true,
+                },
+                {
+                  type: "text",
+                  inputType: "tel",
+                  name: "contact_phone",
+                  title: "Phone (optional)",
+                },
+              ],
+            },
+            {
+              name: "details",
+              elements: [
+                {
+                  type: "dropdown",
+                  name: "area_of_interest",
+                  title: "Area of interest",
+                  isRequired: true,
+                  choices: [
+                    "Training",
+                    "Coaching",
+                    "Officiating",
+                    "Helping out",
+                    "Other",
+                    "Volunteering",
+                  ],
+                },
+                {
+                  type: "comment",
+                  name: "message",
+                  title: "Message",
+                  isRequired: true,
+                },
+              ],
+            },
+          ],
+          completedHtml: "<h3>Thank you! Your enquiry has been submitted.</h3>",
+        };
+
+        const survey = new window.Survey.Model(surveyJSON);
+        survey.onComplete.add(async function (sender: any, options: any) {
+          const data = sender.data;
+          data.gdpr_consent = true;
+          data.honeypot = "";
+
+          try {
+            const res = await fetch("/api/enquiry.json", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data),
+            });
+            if (!res.ok) throw new Error("Submission failed");
+          } catch (err) {
+            const el = document.getElementById("surveyContainer");
+            if (el) {
+              el.innerHTML =
+                '<div class="form-error">Something went wrong — please try again later.</div>';
+            }
+          }
+        });
+
+        window.Survey.StylesManager.applyTheme("default");
+        survey.render("surveyContainer");
+        loaded = true;
+      } catch (err) {
+        console.error("Survey load error", err);
+        showFallback();
+      }
+    };
+    script.onerror = function () {
+      console.warn("SurveyJS script load failed");
+      showFallback();
+    };
+    document.body.appendChild(script);
+
+    // If Survey hasn't loaded in 1200ms, show fallback
+    const timer = setTimeout(() => {
+      if (!loaded) {
+        console.warn("Survey timeout; showing fallback");
+        showFallback();
+      }
+    }, 1200);
+
+    function showFallback() {
+      clearTimeout(timer);
+      const fallback = document.getElementById("surveyFallback");
+      const container = document.getElementById("surveyContainer");
+      if (fallback && container) {
+        container.style.display = "none";
+        fallback.style.display = "block";
+      }
+    }
+  })();
+</script>
+
+<style>
+  /* Slight adjustments to match EGAC look */
+  #surveyContainer .sv_qstn {
+    font-family: var(--font-sans);
+    color: var(--dark-gray);
+  }
+  #surveyContainer .sv_main {
+    border-radius: 8px;
+  }
+  #surveyContainer {
+    min-height: 160px;
+  }
+</style>

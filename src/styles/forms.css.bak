@@ -1,0 +1,108 @@
+/* Shared compact form styles for EGAC site */
+.egac-form {
+  font-family: var(--font-sans);
+  color: var(--dark-gray);
+}
+
+.egac-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.egac-form .form-group {
+  margin-bottom: 0.75rem;
+}
+
+.egac-form label,
+.egac-form .form-label {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+  color: var(--dark-gray);
+}
+
+.egac-form input[type="text"],
+.egac-form input[type="email"],
+.egac-form input[type="tel"],
+.egac-form select,
+.egac-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  border: 1px solid rgba(20, 95, 186, 0.06);
+  background: var(--muted-2);
+}
+
+.egac-form textarea {
+  min-height: 120px;
+}
+
+.egac-form input:focus,
+.egac-form select:focus,
+.egac-form textarea:focus {
+  outline: none;
+  box-shadow: 0 8px 24px rgba(20, 95, 186, 0.06);
+  border-color: var(--yellow);
+  background: var(--muted-3);
+}
+
+/* Inline controls */
+.egac-form .inline-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.egac-form .inline-controls label {
+  font-weight: 600;
+}
+
+/* Compact success / error banners */
+.egac-form .form-success {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(220, 255, 235, 0.95);
+  border: 1px solid rgba(34, 197, 94, 0.12);
+  color: #065f46;
+}
+
+.egac-form .form-error {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(255, 235, 238, 0.95);
+  border: 1px solid rgba(239, 68, 68, 0.12);
+  color: #991b1b;
+}
+
+/* Field-level error */
+.egac-form .form-field-error {
+  color: #991b1b;
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}
+
+/* Slightly larger, cleaner controls */
+.egac-form input[type="text"],
+.egac-form input[type="email"],
+.egac-form input[type="tel"],
+.egac-form select,
+.egac-form textarea {
+  padding: 12px 14px;
+  font-size: 1rem;
+  border-radius: 10px;
+}
+
+.egac-form .btn {
+  padding: 0.9rem 1.4rem;
+  font-weight: 800;
+}
+
+/* Make single-column on small screens */
+@media (max-width: 800px) {
+  .egac-form .form-row {
+    grid-template-columns: 1fr;
+  }
+}

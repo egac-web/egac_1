@@ -1,0 +1,21 @@
+---
+import Layout from "../components/Layout.astro";
+import Hero from "../components/ui/Hero.astro";
+---
+
+<Layout>
+  <div style="max-width:1100px;margin:0 auto;padding:0 1.5rem;">
+    <Hero
+      overline="East Grinstead Athletics Club"
+      subtitle="Inspiring athletes of all ages to reach their full potential"
+      primary={{ href: "/records", text: "View Records" }}
+      secondary={{ href: "/enquiry", text: "Enquiry" }}
+      media="/images/hero-1.svg"
+    >
+      <span slot="title"
+        >Performance.<br /><span class="accent">Excellence.</span><br
+        />Community.</span
+      >
+    </Hero>
+  </div>
+</Layout>

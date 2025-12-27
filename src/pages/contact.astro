@@ -1,0 +1,48 @@
+---
+import Layout from "../components/Layout.astro";
+import Card from "../components/ui/Card.astro";
+---
+
+<Layout>
+  <div style="max-width:900px;margin:0 auto;padding:0 1.5rem;">
+    <section style="padding:3rem 0 2rem 0;">
+      <h1 class="egac-section-title">Contact Us</h1>
+      <p class="egac-section-lead">Get in touch with East Grinstead AC</p>
+      <Card class="card--padded" title="Contact Details">
+        <p>
+          Email: <a
+            href="mailto:info@egac.org.uk"
+            style="color:var(--blue);text-decoration:underline;"
+            >info@egac.org.uk</a>
+        </p>
+        <p>Training Venue: Imberhorne Upper School, East Grinstead, RH19 1QY</p>
+        <p>Club Secretary: Jane Doe</p>
+        <p>
+          For membership, volunteering, or general enquiries, please use the
+          email above or speak to a committee member at training.
+        </p>
+      </Card>
+    </section>
+  </div>
+  <style>
+    .egac-section-title {
+      font-size: 3rem;
+      font-weight: 900;
+      color: var(--blue);
+      margin-bottom: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      text-align: center;
+      font-family: var(--font-heading);
+      text-shadow: 0 2px 12px rgba(20, 95, 186, 0.08);
+    }
+    .egac-section-lead {
+      color: var(--dark-gray);
+      margin-bottom: 2.5rem;
+      font-size: 1.2rem;
+      font-weight: 600;
+      text-align: center;
+      font-family: var(--font-sans);
+    }
+  </style>
+</Layout>

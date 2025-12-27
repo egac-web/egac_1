@@ -1,0 +1,83 @@
+---
+// Chart component for displaying records analytics
+// Uses Chart.js CDN (see variables.md for version)
+---
+
+<html>
+  <head>
+    <script
+      src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"
+    ></script>
+  </head>
+  <body>
+    <canvas id="recordsChart" width="400" height="200"></canvas>
+    <script>
+      // Example dummy data, replace with Directus data
+      const data = {
+        labels: ["Jan", "Feb", "Mar", "Apr", "May"],
+        datasets: [
+          {
+            label: "Records Broken",
+            data: [2, 4, 1, 3, 5],
+            backgroundColor: "rgba(20,95,186,0.5)",
+            borderColor: getComputedStyle(document.documentElement).getPropertyValue('--blue').trim(),
+            borderWidth: 2,
+          },
+        ],
+      };
+      const config = {
+        type: "bar",
+        data,
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true },
+            title: { display: true, text: "Records Analytics" },
+          },
+        },
+      };
+      document.addEventListener("DOMContentLoaded", function () {
+        new (window.Chart as typeof Chart)(document.getElementById("recordsChart"), config);
+      });
+
+      /**
+       * Example Directus aggregation for chart:
+       *
+       * import { directus } from "../lib/directus";
+       *
+       * async function getMonthlyRecordCounts() {
+       *   const { data } = await directus.items("records").readMany({
+       *     fields: ["date"],
+       *     limit: 100,
+       *   });
+       *   // Aggregate by month
+       *   const counts = {};
+       *   data.forEach(record => {
+       *     const month = record.date.slice(0, 7); // "YYYY-MM"
+       *     counts[month] = (counts[month] || 0) + 1;
+       *   });
+       *   return counts;
+       * }
+       *
+       * // Use getMonthlyRecordCounts() to build chart labels and data
+       */
+
+      /**
+       * Testing instructions:
+       * 1. Ensure Directus instance is running and populated with dummy-records.md data.
+       * 2. Run dev server and navigate to /records and age group pages.
+       * 3. Verify records table, chart analytics, and error handling display correctly.
+       * 4. Check formatting and responsive design on desktop and mobile.
+       * 5. Log any issues in issues-log.md and document fixes in change.md.
+       */
+
+      /**
+       * Documentation:
+       * - Chart.js version and config: see variables.md
+       * - Data source: Directus records collection (see dummy-records.md for schema)
+       * - Integration steps: see comments above for aggregation and chart update
+       * - All changes must be logged in change.md and referenced in master.md
+       */
+    </script>
+  </body>
+</html>

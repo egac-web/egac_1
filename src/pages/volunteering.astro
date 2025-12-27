@@ -1,0 +1,342 @@
+---
+import Layout from "../components/Layout.astro";
+import Card from "../components/ui/Card.astro";
+import EnquiryForm from "../components/forms/EnquiryForm.astro";
+---
+
+<Layout>
+  <div class="volunteer-wrapper">
+    <!-- Hero Section -->
+    <section class="volunteer-hero">
+      <div class="container">
+        <h1>Make a Difference</h1>
+        <p class="hero-subtitle">
+          Join our team of dedicated volunteers and help create amazing
+          experiences for athletes across East Grinstead.
+        </p>
+        <div class="hero-cta">
+          <a href="#volunteer-form" class="btn btn-cta">Get Involved</a>
+          <a href="/contact" class="btn btn-secondary">Learn More</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Content -->
+    <section class="volunteer-content">
+      <div class="container">
+        <!-- Why Volunteer Section -->
+        <div class="why-volunteer">
+          <h2>Why Volunteer with Us?</h2>
+          <div class="benefits-grid">
+            <Card class="benefit-card">
+              <div class="benefit-icon">🤝</div>
+              <h3>Community Impact</h3>
+              <p>
+                Help develop athletes and create opportunities for people of all
+                ages and abilities.
+              </p>
+            </Card>
+
+            <Card class="benefit-card">
+              <div class="benefit-icon">🎓</div>
+              <h3>Learn & Develop</h3>
+              <p>
+                Gain new skills, coaching qualifications, and valuable
+                experience in sports management.
+              </p>
+            </Card>
+
+            <Card class="benefit-card">
+              <div class="benefit-icon">👥</div>
+              <h3>Be Part of the Team</h3>
+              <p>
+                Join a friendly, supportive community passionate about athletics
+                and wellbeing.
+              </p>
+            </Card>
+
+            <Card class="benefit-card">
+              <div class="benefit-icon">⭐</div>
+              <h3>Flexible Commitment</h3>
+              <p>
+                Whether you can spare a few hours a month or more, every
+                contribution counts.
+              </p>
+            </Card>
+          </div>
+        </div>
+
+        <!-- Opportunities Section -->
+        <div class="opportunities-section">
+          <div class="opportunities-grid">
+            <div class="opportunities-list">
+              <Card class="card--padded">
+                <h2 style="margin-top:0;font-size:1.75rem;">
+                  How You Can Help
+                </h2>
+                <div class="role-list">
+                  <div class="role-item">
+                    <div class="role-icon">📋</div>
+                    <div>
+                      <h3>Event Support</h3>
+                      <p>
+                        Help marshal races, register participants, and ensure
+                        events run smoothly.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="role-item">
+                    <div class="role-icon">🏃</div>
+                    <div>
+                      <h3>Coaching Assistant</h3>
+                      <p>
+                        Support our qualified coaches during training sessions
+                        and competitions.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="role-item">
+                    <div class="role-icon">💼</div>
+                    <div>
+                      <h3>Committee Roles</h3>
+                      <p>
+                        Help with club administration, communications, or
+                        fundraising activities.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="role-item">
+                    <div class="role-icon">🎯</div>
+                    <div>
+                      <h3>Team Manager</h3>
+                      <p>
+                        Coordinate teams for competitions and support athletes
+                        on event days.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="getting-started">
+                  <h3>Getting Started is Easy</h3>
+                  <ol>
+                    <li>Fill out the volunteer enquiry form</li>
+                    <li>
+                      We'll discuss opportunities that match your interests
+                    </li>
+                    <li>Get any necessary training or accreditation</li>
+                    <li>Start making a difference!</li>
+                  </ol>
+                </div>
+              </Card>
+            </div>
+
+            <div class="form-column">
+              <div id="volunteer-form">
+                <EnquiryForm
+                  title="Express Your Interest"
+                  defaultArea="Volunteering"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</Layout>
+
+<style>
+  .volunteer-wrapper {
+    min-height: 80vh;
+  }
+
+  .volunteer-hero {
+    background: linear-gradient(135deg, #fdb913 0%, #f5a800 100%);
+    color: var(--dark-gray);
+    padding: 4rem 0 3rem 0;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .volunteer-hero::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg width="60" height="60" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="30" r="1.5" fill="rgba(0,0,0,0.05)"/></svg>');
+    opacity: 0.3;
+  }
+
+  .volunteer-hero .container {
+    position: relative;
+    z-index: 1;
+  }
+
+  .volunteer-hero h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 900;
+    margin: 0 0 1rem 0;
+    letter-spacing: -0.02em;
+    color: var(--dark-gray);
+  }
+
+  .hero-subtitle {
+    font-size: clamp(1rem, 2.5vw, 1.25rem);
+    max-width: 700px;
+    margin: 0 auto 2rem auto;
+    line-height: 1.6;
+    color: #2c2c2c;
+  }
+
+  .hero-cta {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .volunteer-content {
+    padding: 3rem 0 4rem 0;
+    background: var(--muted-1);
+  }
+
+  .why-volunteer {
+    margin-bottom: 3rem;
+  }
+
+  .why-volunteer h2 {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 900;
+    margin: 0 0 2.5rem 0;
+    color: var(--dark-gray);
+  }
+
+  .benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .benefit-card {
+    text-align: center;
+    padding: 2rem 1.5rem !important;
+  }
+
+  .benefit-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    line-height: 1;
+  }
+
+  .benefit-card h3 {
+    margin: 0 0 0.75rem 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--dark-gray);
+  }
+
+  .benefit-card p {
+    margin: 0;
+    color: #6b7280;
+    line-height: 1.6;
+  }
+
+  .opportunities-section {
+    margin-top: 3rem;
+  }
+
+  .opportunities-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .role-list {
+    display: grid;
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+  }
+
+  .role-item {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .role-icon {
+    font-size: 2rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .role-item h3 {
+    margin: 0 0 0.35rem 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--dark-gray);
+  }
+
+  .role-item p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .getting-started {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(20, 95, 186, 0.1);
+  }
+
+  .getting-started h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--dark-gray);
+  }
+
+  .getting-started ol {
+    margin: 0;
+    padding-left: 1.5rem;
+    color: var(--dark-gray);
+  }
+
+  .getting-started li {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 900px) {
+    .opportunities-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .form-column {
+      order: -1;
+    }
+
+    .benefits-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .volunteer-hero {
+      padding: 3rem 0 2rem 0;
+    }
+  }
+</style>

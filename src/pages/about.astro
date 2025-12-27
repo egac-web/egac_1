@@ -1,0 +1,61 @@
+---
+import Layout from "../components/Layout.astro";
+import Card from "../components/ui/Card.astro";
+---
+
+<Layout>
+  <div style="max-width:900px;margin:0 auto;padding:0 1.5rem;">
+    <section style="padding:3rem 0 2rem 0;">
+      <h1 class="egac-section-title">About Us</h1>
+      <p class="egac-section-lead">
+        Learn more about our club, our history, and our values
+      </p>
+      <Card class="card--padded" title="East Grinstead AC">
+        <p>
+          Formed in 1978, East Grinstead Athletics Club is a friendly athletics
+          club where we all know each other and welcome all newcomers. Everyone
+          has a chance to sprint, throw a discus, jump as high or as far as they
+          can, run on roads or run over cross-country.
+        </p>
+        <p>
+          We provide athletics opportunities in East Grinstead for athletes of
+          all ages and abilities, from primary school children through to
+          masters athletes. Our club has a rich history of success across all
+          age groups and disciplines.
+        </p>
+        <p>
+          Training takes place at Imberhorne Upper School on Tuesdays and
+          Thursdays, with sessions tailored to different age groups and
+          abilities. We participate in local, regional, and national
+          competitions throughout the year.
+        </p>
+        <p>
+          Our club is affiliated with UK Athletics and follows all relevant
+          policies and codes of conduct to ensure a safe and enjoyable
+          environment for all members.
+        </p>
+      </Card>
+    </section>
+  </div>
+  <style>
+    .egac-section-title {
+      font-size: 3rem;
+      font-weight: 900;
+      color: var(--blue);
+      margin-bottom: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      text-align: center;
+      font-family: var(--font-heading);
+      text-shadow: 0 2px 12px rgba(20, 95, 186, 0.08);
+    }
+    .egac-section-lead {
+      color: var(--dark-gray);
+      margin-bottom: 2.5rem;
+      font-size: 1.2rem;
+      font-weight: 600;
+      text-align: center;
+      font-family: var(--font-sans);
+    }
+  </style>
+</Layout>
