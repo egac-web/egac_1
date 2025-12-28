@@ -188,9 +188,10 @@ try {
     }
     .tab-btn:hover { transform: translateY(-2px); }
     .tab-btn[aria-selected="true"] {
-      color: var(--white);
-      background: var(--yellow);
-      box-shadow: 0 6px 18px rgba(253,185,19,0.12);
+      color: var(--yellow);
+      background: none;
+      border-bottom: 3px solid var(--yellow);
+      box-shadow: none;
       z-index: 2;
     }
     .tab-btn:focus-visible {
