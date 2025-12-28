@@ -140,8 +140,9 @@ import "../../styles/forms.css";
           class="btn btn-cta" 
           :disabled="submitting" 
           :class="{ 'btn-loading': submitting }"
-          x-text="submitting ? 'Submitting...' : 'Submit Enquiry'"
         >
+          <span x-show="!submitting">Submit Enquiry</span>
+          <span x-show="submitting" x-cloak>Submitting...</span>
         </button>
       </div>
     </form>
@@ -263,7 +264,7 @@ import "../../styles/forms.css";
         :class="{ 'btn-loading': submitting }"
       >
         <span x-show="!submitting">Submit Enquiry</span>
-        <span x-show="submitting">Submitting...</span>
+        <span x-show="submitting" x-cloak>Submitting...</span>
       </button>
     </div>
   </form>

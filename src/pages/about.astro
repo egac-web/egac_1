@@ -6,6 +6,7 @@ import { readItems } from '@directus/sdk';
 import { onMount } from 'astro/client';
 
 let aboutArticles = [];
+let mainArticle = null;
 
 try {
   const response = await directus.request(
@@ -16,9 +17,12 @@ try {
     })
   );
   aboutArticles = response || [];
+  // choose main article: prefer common slugs, otherwise first
+  mainArticle = aboutArticles.find(a => ['about-us','about_us','about'].includes(a.slug)) || aboutArticles[0] || null;
 } catch (e) {
   console.error("Error fetching about articles:", e);
   aboutArticles = [];
+  mainArticle = null;
 }
 ---
 
@@ -29,17 +33,33 @@ try {
       <p class="egac-section-lead">
         Discover our history, training locations, Academy, and how to join East Grinstead AC.
       </p>
-      {aboutArticles.filter(a => a.slug === 'about-us').map(article => (
-        <Card class="card--padded" title={article.title}>
-          <div set:html={article.content} />
+      {mainArticle ? (
+        <Card class="card--padded" title={mainArticle.title}>
+          <div set:html={mainArticle.content} />
         </Card>
-      ))}
+      ) : (
+        // fallback: show first about article if none match expected slugs
+        aboutArticles.length > 0 ? (
+          <Card class="card--padded" title={aboutArticles[0].title}>
+            <div set:html={aboutArticles[0].content} />
+          </Card>
+        ) : (
+          <Card class="card--padded" title="About">
+            <div>About content is not available.</div>
+          </Card>
+        )
+      )}
 
       <div class="your-club-tabs">
+        <!-- CSS-only radio inputs for tabs (avoids CSP/js issues) -->
+        <input type="radio" name="about-tabs" id="tab-radio-locations" class="tab-radio" checked hidden>
+        <input type="radio" name="about-tabs" id="tab-radio-academy" class="tab-radio" hidden>
+        <input type="radio" name="about-tabs" id="tab-radio-fees" class="tab-radio" hidden>
+
         <div class="tab-list" role="tablist">
-          <button class="tab-btn" id="tab-locations" role="tab" aria-selected="true" aria-controls="panel-locations" tabindex="0" onclick="showTab('locations')">Training Locations</button>
-          <button class="tab-btn" id="tab-academy" role="tab" aria-selected="false" aria-controls="panel-academy" tabindex="-1" onclick="showTab('academy')">Academy</button>
-          <button class="tab-btn" id="tab-fees" role="tab" aria-selected="false" aria-controls="panel-fees" tabindex="-1" onclick="showTab('fees')">Membership & Fees</button>
+          <label class="tab-btn" for="tab-radio-locations" id="tab-locations" role="tab" aria-controls="panel-locations" tabindex="0">Training Locations</label>
+          <label class="tab-btn" for="tab-radio-academy" id="tab-academy" role="tab" aria-controls="panel-academy" tabindex="-1">Academy</label>
+          <label class="tab-btn" for="tab-radio-fees" id="tab-fees" role="tab" aria-controls="panel-fees" tabindex="-1">Membership & Fees</label>
         </div>
         <div class="tab-panels">
           <div class="tab-panel" id="panel-locations" role="tabpanel" aria-labelledby="tab-locations">
@@ -67,7 +87,7 @@ try {
               </div>
             </div>
           </div>
-          <div class="tab-panel" id="panel-academy" role="tabpanel" aria-labelledby="tab-academy" hidden>
+          <div class="tab-panel" id="panel-academy" role="tabpanel" aria-labelledby="tab-academy">
             <div class="tab-content-box">
               <h2 class="tab-section-title">Academy</h2>
               {aboutArticles.filter(a => a.slug === 'academy').map(article => (
@@ -75,7 +95,7 @@ try {
               ))}
             </div>
           </div>
-          <div class="tab-panel" id="panel-fees" role="tabpanel" aria-labelledby="tab-fees" hidden>
+          <div class="tab-panel" id="panel-fees" role="tabpanel" aria-labelledby="tab-fees">
             <div class="tab-content-box">
               {aboutArticles.filter(a => a.slug === 'membership-fees').map(article => (
                 <div set:html={article.content} />
@@ -85,15 +105,57 @@ try {
         </div>
       </div>
       <script>
-        function showTab(tab) {
+        (function() {
           const tabs = ['locations', 'academy', 'fees'];
-          tabs.forEach(t => {
-            document.getElementById('tab-' + t).setAttribute('aria-selected', t === tab ? 'true' : 'false');
-            document.getElementById('tab-' + t).setAttribute('tabindex', t === tab ? '0' : '-1');
-            document.getElementById('panel-' + t).hidden = t !== tab;
-          });
-        }
+
+          function setTabState(active) {
+            tabs.forEach(t => {
+              const btn = document.getElementById('tab-' + t);
+              const panel = document.getElementById('panel-' + t);
+              if (!btn || !panel) return;
+              btn.setAttribute('aria-selected', t === active ? 'true' : 'false');
+              btn.setAttribute('tabindex', t === active ? '0' : '-1');
+              panel.hidden = t !== active;
+            });
+          }
+
+          function init() {
+            const buttons = Array.from(document.querySelectorAll('.tab-btn[data-tab]'));
+            // debug: ensure script runs
+            console.debug('[EGAC] initializing tabs, found buttons:', buttons.length);
+            buttons.forEach(btn => {
+              btn.addEventListener('click', () => setTabState(btn.dataset.tab));
+              btn.addEventListener('keydown', (e) => {
+                const idx = buttons.indexOf(btn);
+                if (e.key === 'ArrowRight') {
+                  const next = buttons[(idx + 1) % buttons.length];
+                  next.focus();
+                  setTabState(next.dataset.tab);
+                  e.preventDefault();
+                } else if (e.key === 'ArrowLeft') {
+                  const prev = buttons[(idx - 1 + buttons.length) % buttons.length];
+                  prev.focus();
+                  setTabState(prev.dataset.tab);
+                  e.preventDefault();
+                } else if (e.key === 'Enter' || e.key === ' ') {
+                  setTabState(btn.dataset.tab);
+                  e.preventDefault();
+                }
+              });
+            });
+
+            // ensure default
+            setTabState('locations');
+          }
+
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+          } else {
+            init();
+          }
+        })();
       </script>
+
     </section>
   </div>
   <style>
@@ -111,23 +173,24 @@ try {
       flex-wrap: wrap;
     }
     .tab-btn {
-      background: none;
-      border: none;
+      display: inline-block;
+      background: #f3f6fb;
       color: var(--blue);
       font-family: var(--font-heading);
-      font-size: 1.1rem;
-      font-weight: 700;
-      border-bottom: 3px solid transparent;
-      padding: 0.7rem 1.8rem;
+      font-size: 1.05rem;
+      font-weight: 800;
+      border-radius: 0.6rem;
+      padding: 0.6rem 1rem;
       cursor: pointer;
-      transition: color 0.18s, border 0.18s;
+      transition: color 0.18s, background 0.18s, transform 0.12s;
       outline: none;
       margin-bottom: -2px;
     }
+    .tab-btn:hover { transform: translateY(-2px); }
     .tab-btn[aria-selected="true"] {
-      color: var(--yellow);
-      border-bottom: 3px solid var(--yellow);
-      background: none;
+      color: var(--white);
+      background: var(--yellow);
+      box-shadow: 0 6px 18px rgba(253,185,19,0.12);
       z-index: 2;
     }
     .tab-btn:focus-visible {
@@ -139,6 +202,22 @@ try {
     .tab-panel {
       padding: 2rem 0 0 0;
       animation: fadeInTab 0.3s;
+      display: none;
+    }
+
+    /* Show panels when corresponding radio is checked */
+    #tab-radio-locations:checked ~ .tab-list + .tab-panels #panel-locations,
+    #tab-radio-academy:checked ~ .tab-list + .tab-panels #panel-academy,
+    #tab-radio-fees:checked ~ .tab-list + .tab-panels #panel-fees {
+      display: block;
+    }
+
+    /* Visual state for selected tabs */
+    #tab-radio-locations:checked ~ .tab-list label[for="tab-radio-locations"],
+    #tab-radio-academy:checked ~ .tab-list label[for="tab-radio-academy"],
+    #tab-radio-fees:checked ~ .tab-list label[for="tab-radio-fees"] {
+      color: var(--yellow);
+      border-bottom: 3px solid var(--yellow);
     }
     .tab-section-title {
       font-size: 1.4rem;
@@ -246,6 +325,53 @@ try {
     @keyframes fadeInTab {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Membership fees table: style content coming from Directus */
+    .tab-panel#panel-fees .tab-content-box figure.wp-block-table,
+    .tab-panel#panel-fees .tab-content-box table {
+      width: 100%;
+      margin: 0 0 1rem 0;
+      overflow: hidden;
+      border-radius: 0.7rem;
+      box-shadow: 0 6px 18px rgba(20,95,186,0.06);
+      border: 1px solid #e6eef8;
+      background: white;
+    }
+
+    .tab-panel#panel-fees .tab-content-box table {
+      border-collapse: collapse;
+      font-size: 1rem;
+      width: 100%;
+    }
+
+    .tab-panel#panel-fees .tab-content-box th,
+    .tab-panel#panel-fees .tab-content-box td {
+      padding: 0.85rem 1rem;
+      text-align: center;
+      border-bottom: 1px solid #eef6fb;
+      color: var(--dark-gray);
+    }
+
+    .tab-panel#panel-fees .tab-content-box th {
+      background: var(--blue);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .tab-panel#panel-fees .tab-content-box tr:nth-child(even) {
+      background: #fbfdff;
+    }
+
+    .tab-panel#panel-fees .tab-content-box tr:last-child td { border-bottom: none; }
+
+    .tab-panel#panel-fees .tab-content-box p { margin-bottom: 0.9rem; line-height: 1.6; color: var(--dark-gray); }
+    .tab-panel#panel-fees .tab-content-box a { color: var(--blue); text-decoration: underline; }
+
+    @media (max-width: 700px) {
+      .tab-panel#panel-fees .tab-content-box th,
+      .tab-panel#panel-fees .tab-content-box td { padding: 0.6rem 0.5rem; font-size: 0.95rem; }
+      .tab-panel#panel-fees .tab-content-box table { display: block; overflow-x: auto; }
     }
   </style>
   <style>
