@@ -1,3 +1,11 @@
+// Helper to decode HTML entities if content is double-escaped
+function decodeHTMLEntities(text) {
+  if (!text) return '';
+  return text
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+}
 export const prerender = false;
 ---
 import Layout from "../../components/Layout.astro";
@@ -27,7 +35,7 @@ try {
         <>
           <h1 class="egac-section-title">{code.title}</h1>
           <p class="egac-section-lead">{code.summary || ''}</p>
-          <div class="egac-policy-content" set:html={code.content}></div>
+          <div class="egac-policy-content" set:html={decodeHTMLEntities(code.content)}></div>
         </>
       ) : (
         <>

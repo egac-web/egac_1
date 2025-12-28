@@ -18,6 +18,11 @@ const DIRECTUS_TOKEN = (import.meta as any).env?.DIRECTUS_TOKEN || process.env.D
 console.log('[EGAC] DIRECTUS_URL:', DIRECTUS_URL);
 console.log('[EGAC] DIRECTUS_TOKEN:', DIRECTUS_TOKEN ? '[set]' : '[not set]');
 
+// Safety check for missing DIRECTUS_URL
+if (!DIRECTUS_URL) {
+  throw new Error('[EGAC] DIRECTUS_URL is not set. Please set the DIRECTUS_URL environment variable in your deployment environment.');
+}
+
 // Only create Directus client if we have a real URL
 export const directus = DIRECTUS_URL.includes('placeholder')
   ? null
