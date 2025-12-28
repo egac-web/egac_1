@@ -8,6 +8,7 @@ let policies = [];
 try {
   const response = await directus.request(
     readItems("policies", {
+      filter: { published: { _eq: true } },
       sort: ["policy_title"],
       limit: 50
     })
