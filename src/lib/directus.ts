@@ -14,6 +14,10 @@ interface ImportMeta {
 const DIRECTUS_URL = (import.meta as any).env?.DIRECTUS_URL || process.env.DIRECTUS_URL;
 const DIRECTUS_TOKEN = (import.meta as any).env?.DIRECTUS_TOKEN || process.env.DIRECTUS_TOKEN;
 
+// Debug output for environment troubleshooting
+console.log('[EGAC] DIRECTUS_URL:', DIRECTUS_URL);
+console.log('[EGAC] DIRECTUS_TOKEN:', DIRECTUS_TOKEN ? '[set]' : '[not set]');
+
 // Only create Directus client if we have a real URL
 export const directus = DIRECTUS_URL.includes('placeholder')
   ? null
