@@ -1,0 +1,43 @@
+---
+import Layout from "../../components/Layout.astro";
+import { directus } from "../../lib/directus";
+import { readItems } from '@directus/sdk';
+
+const { slug } = Astro.params;
+
+let policy = null;
+try {
+  const response = await directus.request(
+    readItems("policies", {
+      filter: { slug: { _eq: slug }, published: { _eq: true } },
+      limit: 1
+    })
+  );
+  policy = response && response.length > 0 ? response[0] : null;
+} catch (e) {
+  policy = null;
+}
+---
+
+<Layout>
+  <div style="max-width:900px;margin:0 auto;padding:0 1.5rem;">
+    <section style="padding:3rem 0 2rem 0;">
+      {policy ? (
+        <>
+          <h1 class="egac-section-title">{policy.policy_title}</h1>
+          <p class="egac-section-lead">{policy.policy_summary || ''}</p>
+          <div class="egac-policy-content" set:html={policy.policy_content}></div>
+          <div style="margin-top:2rem;font-size:0.95em;color:#888;">
+            <div>Date Approved: {policy.date_approved || 'N/A'}</div>
+            <div>Review Date: {policy.review_date || 'N/A'}</div>
+          </div>
+        </>
+      ) : (
+        <>
+          <h1>Policy Not Found</h1>
+          <p>The requested policy could not be found or is not published.</p>
+        </>
+      )}
+    </section>
+  </div>
+</Layout>

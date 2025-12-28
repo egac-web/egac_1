@@ -1,0 +1,55 @@
+---
+import Layout from "../components/Layout.astro";
+import Card from "../components/ui/Card.astro";
+import { directus } from "../lib/directus";
+import { readItems } from '@directus/sdk';
+
+let codes = [];
+try {
+  const response = await directus.request(
+    readItems("codes_of_conduct", {
+      filter: { published: { _eq: true } },
+      sort: ["title"],
+      limit: 50
+    })
+  );
+  codes = response || [];
+} catch (e) {
+  codes = [];
+}
+---
+
+<Layout>
+  <div style="max-width:900px;margin:0 auto;padding:0 1.5rem;">
+    <section style="padding:3rem 0 2rem 0;">
+      <h1 class="egac-section-title">Codes of Conduct</h1>
+      <Card class="card--padded" title="Codes of Conduct">
+        <div style="overflow-x:auto;">
+          <table class="egac-policies-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+              </tr>
+            </thead>
+            <tbody>
+              {codes.length === 0 && (
+                <tr><td>No codes of conduct found.</td></tr>
+              )}
+              {codes.map(code => (
+                <tr>
+                  <td>
+                    {code.slug ? (
+                      <a href={`/codes_of_conduct/${code.slug}`}>{code.title}</a>
+                    ) : (
+                      code.title
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </section>
+  </div>
+</Layout>

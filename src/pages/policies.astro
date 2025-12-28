@@ -43,8 +43,8 @@ try {
               {policies.map(policy => (
                 <tr>
                   <td>
-                    {policy.slug === 'constitution' ? (
-                      <a href="/policies/constitution">{policy.policy_title}</a>
+                    {policy.slug ? (
+                      <a href={`/policies/${policy.slug}`}>{policy.policy_title}</a>
                     ) : (
                       policy.policy_title
                     )}
