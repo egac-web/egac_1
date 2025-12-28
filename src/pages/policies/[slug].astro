@@ -40,7 +40,7 @@ try {
         <>
           <h1 class="egac-section-title">{policy.policy_title}</h1>
           <p class="egac-section-lead">{policy.policy_summary || ''}</p>
-          <div class="egac-policy-content">{policy.policy_content}</div>
+          <div class="egac-policy-content" set:html={policy.policy_content} />
           <div style="margin-top:2rem;font-size:0.95em;color:#888;">
             <div>Date Approved: {policy.date_approved || 'N/A'}</div>
             <div>Review Date: {policy.review_date || 'N/A'}</div>

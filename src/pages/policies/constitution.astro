@@ -28,7 +28,7 @@ try {
     <section style="padding:3rem 0 2rem 0;">
       <h1 class="egac-section-title">{constitution ? constitution.policy_title : "Constitution"}</h1>
       {constitution && constitution.policy_content ? (
-        <div>{constitution.policy_content}</div>
+        <div set:html={constitution.policy_content} />
       ) : (
         <p>Constitution not found.</p>
       )}
