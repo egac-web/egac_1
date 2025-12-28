@@ -1,15 +1,21 @@
-// Helper to decode HTML entities if content is double-escaped
-function decodeHTMLEntities(text) {
-  if (!text) return '';
-  return text
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&');
-}
 ---
 import Layout from "../../components/Layout.astro";
 import { directus } from "../../lib/directus";
 import { readItems } from '@directus/sdk';
+
+export async function getStaticPaths() {
+  try {
+    const response = await directus.request(
+      readItems("policies", {
+        filter: { published: { _eq: true } },
+        fields: ['slug']
+      })
+    );
+    return response.map(policy => ({ params: { slug: policy.slug } }));
+  } catch (e) {
+    return [];
+  }
+}
 
 const { slug } = Astro.params;
 

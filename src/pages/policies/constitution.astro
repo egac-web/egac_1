@@ -4,12 +4,6 @@ import Layout from "../../components/Layout.astro";
 import { directus } from "../../lib/directus";
 import { readItems } from '@directus/sdk';
 
-// Helper to decode HTML entities if content is double-escaped
-function decodeHTMLEntities(text) {
-  if (!text) return '';
-  return text.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
-}
-
 let constitution = null;
 try {
   const response = await directus.request(
@@ -34,7 +28,7 @@ try {
     <section style="padding:3rem 0 2rem 0;">
       <h1 class="egac-section-title">{constitution ? constitution.policy_title : "Constitution"}</h1>
       {constitution && constitution.policy_content ? (
-        <div set:html={decodeHTMLEntities(constitution.policy_content)} />
+        <div>{constitution.policy_content}</div>
       ) : (
         <p>Constitution not found.</p>
       )}

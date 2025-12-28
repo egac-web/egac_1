@@ -27,7 +27,7 @@ try {
       </p>
       {aboutArticles.filter(a => a.slug === 'about_us').map(article => (
         <Card class="card--padded" title={article.title}>
-          <div set:html={article.content} />
+          <div>{article.content}</div>
         </Card>
       ))}
 
@@ -67,7 +67,7 @@ try {
             <div class="tab-content-box">
               <h2 class="tab-section-title">Academy</h2>
               {aboutArticles.filter(a => a.slug === 'academy').map(article => (
-                <div set:html={article.content} />
+                <div>{article.content}</div>
               ))}
             </div>
           </div>
@@ -103,7 +103,7 @@ try {
           </div>
         </div>
       </div>
-      <script is:inline>
+      <script>
         function showTab(tab) {
           const tabs = ['locations', 'academy', 'fees'];
           tabs.forEach(t => {
