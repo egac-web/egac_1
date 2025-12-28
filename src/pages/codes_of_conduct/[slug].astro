@@ -35,7 +35,7 @@ try {
         <>
           <h1 class="egac-section-title">{code.title}</h1>
           <p class="egac-section-lead">{code.summary || ''}</p>
-          <div class="egac-policy-content" set:html={decodeHTMLEntities(code.content)}></div>
+          <div class="egac-policy-content">{code.content}</div>
         </>
       ) : (
         <>
