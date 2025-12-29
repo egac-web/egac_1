@@ -1,5 +1,8 @@
 import { insertEnquiry, createInviteForEnquiry, markInviteSent, getSupabaseAdmin } from '../../lib/supabase';
 
+// This API route must be server-rendered so POST requests are accepted during dev/runtime
+export const prerender = false;
+
 export async function post({ request }) {
   try {
     const body = await request.json();
@@ -35,8 +38,8 @@ export async function post({ request }) {
       return { status: 400, body: { ok: false, error: "GDPR consent required" } };
     }
 
-    // If interest is Training, DOB is required (subject DOB can be provided as subject_dob when enquiring for someone else)
-    if ((body.interest === 'Training' || body.area_of_interest === 'Training') && !body.dob) {
+    // If interest is Training, DOB is required (subject DOB is accepted when enquiring for someone else)
+    if ((body.interest === 'Training' || body.area_of_interest === 'Training') && !(body.dob || body.subject_dob)) {
       return { status: 400, body: { ok: false, error: 'Date of birth is required for Training enquiries' } };
     }
 

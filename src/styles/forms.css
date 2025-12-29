@@ -56,7 +56,8 @@
 
 /* Ensure date inputs visually match other inputs (DOB) */
 .egac-form input[type="date"] {
-  padding-right: 1rem; /* avoid calendar icon overlapping text */
+  padding-right: 1rem;
+  /* avoid calendar icon overlapping text */
 }
 
 .egac-form select {
@@ -357,7 +358,8 @@
   .enquiry-form select,
   .enquiry-form textarea {
     color: #000;
-    background: #fff9e6; /* keep pale yellow background for enquiry inputs */
+    background: #fff9e6;
+    /* keep pale yellow background for enquiry inputs */
   }
 }
 
@@ -367,12 +369,14 @@
 .enquiry-form input[type="tel"],
 .enquiry-form select,
 .enquiry-form textarea {
-  background: #fff9e6; /* pale yellow */
-  border: 2px solid rgba(253,185,19,0.14);
+  background: #fff9e6;
+  /* pale yellow */
+  border: 2px solid rgba(253, 185, 19, 0.14);
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
-  color: #111; /* ensure readable in light mode */
+  color: #111;
+  /* ensure readable in light mode */
   overflow: visible;
 }
 
@@ -385,6 +389,7 @@
 
 /* Address Firefox specific sizing quirks */
 @-moz-document url-prefix() {
+
   .enquiry-form input[type="email"],
   .enquiry-form input[type="text"],
   .enquiry-form input[type="tel"] {
@@ -399,10 +404,12 @@
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
-  color: #111; /* readable in light mode */
+  color: #111;
+  /* readable in light mode */
 }
 
 @media (prefers-color-scheme: dark) {
+
   /* In dark mode, keep inputs legible with a light text colour for non-enquiry forms */
   .egac-form:not(.enquiry-form) input,
   .egac-form:not(.enquiry-form) select,
@@ -416,28 +423,30 @@
 .enquiry-form select:focus,
 .enquiry-form textarea:focus {
   outline: none;
-  border-color: rgba(253,185,19,0.35);
-  box-shadow: 0 0 0 4px rgba(253,185,19,0.08), 0 8px 24px rgba(20,95,186,0.06);
+  border-color: rgba(253, 185, 19, 0.35);
+  box-shadow: 0 0 0 4px rgba(253, 185, 19, 0.08), 0 8px 24px rgba(20, 95, 186, 0.06);
   background: #fffaf0;
 }
 
 /* card background for the enquiry form — pale yellow surface */
 .enquiry-form-card {
-  background: linear-gradient(180deg, rgba(255,250,235,0.9), rgba(255,249,230,0.95));
-  border: 1px solid rgba(253,185,19,0.12);
+  background: linear-gradient(180deg, rgba(255, 250, 235, 0.9), rgba(255, 249, 230, 0.95));
+  border: 1px solid rgba(253, 185, 19, 0.12);
 }
 
 /* Make the CTA easy to read on pale yellow */
 .enquiry-form .btn-cta {
   background: linear-gradient(90deg, var(--yellow) 0%, #ffe066 100%);
   color: var(--blue);
-  box-shadow: 0 6px 20px rgba(253,185,19,0.18);
+  box-shadow: 0 6px 20px rgba(253, 185, 19, 0.18);
 }
 
 .enquiry-form .btn-cta:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 10px 28px rgba(253,185,19,0.26);
+  box-shadow: 0 10px 28px rgba(253, 185, 19, 0.26);
 }
 
 /* Ensure visible text for loading/disabled state */
-.enquiry-form .btn-loading { opacity: 0.95; }
+.enquiry-form .btn-loading {
+  opacity: 0.95;
+}

@@ -86,7 +86,7 @@ import "../../styles/forms.css";
             name="contact_phone" 
             placeholder="07123 456789" 
             x-model="form.contact_phone"
-            :required="form.enquiry_for === 'someone_else' || form.enquiry_for === 'child'"
+            data-required-if="form.enquiry_for === 'someone_else' || form.enquiry_for === 'child'"
           />
         </div>
       </div>
@@ -110,23 +110,34 @@ import "../../styles/forms.css";
           <div class="form-row">
             <div class="form-group">
               <label class="form-label" for="subject_first_name">First name *</label>
-              <input type="text" id="subject_first_name" name="subject_first_name" placeholder="First name" x-model="form.subject_first_name" :required="form.enquiry_for === 'someone_else' || form.enquiry_for === 'child'" />
+              <input type="text" id="subject_first_name" name="subject_first_name" placeholder="First name" x-model="form.subject_first_name" data-required-if="form.enquiry_for === 'someone_else' || form.enquiry_for === 'child'" />
               <div x-show="errors.subject_first_name" class="form-field-error" x-text="errors.subject_first_name" x-cloak></div>
             </div>
 
             <div class="form-group">
               <label class="form-label" for="subject_last_name">Last name *</label>
-              <input type="text" id="subject_last_name" name="subject_last_name" placeholder="Last name" x-model="form.subject_last_name" :required="form.enquiry_for === 'someone_else' || form.enquiry_for === 'child'" />
+              <input type="text" id="subject_last_name" name="subject_last_name" placeholder="Last name" x-model="form.subject_last_name" data-required-if="form.enquiry_for === 'someone_else' || form.enquiry_for === 'child'" />
               <div x-show="errors.subject_last_name" class="form-field-error" x-text="errors.subject_last_name" x-cloak></div>
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="subject_dob">Date of birth *</label>
-            <input type="date" id="subject_dob" name="subject_dob" x-model="form.subject_dob" :required="form.enquiry_for === 'someone_else' || form.enquiry_for === 'child'" />
+            <label class="form-label" for="subject_dob">Date of birth (person you're enquiring for) *</label>
+            <input type="date" id="subject_dob" name="subject_dob" x-model="form.subject_dob" data-required-if="form.enquiry_for === 'someone_else' || form.enquiry_for === 'child'" />
+            <div class="help-text">Provide the athlete's date of birth — required only when enquiring about someone else for Training.</div>
             <div x-show="errors.subject_dob" class="form-field-error" x-text="errors.subject_dob" x-cloak></div>
           </div>
         </div>
+
+      <!-- Interest category -->
+      <div class="form-group">
+        <label class="form-label" for="interest">Area of interest *</label>
+        <select id="interest" name="interest" required x-model="form.interest">
+          <option value="">Please select...</option>
+          <option value="Training">Training &amp; competitive athletics</option>
+          <option value="Coaching">Coaching</option>
+          <option value="Officiating">Officiating</option>
+          <option value="Committee">Committee</option>
           <option value="Administration">Administration</option>
           <option value="Other">Something else</option>
         </select>
@@ -183,8 +194,6 @@ import "../../styles/forms.css";
         <button 
           type="submit" 
           class="btn btn-cta" 
-          :disabled="submitting" 
-          :class="{ 'btn-loading': submitting }"
         >
           <span x-show="!submitting">Submit Enquiry</span>
           <span x-show="submitting" x-cloak>Submitting...</span>
@@ -298,30 +307,30 @@ import "../../styles/forms.css";
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" for="subject_first_name_alt">First name *</label>
-          <input type="text" id="subject_first_name_alt" name="subject_first_name" placeholder="First name" x-model="form.subject_first_name" :required="form.enquiry_for === 'child' || form.enquiry_for === 'someone_else'" />
+          <input type="text" id="subject_first_name_alt" name="subject_first_name" placeholder="First name" x-model="form.subject_first_name" data-required-if="form.enquiry_for === 'child' || form.enquiry_for === 'someone_else'" />
           <div x-show="errors.subject_first_name" class="form-field-error" x-text="errors.subject_first_name" x-cloak></div>
         </div>
 
         <div class="form-group">
           <label class="form-label" for="subject_last_name_alt">Last name *</label>
-          <input type="text" id="subject_last_name_alt" name="subject_last_name" placeholder="Last name" x-model="form.subject_last_name" :required="form.enquiry_for === 'child' || form.enquiry_for === 'someone_else'" />
+          <input type="text" id="subject_last_name_alt" name="subject_last_name" placeholder="Last name" x-model="form.subject_last_name" data-required-if="form.enquiry_for === 'child' || form.enquiry_for === 'someone_else'" />
           <div x-show="errors.subject_last_name" class="form-field-error" x-text="errors.subject_last_name" x-cloak></div>
         </div>
       </div>
 
       <div class="form-group">
         <label class="form-label" for="subject_dob_alt">Date of birth *</label>
-        <input type="date" id="subject_dob_alt" name="subject_dob" x-model="form.subject_dob" :required="form.enquiry_for === 'child' || form.enquiry_for === 'someone_else'" />
+        <input type="date" id="subject_dob_alt" name="subject_dob" x-model="form.subject_dob" data-required-if="form.enquiry_for === 'child' || form.enquiry_for === 'someone_else'" />
         <div x-show="errors.subject_dob" class="form-field-error" x-text="errors.subject_dob" x-cloak></div>
       </div>
     </div>
 
-        :class="{ 'btn-loading': submitting }"
-      >
-        <span x-show="!submitting">Submit Enquiry</span>
-        <span x-show="submitting" x-cloak>Submitting...</span>
-      </button>
-    </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-cta">
+          <span x-show="!submitting">Submit Enquiry</span>
+          <span x-show="submitting" x-cloak>Submitting...</span>
+        </button>
+      </div>
   </form>
 )}
 
@@ -384,9 +393,14 @@ import "../../styles/forms.css";
         
         // remove other_interest requirement (no free-text box)
         
-        // DOB required if either interest or area_of_interest indicates training
-        if (this.form.interest === 'Training' && !this.form.dob) {
-          this.errors.dob = 'Please provide a date of birth.';
+        // DOB required if interest indicates training; if enquiring for someone else, the subject_dob satisfies this
+        const someoneElse = (this.form.enquiry_for === 'someone_else' || this.form.enquiry_for === 'child');
+        if (this.form.interest === 'Training') {
+          if (someoneElse) {
+            if (!this.form.subject_dob) this.errors.subject_dob = 'Please provide the date of birth for the person you are enquiring for.';
+          } else {
+            if (!this.form.dob) this.errors.dob = 'Please provide a date of birth.';
+          }
         }
 
         // Message is only required when 'Other' is selected
@@ -395,7 +409,6 @@ import "../../styles/forms.css";
         }
 
         // If enquiring on behalf of someone else (parent/guardian), require contact phone and subject details
-        const someoneElse = (this.form.enquiry_for === 'someone_else' || this.form.enquiry_for === 'child');
         if (someoneElse) {
           // Ensure we have an enquirer name (either contact_name or first+last)
           const hasEnquirerName = (this.form.contact_name && this.form.contact_name.trim()) || ((this.form.first_name && this.form.first_name.trim()) && (this.form.last_name && this.form.last_name.trim()));
@@ -543,18 +556,24 @@ import "../../styles/forms.css";
 
       // Subject (person being enquired about) visibility and required toggles
       const subjectFirst = formEl.querySelector('[name="subject_first_name"]');
-      if (subjectFirst) {
-        const group = subjectFirst.closest('.form-group');
-        if (group) {
-          if (someoneElse) { group.style.display = ''; group.removeAttribute('x-cloak'); }
-          else { group.style.display = 'none'; group.setAttribute('x-cloak', ''); }
-        }
-        subjectFirst.required = someoneElse;
-      }
       const subjectLast = formEl.querySelector('[name="subject_last_name"]');
-      if (subjectLast) { subjectLast.required = someoneElse; }
       const subjectDob = formEl.querySelector('[name="subject_dob"]');
-      if (subjectDob) { subjectDob.required = someoneElse; }
+
+      // Find the outer container for the subject block by locating the form-group whose label matches our block title
+      let subjectContainer = null;
+      Array.from(formEl.querySelectorAll('.form-group')).forEach((g) => {
+        const lbl = g.querySelector('.form-label');
+        if (lbl && /Details of the person you are enquiring for/i.test(lbl.textContent || '')) subjectContainer = g;
+      });
+
+      if (subjectContainer) {
+        if (someoneElse) { subjectContainer.style.display = ''; subjectContainer.removeAttribute('x-cloak'); }
+        else { subjectContainer.style.display = 'none'; subjectContainer.setAttribute('x-cloak', ''); }
+      }
+
+      if (subjectFirst) subjectFirst.required = someoneElse;
+      if (subjectLast) subjectLast.required = someoneElse;
+      if (subjectDob) subjectDob.required = someoneElse;
 
       // Enquirer phone requirement
       const phone = formEl.querySelector('[name="contact_phone"]');
@@ -592,7 +611,12 @@ import "../../styles/forms.css";
         const errors = {};
         if (!data.contact_name || !data.contact_name.trim()) errors.contact_name = 'Please enter your name.';
         if (!data.contact_email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.contact_email)) errors.contact_email = 'Please enter a valid email address.';
-        if (data.interest === 'Training' && !data.dob) errors.dob = 'Please provide a date of birth.';
+        // Training DOB can be provided via subject_dob when enquiring for someone else
+        const someoneElseClient = (data.enquiry_for === 'someone_else' || data.enquiry_for === 'child');
+        if (data.interest === 'Training' && !(data.dob || (someoneElseClient && data.subject_dob))) {
+          if (someoneElseClient) errors.subject_dob = 'Please provide the date of birth for the person you are enquiring for.';
+          else errors.dob = 'Please provide a date of birth.';
+        }
         if (data.interest === 'Other' && (!data.message || !data.message.trim())) errors.message = 'Please add a message.';
 
         // Someone else flow (parent/guardian) validations
@@ -724,3 +748,5 @@ import "../../styles/forms.css";
     display: none !important;
   }
 </style>
+
+)}
