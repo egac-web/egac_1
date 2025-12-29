@@ -86,6 +86,7 @@ import "../../styles/forms.css";
             name="contact_phone" 
             placeholder="07123 456789" 
             x-model="form.contact_phone"
+            :required="form.enquiry_for === 'someone_else' || form.enquiry_for === 'child'"
           />
         </div>
       </div>
@@ -103,17 +104,29 @@ import "../../styles/forms.css";
         <div x-show="errors.contact_email" class="form-field-error" x-text="errors.contact_email" x-cloak></div>
       </div>
 
-      <!-- training-days moved below interest select for better UX -->
+        <!-- Subject (person being enquired about) - shown when enquiring on behalf of someone else -->
+        <div class="form-group" x-show="form.enquiry_for === 'someone_else' || form.enquiry_for === 'child'" x-cloak style="display:none">
+          <label class="form-label">Details of the person you are enquiring for</label>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="subject_first_name">First name *</label>
+              <input type="text" id="subject_first_name" name="subject_first_name" placeholder="First name" x-model="form.subject_first_name" :required="form.enquiry_for === 'someone_else' || form.enquiry_for === 'child'" />
+              <div x-show="errors.subject_first_name" class="form-field-error" x-text="errors.subject_first_name" x-cloak></div>
+            </div>
 
-      <!-- Interest category -->
-      <div class="form-group">
-        <label class="form-label" for="interest">Area of interest *</label>
-        <select id="interest" name="interest" required x-model="form.interest">
-          <option value="">Please select...</option>
-          <option value="Training">Training &amp; competitive athletics</option>
-          <option value="Coaching">Coaching</option>
-          <option value="Officiating">Officiating</option>
-          <option value="Committee">Committee</option>
+            <div class="form-group">
+              <label class="form-label" for="subject_last_name">Last name *</label>
+              <input type="text" id="subject_last_name" name="subject_last_name" placeholder="Last name" x-model="form.subject_last_name" :required="form.enquiry_for === 'someone_else' || form.enquiry_for === 'child'" />
+              <div x-show="errors.subject_last_name" class="form-field-error" x-text="errors.subject_last_name" x-cloak></div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="subject_dob">Date of birth *</label>
+            <input type="date" id="subject_dob" name="subject_dob" x-model="form.subject_dob" :required="form.enquiry_for === 'someone_else' || form.enquiry_for === 'child'" />
+            <div x-show="errors.subject_dob" class="form-field-error" x-text="errors.subject_dob" x-cloak></div>
+          </div>
+        </div>
           <option value="Administration">Administration</option>
           <option value="Other">Something else</option>
         </select>
@@ -279,37 +292,30 @@ import "../../styles/forms.css";
       <div x-show="errors.dob" class="form-field-error" x-text="errors.dob" x-cloak></div>
     </div>
 
-    <!-- Message only for Other -->
-    <div class="form-group" x-show="form.interest === 'Other'" x-cloak>
-      <label class="form-label" for="message_alt">Message *</label>
-      <textarea 
-        id="message_alt"
-        name="message" 
-        rows="5" 
-        placeholder="Tell us a bit more about your enquiry..." 
-        x-model="form.message"
-      ></textarea>
-      <div x-show="errors.message" class="form-field-error" x-text="errors.message" x-cloak></div>
+    <!-- Subject (person being enquired about) for alt form -->
+    <div class="form-group" x-show="form.enquiry_for === 'child' || form.enquiry_for === 'someone_else'" x-cloak style="display:none">
+      <label class="form-label">Details of the person you are enquiring for</label>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="subject_first_name_alt">First name *</label>
+          <input type="text" id="subject_first_name_alt" name="subject_first_name" placeholder="First name" x-model="form.subject_first_name" :required="form.enquiry_for === 'child' || form.enquiry_for === 'someone_else'" />
+          <div x-show="errors.subject_first_name" class="form-field-error" x-text="errors.subject_first_name" x-cloak></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="subject_last_name_alt">Last name *</label>
+          <input type="text" id="subject_last_name_alt" name="subject_last_name" placeholder="Last name" x-model="form.subject_last_name" :required="form.enquiry_for === 'child' || form.enquiry_for === 'someone_else'" />
+          <div x-show="errors.subject_last_name" class="form-field-error" x-text="errors.subject_last_name" x-cloak></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="subject_dob_alt">Date of birth *</label>
+        <input type="date" id="subject_dob_alt" name="subject_dob" x-model="form.subject_dob" :required="form.enquiry_for === 'child' || form.enquiry_for === 'someone_else'" />
+        <div x-show="errors.subject_dob" class="form-field-error" x-text="errors.subject_dob" x-cloak></div>
+      </div>
     </div>
 
-    <div class="form-group">
-      <label class="checkbox-label">
-        <input type="checkbox" name="gdpr_consent" required x-model="form.gdpr_consent" />
-        <span>I consent to EGAC storing and processing my data for club purposes. See our <a href="/policies/privacy" class="form-link">Privacy Policy</a>.</span>
-      </label>
-      <div x-show="errors.gdpr_consent" class="form-field-error" x-text="errors.gdpr_consent" x-cloak></div>
-    </div>
-
-    <div style="display:none;">
-      <label>Leave this field blank</label>
-      <input type="text" name="honeypot" tabindex="-1" autocomplete="off" />
-    </div>
-
-    <div class="form-actions">
-      <button 
-        type="submit" 
-        class="btn btn-cta" 
-        :disabled="submitting" 
         :class="{ 'btn-loading': submitting }"
       >
         <span x-show="!submitting">Submit Enquiry</span>
@@ -348,6 +354,9 @@ import "../../styles/forms.css";
         interest: '',
         dob: '',
         message: '',
+        subject_first_name: '',
+        subject_last_name: '',
+        subject_dob: '',
         gdpr_consent: false
       },
       submitting: false,
@@ -384,6 +393,28 @@ import "../../styles/forms.css";
         if (this.form.interest === 'Other' && (!this.form.message || !this.form.message.trim())) {
           this.errors.message = 'Please add a message.';
         }
+
+        // If enquiring on behalf of someone else (parent/guardian), require contact phone and subject details
+        const someoneElse = (this.form.enquiry_for === 'someone_else' || this.form.enquiry_for === 'child');
+        if (someoneElse) {
+          // Ensure we have an enquirer name (either contact_name or first+last)
+          const hasEnquirerName = (this.form.contact_name && this.form.contact_name.trim()) || ((this.form.first_name && this.form.first_name.trim()) && (this.form.last_name && this.form.last_name.trim()));
+          if (!hasEnquirerName) this.errors.contact_name = 'Please provide your name.';
+
+          if (!this.form.contact_phone || !this.form.contact_phone.trim()) {
+            this.errors.contact_phone = 'Please enter a phone number.';
+          }
+
+          if (!this.form.subject_first_name || !this.form.subject_first_name.trim()) {
+            this.errors.subject_first_name = 'Please provide the first name of the person you are enquiring for.';
+          }
+          if (!this.form.subject_last_name || !this.form.subject_last_name.trim()) {
+            this.errors.subject_last_name = 'Please provide the last name of the person you are enquiring for.';
+          }
+          if (!this.form.subject_dob) {
+            this.errors.subject_dob = 'Please provide the date of birth for the person you are enquiring for.';
+          }
+        }
         
         if (!this.form.gdpr_consent) {
           this.errors.gdpr_consent = 'You must consent to data processing.';
@@ -418,6 +449,11 @@ import "../../styles/forms.css";
           // Derive contact_name for backward compatibility
           if (!data.contact_name && (this.form.first_name || this.form.last_name)) {
             data.contact_name = `${this.form.first_name || ''} ${this.form.last_name || ''}`.trim();
+          }
+
+          // If enquiring on behalf of someone else, prefer the subject's DOB for age-based logic
+          if ((data.enquiry_for === 'someone_else' || data.enquiry_for === 'child') && data.subject_dob) {
+            data.dob = data.subject_dob;
           }
 
           // Honeypot check
@@ -469,6 +505,11 @@ import "../../styles/forms.css";
       const message = formEl.querySelector('#message');
       const messageAlt = formEl.querySelector('#message_alt');
 
+      // Determine who the enquiry is for (radio)
+      const enqForChecked = formEl.querySelector('[name="enquiry_for"]:checked');
+      const enqFor = enqForChecked ? enqForChecked.value : (formEl.querySelector('[name="enquiry_for"]') ? formEl.querySelector('[name="enquiry_for"]').value : '');
+      const someoneElse = (enqFor === 'someone_else' || enqFor === 'child');
+
       if (dob) {
         const g = dob.closest('.form-group');
         if (interest === 'Training') { g.style.display = ''; g.removeAttribute('x-cloak'); } else { g.style.display = 'none'; g.setAttribute('x-cloak', ''); }
@@ -499,6 +540,25 @@ import "../../styles/forms.css";
           else { group.style.display = 'none'; group.setAttribute('x-cloak', ''); }
         }
       }
+
+      // Subject (person being enquired about) visibility and required toggles
+      const subjectFirst = formEl.querySelector('[name="subject_first_name"]');
+      if (subjectFirst) {
+        const group = subjectFirst.closest('.form-group');
+        if (group) {
+          if (someoneElse) { group.style.display = ''; group.removeAttribute('x-cloak'); }
+          else { group.style.display = 'none'; group.setAttribute('x-cloak', ''); }
+        }
+        subjectFirst.required = someoneElse;
+      }
+      const subjectLast = formEl.querySelector('[name="subject_last_name"]');
+      if (subjectLast) { subjectLast.required = someoneElse; }
+      const subjectDob = formEl.querySelector('[name="subject_dob"]');
+      if (subjectDob) { subjectDob.required = someoneElse; }
+
+      // Enquirer phone requirement
+      const phone = formEl.querySelector('[name="contact_phone"]');
+      if (phone) phone.required = someoneElse;
     }
 
     document.querySelectorAll('form.enquiry-form').forEach((formEl) => {
@@ -508,6 +568,12 @@ import "../../styles/forms.css";
       // Attach listener to interest selects
       const interestSel = formEl.querySelector('[name="interest"]');
       if (interestSel) interestSel.addEventListener('change', () => toggleFields(formEl));
+
+      // Attach listener to enquiry_for radios (someone else / myself)
+      const enqRadios = formEl.querySelectorAll('[name="enquiry_for"]');
+      if (enqRadios && enqRadios.length) {
+        enqRadios.forEach(r => r.addEventListener('change', () => toggleFields(formEl)));
+      }
 
       // Hook up submit handling (using same logic as Alpine submitForm behavior)
       formEl.addEventListener('submit', async (e) => {
@@ -528,6 +594,22 @@ import "../../styles/forms.css";
         if (!data.contact_email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.contact_email)) errors.contact_email = 'Please enter a valid email address.';
         if (data.interest === 'Training' && !data.dob) errors.dob = 'Please provide a date of birth.';
         if (data.interest === 'Other' && (!data.message || !data.message.trim())) errors.message = 'Please add a message.';
+
+        // Someone else flow (parent/guardian) validations
+        const someoneElse = (data.enquiry_for === 'someone_else' || data.enquiry_for === 'child');
+        if (someoneElse) {
+          const hasEnquirerName = (data.contact_name && data.contact_name.trim()) || ((data.first_name && data.first_name.trim()) && (data.last_name && data.last_name.trim()));
+          if (!hasEnquirerName) errors.contact_name = 'Please enter your name.';
+          if (!data.contact_phone || !data.contact_phone.trim()) errors.contact_phone = 'Please enter a phone number.';
+
+          if (!data.subject_first_name || !data.subject_first_name.trim()) errors.subject_first_name = 'Please provide the first name of the person you are enquiring for.';
+          if (!data.subject_last_name || !data.subject_last_name.trim()) errors.subject_last_name = 'Please provide the last name of the person you are enquiring for.';
+          if (!data.subject_dob) errors.subject_dob = 'Please provide the date of birth for the person you are enquiring for.';
+
+          // Make the subject DOB the DOB the server will use for age mapping
+          if (data.subject_dob) data.dob = data.subject_dob;
+        }
+
         if (!(data.gdpr_consent === true || data.gdpr_consent === 'true' || data.gdpr_consent === 'on')) errors.gdpr_consent = 'You must consent to data processing.';
 
         // Show errors
