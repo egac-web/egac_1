@@ -180,7 +180,6 @@ export async function cancelBooking(booking_id: string) {
   return data;
 }
 
-export { getSupabaseAdmin };
 export {
   getBookingByInvite,
   getInviteByToken,
