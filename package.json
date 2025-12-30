@@ -13,6 +13,7 @@
     "@directus/sdk": "^20.2.0",
     "@supabase/supabase-js": "^2.89.0",
     "astro": "^5.16.6",
+    "date-fns": "^4.1.0",
     "lucide-react": "^0.561.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
