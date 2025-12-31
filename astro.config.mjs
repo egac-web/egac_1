@@ -9,6 +9,18 @@ export default defineConfig({
     port: 3000
   },
   output: 'server',
-  adapter: cloudflare(),
+  adapter: cloudflare({
+    mode: 'directory',
+    runtime: {
+      mode: 'local',
+      type: 'pages'
+    }
+  }),
   integrations: [react()],
+  vite: {
+    define: {
+      'process.env.DIRECTUS_URL': JSON.stringify(process.env.DIRECTUS_URL),
+      'process.env.DIRECTUS_TOKEN': JSON.stringify(process.env.DIRECTUS_TOKEN),
+    }
+  }
 });
