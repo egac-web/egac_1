@@ -153,8 +153,8 @@ import "../../styles/forms.css";
         </div>
       </div>
 
-      <!-- Conditional: DOB when Training is selected -->
-      <div class="form-group" x-show="form.interest === 'Training'" x-cloak>
+      <!-- Conditional: DOB when Training is selected AND enquiry is for myself -->
+      <div class="form-group" x-show="form.interest === 'Training' && form.enquiry_for === 'myself'" x-cloak>
         <label class="form-label" for="dob">Date of birth *</label>
         <input type="date" id="dob" name="dob" required x-model="form.dob" />
         <div class="help-text">This is required to help us identify your England Athletics age group.</div>
@@ -293,8 +293,8 @@ import "../../styles/forms.css";
       </div>
     </div>
 
-    <!-- DOB for alt form when Training chosen -->
-    <div class="form-group" x-show="form.interest === 'Training'" x-cloak>
+    <!-- DOB for alt form when Training chosen AND enquiry is for myself -->
+    <div class="form-group" x-show="form.interest === 'Training' && form.enquiry_for === 'myself'" x-cloak>
       <label class="form-label" for="dob_alt">Date of birth *</label>
       <input type="date" id="dob_alt" name="dob" required x-model="form.dob" />
       <div class="help-text">This is required to help us identify your England Athletics age group.</div>
