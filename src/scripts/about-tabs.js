@@ -1,4 +1,4 @@
-(function() {
+(function () {
   const tabs = ['locations', 'academy', 'fees'];
 
   function setTabState(active) {
