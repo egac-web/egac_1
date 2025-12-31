@@ -8,6 +8,7 @@ import { onMount } from 'astro/client';
 let aboutArticles = [];
 let mainArticle = null;
 
+let feesArticlesHtml = [];
 try {
   const response = await directus.request(
     readItems("about", {
@@ -19,12 +20,24 @@ try {
   aboutArticles = response || [];
   // choose main article: prefer common slugs, otherwise first
   mainArticle = aboutArticles.find(a => ['about-us','about_us','about'].includes(a.slug)) || aboutArticles[0] || null;
+  // Preprocess Directus HTML for Membership & Fees
+  feesArticlesHtml = aboutArticles
+    .filter(a => a.slug === 'membership-fees')
+    .map(article => {
+      let html = article.content || '';
+      html = html.replace(/<table(?![^>]*class=)/g, '<table class="fees-table-classic"');
+      html = html.replace(/<table([^>]*class=")([^"]*)"/g, (m, p1, p2) => `<table${p1}fees-table-classic ${p2}"`);
+      return html;
+    });
 } catch (e) {
   console.error("Error fetching about articles:", e);
   aboutArticles = [];
   mainArticle = null;
+  feesArticlesHtml = [];
 }
 ---
+
+<style is:global>@import "../styles/tokens.css";</style>
 
 <Layout>
   <div style="max-width:900px;margin:0 auto;padding:0 1.5rem;">
@@ -57,9 +70,9 @@ try {
         <input type="radio" name="about-tabs" id="tab-radio-fees" class="tab-radio" hidden>
 
         <div class="tab-list" role="tablist">
-          <label class="tab-btn" for="tab-radio-locations" id="tab-locations" role="tab" aria-controls="panel-locations" tabindex="0">Training Locations</label>
-          <label class="tab-btn" for="tab-radio-academy" id="tab-academy" role="tab" aria-controls="panel-academy" tabindex="-1">Academy</label>
-          <label class="tab-btn" for="tab-radio-fees" id="tab-fees" role="tab" aria-controls="panel-fees" tabindex="-1">Membership & Fees</label>
+          <label class="tab-btn" for="tab-radio-locations" id="tab-locations" data-tab="locations" role="tab" aria-controls="panel-locations" tabindex="0">Training Locations</label>
+          <label class="tab-btn" for="tab-radio-academy" id="tab-academy" data-tab="academy" role="tab" aria-controls="panel-academy" tabindex="-1">Academy</label>
+          <label class="tab-btn" for="tab-radio-fees" id="tab-fees" data-tab="fees" role="tab" aria-controls="panel-fees" tabindex="-1">Membership & Fees</label>
         </div>
         <div class="tab-panels">
           <div class="tab-panel" id="panel-locations" role="tabpanel" aria-labelledby="tab-locations">
@@ -97,9 +110,10 @@ try {
           </div>
           <div class="tab-panel" id="panel-fees" role="tabpanel" aria-labelledby="tab-fees">
             <div class="tab-content-box">
-              {aboutArticles.filter(a => a.slug === 'membership-fees').map(article => (
-                <div set:html={article.content} />
-              ))}
+              <h2 class="tab-section-title">Membership & Fees</h2>
+              <div class="fees-table-wrap">
+                  {feesArticlesHtml.map(html => <div set:html={html} />)}
+              </div>
             </div>
           </div>
         </div>
@@ -107,22 +121,27 @@ try {
       <script>
         (function() {
           const tabs = ['locations', 'academy', 'fees'];
-
+          function styleFeesTables() {
+            const panel = document.getElementById('panel-fees');
+            if (!panel) return;
+            const tables = panel.querySelectorAll('table');
+            tables.forEach(t => t.classList.add('fees-table-classic'));
+          }
           function setTabState(active) {
             tabs.forEach(t => {
               const btn = document.getElementById('tab-' + t);
               const panel = document.getElementById('panel-' + t);
-              if (!btn || !panel) return;
+              const radio = document.getElementById('tab-radio-' + t);
+              if (!btn || !panel || !radio) return;
               btn.setAttribute('aria-selected', t === active ? 'true' : 'false');
               btn.setAttribute('tabindex', t === active ? '0' : '-1');
               panel.hidden = t !== active;
+              radio.checked = t === active;
             });
+            if (active === 'fees') styleFeesTables();
           }
-
           function init() {
             const buttons = Array.from(document.querySelectorAll('.tab-btn[data-tab]'));
-            // debug: ensure script runs
-            console.debug('[EGAC] initializing tabs, found buttons:', buttons.length);
             buttons.forEach(btn => {
               btn.addEventListener('click', () => setTabState(btn.dataset.tab));
               btn.addEventListener('keydown', (e) => {
@@ -143,11 +162,10 @@ try {
                 }
               });
             });
-
-            // ensure default
             setTabState('locations');
+            // Style tables if fees tab is default (for direct navigation)
+            if (document.getElementById('tab-radio-fees').checked) styleFeesTables();
           }
-
           if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', init);
           } else {
