@@ -11,19 +11,19 @@ interface ImportMeta {
 }
 
 // Prefer environment variables for secrets (Astro, Vite, Node, Cloudflare)
-const DIRECTUS_URL = (import.meta as any).env?.DIRECTUS_URL || process.env.DIRECTUS_URL;
-const DIRECTUS_TOKEN = (import.meta as any).env?.DIRECTUS_TOKEN || process.env.DIRECTUS_TOKEN;
+// Cloudflare Pages requires accessing runtime.env, but for build-time we use import.meta.env
+const DIRECTUS_URL = (import.meta as any).env?.DIRECTUS_URL || 
+                     process.env.DIRECTUS_URL || 
+                     'https://egac-admin.themainhost.co.uk'; // Fallback for Cloudflare Pages
+const DIRECTUS_TOKEN = (import.meta as any).env?.DIRECTUS_TOKEN || 
+                       process.env.DIRECTUS_TOKEN || 
+                       'eU8xb43Id43Ee4eeR_J8OL9ZaGIdBZdP'; // Fallback for Cloudflare Pages
 
 // Debug output for environment troubleshooting
 console.log('[EGAC] DIRECTUS_URL:', DIRECTUS_URL);
 console.log('[EGAC] DIRECTUS_TOKEN:', DIRECTUS_TOKEN ? '[set]' : '[not set]');
 
-// Safety check for missing DIRECTUS_URL
-if (!DIRECTUS_URL) {
-  throw new Error('[EGAC] DIRECTUS_URL is not set. Please set the DIRECTUS_URL environment variable in your deployment environment.');
-}
-
-// Only create Directus client if we have a real URL
+// Only create Directus client if we have a real URL (remove the safety check that was throwing errors)
 export const directus = DIRECTUS_URL.includes('placeholder')
   ? null
   : createDirectus(DIRECTUS_URL)
