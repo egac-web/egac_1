@@ -1,26 +1,27 @@
 import { createDirectus, rest, staticToken } from '@directus/sdk';
+import type { DirectusClient, RestClient, StaticTokenClient } from '@directus/sdk';
 
-// Add type declaration for ImportMetaEnv if not already present
-interface ImportMetaEnv {
-  readonly DIRECTUS_URL?: string;
-  readonly DIRECTUS_TOKEN?: string;
-}
+// Helper function to get Directus client with runtime environment support
+export function getDirectusClient(runtime?: any): DirectusClient<any> & RestClient<any> & StaticTokenClient<any> {
+  // Try runtime env first (Cloudflare), then import.meta.env (build time), then process.env (Node)
+  const DIRECTUS_URL = runtime?.env?.DIRECTUS_URL || 
+                       (import.meta as any).env?.DIRECTUS_URL || 
+                       process.env.DIRECTUS_URL;
+  const DIRECTUS_TOKEN = runtime?.env?.DIRECTUS_TOKEN || 
+                         (import.meta as any).env?.DIRECTUS_TOKEN || 
+                         process.env.DIRECTUS_TOKEN;
 
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
-}
+  console.log('[EGAC] DIRECTUS_URL:', DIRECTUS_URL);
+  console.log('[EGAC] DIRECTUS_TOKEN:', DIRECTUS_TOKEN ? '[set]' : '[not set]');
 
-// Prefer environment variables for secrets (Astro, Vite, Node, Cloudflare)
-const DIRECTUS_URL = (import.meta as any).env?.DIRECTUS_URL || process.env.DIRECTUS_URL;
-const DIRECTUS_TOKEN = (import.meta as any).env?.DIRECTUS_TOKEN || process.env.DIRECTUS_TOKEN;
+  if (!DIRECTUS_URL) {
+    throw new Error('[EGAC] DIRECTUS_URL is not available');
+  }
 
-// Debug output for environment troubleshooting
-console.log('[EGAC] DIRECTUS_URL:', DIRECTUS_URL);
-console.log('[EGAC] DIRECTUS_TOKEN:', DIRECTUS_TOKEN ? '[set]' : '[not set]');
-
-// Only create Directus client if we have a URL
-export const directus = DIRECTUS_URL.includes('placeholder')
-  ? null
-  : createDirectus(DIRECTUS_URL)
+  return createDirectus(DIRECTUS_URL)
     .with(rest())
-    .with(staticToken(DIRECTUS_TOKEN));
+    .with(staticToken(DIRECTUS_TOKEN || ''));
+}
+
+// Legacy export for compatibility (uses build-time env vars only)
+export const directus = getDirectusClient();

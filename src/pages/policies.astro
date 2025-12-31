@@ -1,11 +1,12 @@
 ---
 import Layout from "../components/Layout.astro";
 import Card from "../components/ui/Card.astro";
-import { directus } from "../lib/directus";
+import { getDirectusClient } from "../lib/directus";
 import { readItems } from '@directus/sdk';
 
 let policies = [];
 try {
+  const directus = getDirectusClient(Astro.locals.runtime);
   const response = await directus.request(
     readItems("policies", {
       filter: { published: { _eq: true } },

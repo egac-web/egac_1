@@ -1,7 +1,7 @@
 ---
 import Layout from "../components/Layout.astro";
 import Card from "../components/ui/Card.astro";
-import { directus } from "../lib/directus";
+import { getDirectusClient } from "../lib/directus";
 import { readItems } from '@directus/sdk';
 import { onMount } from 'astro/client';
 
@@ -10,6 +10,7 @@ let mainArticle = null;
 
 let feesArticlesHtml = [];
 try {
+  const directus = getDirectusClient(Astro.locals.runtime);
   const response = await directus.request(
     readItems("about", {
       filter: { status: { _eq: "published" } },
