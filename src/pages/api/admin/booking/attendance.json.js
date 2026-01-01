@@ -1,16 +1,17 @@
 import { getSupabaseAdmin, appendEnquiryEvent, createInviteForEnquiry, markInviteSent } from '../../../../lib/supabase';
 import { sendInviteEmail } from '../../../../lib/resend';
 
-export async function POST({ request }) {
+export async function POST({ request, locals }) {
   try {
+    const env = locals?.runtime?.env || process.env;
     const token = request.headers.get('x-admin-token') || '';
-    if (!process.env.ADMIN_TOKEN || token !== process.env.ADMIN_TOKEN) return { status: 401, body: { ok: false, error: 'Unauthorized' } };
+    if (!env.ADMIN_TOKEN || token !== env.ADMIN_TOKEN) return { status: 401, body: { ok: false, error: 'Unauthorized' } };
 
     const body = await request.json();
     const { booking_id, status, note, send_membership_link } = body || {};
     if (!booking_id || !['attended', 'no_show'].includes(status)) return { status: 400, body: { ok: false, error: 'Invalid payload' } };
 
-    const client = getSupabaseAdmin();
+    const client = getSupabaseAdmin(env);
     const { data: booking, error: fetchErr } = await client.from('bookings').select('*, enquiry:enquiries(*)').eq('id', booking_id).maybeSingle();
     if (fetchErr) return { status: 500, body: { ok: false, error: fetchErr.message } };
     if (!booking) return { status: 404, body: { ok: false, error: 'Booking not found' } };
@@ -24,23 +25,23 @@ export async function POST({ request }) {
     if (!enquiry_id) return { status: 500, body: { ok: false, error: 'Booking missing enquiry' } };
 
     const event = { type: 'attendance', status, note: note || null, timestamp: new Date().toISOString(), booking_id };
-    await appendEnquiryEvent(enquiry_id, event);
+    await appendEnquiryEvent(enquiry_id, event, env);
 
     const responsePayload = { ok: true, booking: updated, events_appended: event };
 
     // If attended and the admin asked to send membership link — create invite and send email
     if (status === 'attended' && send_membership_link) {
       try {
-        const invite = await createInviteForEnquiry(enquiry_id);
-        const membershipUrl = `${process.env.SITE_URL || ''}/membership?token=${invite.token}`;
+        const invite = await createInviteForEnquiry(enquiry_id, env);
+        const membershipUrl = `${env.SITE_URL || ''}/membership?token=${invite.token}`;
         const enquiry = booking.enquiry || {};
         if (enquiry && enquiry.email) {
           const html = `<p>Hello ${enquiry.name || ''},</p><p>Thanks for attending your taster session. To complete your membership, please complete the form: <a href="${membershipUrl}">Complete membership</a></p>`;
           const text = `Complete your membership: ${membershipUrl}`;
-          await sendInviteEmail({ apiKey: process.env.RESEND_API_KEY, from: process.env.RESEND_FROM, to: enquiry.email, subject: 'EGAC: Complete your membership', html, text });
-          await markInviteSent(invite.id);
+          await sendInviteEmail({ apiKey: env.RESEND_API_KEY, from: env.RESEND_FROM, to: enquiry.email, subject: 'EGAC: Complete your membership', html, text });
+          await markInviteSent(invite.id, env);
           const ev = { type: 'membership_link_sent', invite_id: invite.id, to: enquiry.email, timestamp: new Date().toISOString() };
-          await appendEnquiryEvent(enquiry_id, ev);
+          await appendEnquiryEvent(enquiry_id, ev, env);
           responsePayload.membership_sent = true;
         } else {
           responsePayload.membership_sent = false;

@@ -3,9 +3,12 @@ import { insertEnquiry, createInviteForEnquiry, markInviteSent, getSupabaseAdmin
 // This API route must be server-rendered so POST requests are accepted during dev/runtime
 export const prerender = false;
 
-export async function POST({ request }) {
+export async function POST({ request, locals }) {
   try {
     const body = await request.json();
+
+    // Get runtime env from Cloudflare Pages context
+    const env = locals?.runtime?.env || process.env;
 
     // Basic server-side validation
     const required = ["contact_name", "contact_email", "gdpr_consent"];
@@ -78,22 +81,22 @@ export async function POST({ request }) {
     }
 
     // Optional: ReCAPTCHA / hCaptcha verification (if secrets provided)
-    if (process.env.RECAPTCHA_SECRET && body['g-recaptcha-response']) {
+    if (env.RECAPTCHA_SECRET && body['g-recaptcha-response']) {
       const token = body['g-recaptcha-response'];
       const verifyRes = await fetch(`https://www.google.com/recaptcha/api/siteverify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `secret=${encodeURIComponent(process.env.RECAPTCHA_SECRET)}&response=${encodeURIComponent(token)}`,
+        body: `secret=${encodeURIComponent(env.RECAPTCHA_SECRET)}&response=${encodeURIComponent(token)}`,
       });
       const json = await verifyRes.json();
       if (!json.success) return { status: 400, body: { ok: false, error: 'recaptcha failed' } };
     }
-    if (process.env.HCAPTCHA_SECRET && body['h-captcha-response']) {
+    if (env.HCAPTCHA_SECRET && body['h-captcha-response']) {
       const token = body['h-captcha-response'];
       const verifyRes = await fetch(`https://hcaptcha.com/siteverify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `secret=${encodeURIComponent(process.env.HCAPTCHA_SECRET)}&response=${encodeURIComponent(token)}`,
+        body: `secret=${encodeURIComponent(env.HCAPTCHA_SECRET)}&response=${encodeURIComponent(token)}`,
       });
       const json = await verifyRes.json();
       if (!json.success) return { status: 400, body: { ok: false, error: 'hCaptcha failed' } };
@@ -126,42 +129,42 @@ export async function POST({ request }) {
     };
 
     // Persist to Supabase
-    const inserted = await insertEnquiry(enquiryPayload);
+    const inserted = await insertEnquiry(enquiryPayload, env);
 
     // Create an invite record for the enquiry
     let invite = null;
     try {
-      invite = await createInviteForEnquiry(inserted.id);
+      invite = await createInviteForEnquiry(inserted.id, env);
       // update enquiry to reference invite
       try {
-        const client = getSupabaseAdmin();
+        const client = getSupabaseAdmin(env);
         await client.from('enquiries').update({ invite_id: invite.id }).eq('id', inserted.id);
       } catch (err) {
         console.error('Could not update enquiry with invite id', err);
       }
 
       // Send invite email via Resend if configured
-      if (process.env.RESEND_API_KEY && process.env.RESEND_FROM) {
+      if (env.RESEND_API_KEY && env.RESEND_FROM) {
         try {
           const { sendInviteEmail } = await import('../../lib/resend');
-          const inviteUrl = `${process.env.SITE_BASE_URL || ''}/booking?invite=${encodeURIComponent(invite.token)}`;
+          const inviteUrl = `${env.SITE_BASE_URL || ''}/booking?invite=${encodeURIComponent(invite.token)}`;
           const html = `<p>Hello ${inserted.name || ''},</p><p>Thanks for your enquiry. To book a free taster, please follow this link:</p><p><a href="${inviteUrl}">${inviteUrl}</a></p><p>If you did not request this, ignore this email.</p>`;
           const text = `Hello ${inserted.name || ''}\n\nBook here: ${inviteUrl}`;
-          const res = await sendInviteEmail({ apiKey: process.env.RESEND_API_KEY, from: process.env.RESEND_FROM, to: inserted.email, subject: 'EGAC: Book a taster / session', html, text });
+          const res = await sendInviteEmail({ apiKey: env.RESEND_API_KEY, from: env.RESEND_FROM, to: inserted.email, subject: 'EGAC: Book a taster / session', html, text });
           // record event
           try {
             const { appendEnquiryEvent } = await import('../../lib/supabase');
-            await appendEnquiryEvent(inserted.id, { type: 'invite_sent', invite_id: invite.id, resend_id: res.id, at: new Date().toISOString(), meta: res.raw });
+            await appendEnquiryEvent(inserted.id, { type: 'invite_sent', invite_id: invite.id, resend_id: res.id, at: new Date().toISOString(), meta: res.raw }, env);
           } catch (err) { console.error('Failed to append enquiry event', err); }
 
           // update invite status
-          try { await markInviteSent(invite.id); } catch (e) { console.error('markInviteSent failed', e); }
+          try { await markInviteSent(invite.id, env); } catch (e) { console.error('markInviteSent failed', e); }
         } catch (err) {
           console.error('Failed to send invite email', err);
           // Append a failed-send event
           try {
             const { appendEnquiryEvent } = await import('../../lib/supabase');
-            await appendEnquiryEvent(inserted.id, { type: 'invite_send_failed', invite_id: invite.id, error: (err && err.response) ? err.response : String(err), at: new Date().toISOString() });
+            await appendEnquiryEvent(inserted.id, { type: 'invite_send_failed', invite_id: invite.id, error: (err && err.response) ? err.response : String(err), at: new Date().toISOString() }, env);
           } catch (err) { console.error('Failed to append enquiry event for failed send', err); }
         }
       }
@@ -171,7 +174,7 @@ export async function POST({ request }) {
     }
 
     // Forward to webhook (Make/automation) if configured, include canonical IDs
-    const webhook = process.env.ENQUIRY_WEBHOOK || null;
+    const webhook = env.ENQUIRY_WEBHOOK || null;
     const payloadForWebhook = { enquiry: inserted, invite };
 
     if (webhook) {

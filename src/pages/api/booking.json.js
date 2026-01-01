@@ -3,8 +3,9 @@ import { getNextNWeekdayDates, slotForAge, computeAgeOnDate, CONFIG } from '../.
 import { countBookingsForDateSlot, createBooking, appendEnquiryEvent, markInviteAccepted, getBookingByInvite, getSupabaseAdmin } from '../../lib/supabase';
 import sendInviteEmail, { sendBookingConfirmation } from '../../lib/resend';
 
-export async function GET({ request }) {
+export async function GET({ request, locals }) {
   try {
+    const env = locals?.runtime?.env || process.env;
     const url = new URL(request.url);
     const inviteToken = url.searchParams.get('invite');
     const dateParam = url.searchParams.get('date');
@@ -14,8 +15,8 @@ export async function GET({ request }) {
       const dates = getNextNWeekdayDates(2, CONFIG.weeksAhead);
       // for each date fetch counts (cheap-ish)
       const availabilityPromises = dates.map(async (d) => {
-        const u13Count = await countBookingsForDateSlot(d, 'u13');
-        const u15Count = await countBookingsForDateSlot(d, 'u15plus');
+        const u13Count = await countBookingsForDateSlot(d, 'u13', env);
+        const u15Count = await countBookingsForDateSlot(d, 'u15plus', env);
         return { date: d, slots: { u13: CONFIG.capacityPerSlot - u13Count, u15plus: CONFIG.capacityPerSlot - u15Count } };
       });
       const availability = await Promise.all(availabilityPromises);
@@ -26,10 +27,10 @@ export async function GET({ request }) {
     }
 
     if (inviteToken) {
-      const invite = await getInviteByToken(inviteToken);
+      const invite = await getInviteByToken(inviteToken, env);
       if (!invite) return { status: 404, body: { ok: false, error: 'Invalid invite' } };
       // get enquiry to determine eligibility
-      const client = getSupabaseAdmin();
+      const client = getSupabaseAdmin(env);
       const { data: enqRes, error } = await client.from('enquiries').select('*').eq('id', invite.enquiry_id).maybeSingle();
       if (error) throw error;
       const enquiry = enqRes;
@@ -38,13 +39,13 @@ export async function GET({ request }) {
       const availabilityPromises = dates.map(async (d) => {
         const age = enquiry.dob ? computeAgeOnDate(enquiry.dob, `${d}T00:00:00`) : null;
         const eligibleSlot = (age !== null) ? slotForAge(age) : null;
-        const u13Count = await countBookingsForDateSlot(d, 'u13');
-        const u15Count = await countBookingsForDateSlot(d, 'u15plus');
+        const u13Count = await countBookingsForDateSlot(d, 'u13', env);
+        const u15Count = await countBookingsForDateSlot(d, 'u15plus', env);
         return { date: d, eligibleSlot, slots: { u13: CONFIG.capacityPerSlot - u13Count, u15plus: CONFIG.capacityPerSlot - u15Count } };
       });
       const availability = await Promise.all(availabilityPromises);
 
-      const existingBooking = await getBookingByInvite(invite.id);
+      const existingBooking = await getBookingByInvite(invite.id, env);
 
       return new Response(JSON.stringify({ ok: true, invite, enquiry, availability, booking: existingBooking }), {
 
@@ -64,17 +65,18 @@ export async function GET({ request }) {
   }
 }
 
-export async function post({ request }) {
+export async function post({ request, locals }) {
   try {
+    const env = locals?.runtime?.env || process.env;
     const body = await request.json();
     const { invite: inviteToken, session_date } = body;
     if (!inviteToken || !session_date) return { status: 400, body: { ok: false, error: 'invite and session_date required' } };
 
-    const invite = await getInviteByToken(inviteToken);
+    const invite = await getInviteByToken(inviteToken, env);
     if (!invite) return { status: 404, body: { ok: false, error: 'Invalid invite' } };
     if (invite.status !== 'pending') return { status: 400, body: { ok: false, error: 'Invite is not available for booking' } };
 
-    const client = getSupabaseAdmin();
+    const client = getSupabaseAdmin(env);
     const { data: enqRes, error } = await client.from('enquiries').select('*').eq('id', invite.enquiry_id).maybeSingle();
     if (error) throw error;
     const enquiry = enqRes;
@@ -88,40 +90,40 @@ export async function post({ request }) {
     if (!slot) return { status: 400, body: { ok: false, error: 'Unable to determine slot for age' } };
 
     // capacity check
-    const count = await countBookingsForDateSlot(session_date, slot);
+    const count = await countBookingsForDateSlot(session_date, slot, env);
     if (count >= CONFIG.capacityPerSlot) return { status: 409, body: { ok: false, error: 'No vacancies for this session' } };
 
     // create booking
     const session_time = CONFIG.slots[slot].time + ':00';
-    const booking = await createBooking(enquiry.id, invite.id, session_date, slot, session_time);
+    const booking = await createBooking(enquiry.id, invite.id, session_date, slot, session_time, env);
 
     // mark invite accepted and append events
     try {
-      await markInviteAccepted(invite.id);
-      await appendEnquiryEvent(enquiry.id, { type: 'booking_created', booking_id: booking.id, session_date, slot, at: new Date().toISOString() });
+      await markInviteAccepted(invite.id, env);
+      await appendEnquiryEvent(enquiry.id, { type: 'booking_created', booking_id: booking.id, session_date, slot, at: new Date().toISOString() }, env);
     } catch (err) { console.error('Failed to mark accepted/append event', err); }
 
     // send confirmation email via Resend if configured
-    if (process.env.RESEND_API_KEY && process.env.RESEND_FROM) {
+    if (env.RESEND_API_KEY && env.RESEND_FROM) {
       try {
-        const res = await sendBookingConfirmation({ apiKey: process.env.RESEND_API_KEY, from: process.env.RESEND_FROM, to: enquiry.email, date: session_date, slotLabel: CONFIG.slots[slot].label });
-        try { await appendEnquiryEvent(enquiry.id, { type: 'booking_confirm_email_sent', booking_id: booking.id, resend_id: res.id, at: new Date().toISOString(), meta: res.raw }); } catch (err) { console.error('append event failed', err); }
+        const res = await sendBookingConfirmation({ apiKey: env.RESEND_API_KEY, from: env.RESEND_FROM, to: enquiry.email, date: session_date, slotLabel: CONFIG.slots[slot].label });
+        try { await appendEnquiryEvent(enquiry.id, { type: 'booking_confirm_email_sent', booking_id: booking.id, resend_id: res.id, at: new Date().toISOString(), meta: res.raw }, env); } catch (err) { console.error('append event failed', err); }
       } catch (err) {
         console.error('Failed to send booking confirmation', err);
-        try { await appendEnquiryEvent(enquiry.id, { type: 'booking_confirm_email_failed', booking_id: booking.id, error: (err && err.response) ? err.response : String(err), at: new Date().toISOString() }); } catch (e) { console.error('append event failed', e); }
+        try { await appendEnquiryEvent(enquiry.id, { type: 'booking_confirm_email_failed', booking_id: booking.id, error: (err && err.response) ? err.response : String(err), at: new Date().toISOString() }, env); } catch (e) { console.error('append event failed', e); }
       }
     }
 
     // Persist booking reference on the enquiry
     try {
-      const client = getSupabaseAdmin();
+      const client = getSupabaseAdmin(env);
       await client.from('enquiries').update({ booking_id: booking.id, booking_date: booking.session_date }).eq('id', enquiry.id);
     } catch (err) {
       console.error('Failed to update enquiry with booking info', err);
     }
 
     // Notify membership secretary (if configured)
-    if (process.env.MEMBERSHIP_SECRETARY_EMAIL && process.env.RESEND_API_KEY && process.env.RESEND_FROM) {
+    if (env.MEMBERSHIP_SECRETARY_EMAIL && env.RESEND_API_KEY && env.RESEND_FROM) {
       try {
         const subject = `EGAC: New taster booking for ${enquiry.name || enquiry.email}`;
         const html = `<p>A new taster booking has been made:</p>` +
@@ -135,11 +137,11 @@ export async function post({ request }) {
           `</ul>`;
         const text = `New taster booking: ${session_date} (${slot}) for ${enquiry.name || enquiry.email}. Booking ID: ${booking.id}`;
 
-        const res2 = await sendInviteEmail({ apiKey: process.env.RESEND_API_KEY, from: process.env.RESEND_FROM, to: process.env.MEMBERSHIP_SECRETARY_EMAIL, subject, html, text });
-        try { await appendEnquiryEvent(enquiry.id, { type: 'booking_notify_secretary_sent', booking_id: booking.id, resend_id: res2.id, at: new Date().toISOString(), meta: res2.raw }); } catch (err) { console.error('append event failed', err); }
+        const res2 = await sendInviteEmail({ apiKey: env.RESEND_API_KEY, from: env.RESEND_FROM, to: env.MEMBERSHIP_SECRETARY_EMAIL, subject, html, text });
+        try { await appendEnquiryEvent(enquiry.id, { type: 'booking_notify_secretary_sent', booking_id: booking.id, resend_id: res2.id, at: new Date().toISOString(), meta: res2.raw }, env); } catch (err) { console.error('append event failed', err); }
       } catch (err) {
         console.error('Failed to send booking notification to secretary', err);
-        try { await appendEnquiryEvent(enquiry.id, { type: 'booking_notify_secretary_failed', booking_id: booking.id, error: (err && err.response) ? err.response : String(err), at: new Date().toISOString() }); } catch (e) { console.error('append event failed', e); }
+        try { await appendEnquiryEvent(enquiry.id, { type: 'booking_notify_secretary_failed', booking_id: booking.id, error: (err && err.response) ? err.response : String(err), at: new Date().toISOString() }, env); } catch (e) { console.error('append event failed', e); }
       }
     }
 

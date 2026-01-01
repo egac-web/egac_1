@@ -10,11 +10,7 @@ export default defineConfig({
   },
   output: 'server',
   adapter: cloudflare({
-    mode: 'directory',
-    runtime: {
-      mode: 'local',
-      type: 'pages'
-    }
+    mode: 'directory'
   }),
   integrations: [react()],
   vite: {

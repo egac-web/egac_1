@@ -1,18 +1,20 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Lazily create a server-side Supabase client. This avoids throwing during import time (e.g. when env vars are not present in local builds).
-let _supabaseAdmin: SupabaseClient | null = null;
-export function getSupabaseAdmin(): SupabaseClient {
-  if (_supabaseAdmin) return _supabaseAdmin;
-  const SUPABASE_URL = process.env.SUPABASE_URL;
-  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// Create a server-side Supabase client with runtime env vars from Cloudflare Pages
+// In Cloudflare Pages, env vars are accessed via context.locals.runtime.env, not process.env
+export function getSupabaseAdmin(env?: any): SupabaseClient {
+  // Use runtime env if provided (Cloudflare Pages), otherwise fall back to process.env (local dev)
+  const runtimeEnv = env || process.env;
+  const SUPABASE_URL = runtimeEnv.SUPABASE_URL;
+  const SUPABASE_SERVICE_ROLE_KEY = runtimeEnv.SUPABASE_SERVICE_ROLE_KEY;
+
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in environment');
   }
-  _supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+
+  return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  return _supabaseAdmin;
 }
 
 export type Enquiry = {
@@ -48,23 +50,23 @@ function generateToken(length = 24) {
     .slice(0, length);
 }
 
-export async function insertEnquiry(payload: Enquiry) {
-  const client = getSupabaseAdmin();
+export async function insertEnquiry(payload: Enquiry, env?: any) {
+  const client = getSupabaseAdmin(env);
   const { data, error } = await client.from('enquiries').insert([{ ...payload }]).select().single();
   if (error) throw error;
   return data as Enquiry;
 }
 
-export async function createInviteForEnquiry(enquiry_id: string) {
-  const client = getSupabaseAdmin();
+export async function createInviteForEnquiry(enquiry_id: string, env?: any) {
+  const client = getSupabaseAdmin(env);
   const token = generateToken(24);
   const { data, error } = await client.from('invites').insert([{ token, enquiry_id }]).select().single();
   if (error) throw error;
   return data as Invite;
 }
 
-export async function appendEnquiryEvent(enquiry_id: string, event: any) {
-  const client = getSupabaseAdmin();
+export async function appendEnquiryEvent(enquiry_id: string, event: any, env?: any) {
+  const client = getSupabaseAdmin(env);
   // read current events, append and update
   const { data: current, error: fetchErr } = await client.from('enquiries').select('events').eq('id', enquiry_id).maybeSingle();
   if (fetchErr) throw fetchErr;
@@ -74,22 +76,22 @@ export async function appendEnquiryEvent(enquiry_id: string, event: any) {
   if (error) throw error;
   return data;
 }
-export async function getInviteByToken(token: string) {
-  const client = getSupabaseAdmin();
+export async function getInviteByToken(token: string, env?: any) {
+  const client = getSupabaseAdmin(env);
   const { data, error } = await client.from('invites').select('*').eq('token', token).maybeSingle();
   if (error) throw error;
   return data as Invite | null;
 }
 
-export async function getLatestInviteForEnquiry(enquiry_id: string) {
-  const client = getSupabaseAdmin();
+export async function getLatestInviteForEnquiry(enquiry_id: string, env?: any) {
+  const client = getSupabaseAdmin(env);
   const { data, error } = await client.from('invites').select('*').eq('enquiry_id', enquiry_id).order('created_at', { ascending: false }).limit(1).maybeSingle();
   if (error) throw error;
   return data as Invite | null;
 }
 
-export async function markEnquiryPresliConfirmed(enquiry_id: string, note?: string) {
-  const client = getSupabaseAdmin();
+export async function markEnquiryPresliConfirmed(enquiry_id: string, note?: string, env?: any) {
+  const client = getSupabaseAdmin(env);
   const payload: any = { presli_confirmed_at: new Date().toISOString() };
   if (note !== undefined) payload.presli_note = note;
   const { data, error } = await client.from('enquiries').update(payload).eq('id', enquiry_id).select().single();
@@ -97,8 +99,8 @@ export async function markEnquiryPresliConfirmed(enquiry_id: string, note?: stri
   return data;
 }
 
-export async function markInviteSent(invite_id: string) {
-  const client = getSupabaseAdmin();
+export async function markInviteSent(invite_id: string, env?: any) {
+  const client = getSupabaseAdmin(env);
   const { data, error } = await client
     .from('invites')
     .update({ status: 'sent', sent_at: new Date().toISOString() })
@@ -109,8 +111,8 @@ export async function markInviteSent(invite_id: string) {
   return data as Invite;
 }
 
-export async function markInviteAccepted(invite_id: string) {
-  const client = getSupabaseAdmin();
+export async function markInviteAccepted(invite_id: string, env?: any) {
+  const client = getSupabaseAdmin(env);
   const { data, error } = await client
     .from('invites')
     .update({ status: 'accepted', accepted_at: new Date().toISOString() })
@@ -121,8 +123,8 @@ export async function markInviteAccepted(invite_id: string) {
   return data as Invite;
 }
 
-export async function createMemberFromEnquiry(enquiry: Enquiry) {
-  const client = getSupabaseAdmin();
+export async function createMemberFromEnquiry(enquiry: Enquiry, env?: any) {
+  const client = getSupabaseAdmin(env);
   const memberPayload = {
     name: enquiry.name,
     email: enquiry.email,
@@ -135,37 +137,37 @@ export async function createMemberFromEnquiry(enquiry: Enquiry) {
 }
 
 // Bookings helpers
-export async function countBookingsForDateSlot(session_date: string, slot: string) {
-  const client = getSupabaseAdmin();
+export async function countBookingsForDateSlot(session_date: string, slot: string, env?: any) {
+  const client = getSupabaseAdmin(env);
   const { count, error } = await client.from('bookings').select('id', { count: 'exact', head: true }).eq('session_date', session_date).eq('slot', slot);
   if (error) throw error;
   return count || 0;
 }
 
-export async function createBooking(enquiry_id: string, invite_id: string, session_date: string, slot: string, session_time: string) {
-  const client = getSupabaseAdmin();
+export async function createBooking(enquiry_id: string, invite_id: string, session_date: string, slot: string, session_time: string, env?: any) {
+  const client = getSupabaseAdmin(env);
   const payload = { enquiry_id, invite_id, session_date, slot, session_time };
   const { data, error } = await client.from('bookings').insert([payload]).select().single();
   if (error) throw error;
   return data;
 }
 
-export async function getBookingByInvite(invite_id: string) {
-  const client = getSupabaseAdmin();
+export async function getBookingByInvite(invite_id: string, env?: any) {
+  const client = getSupabaseAdmin(env);
   const { data, error } = await client.from('bookings').select('*').eq('invite_id', invite_id).maybeSingle();
   if (error) throw error;
   return data || null;
 }
 
-export async function getBookingById(booking_id: string) {
-  const client = getSupabaseAdmin();
+export async function getBookingById(booking_id: string, env?: any) {
+  const client = getSupabaseAdmin(env);
   const { data, error } = await client.from('bookings').select('*, enquiry:enquiries(*)').eq('id', booking_id).maybeSingle();
   if (error) throw error;
   return data || null;
 }
 
-export async function updateBookingStatus(booking_id: string, status: string, note?: string) {
-  const client = getSupabaseAdmin();
+export async function updateBookingStatus(booking_id: string, status: string, note?: string, env?: any) {
+  const client = getSupabaseAdmin(env);
   const payload: any = { status };
   if (note !== undefined) payload.attendance_note = note;
   const { data, error } = await client.from('bookings').update(payload).eq('id', booking_id).select().single();
@@ -173,8 +175,8 @@ export async function updateBookingStatus(booking_id: string, status: string, no
   return data;
 }
 
-export async function cancelBooking(booking_id: string) {
-  const client = getSupabaseAdmin();
+export async function cancelBooking(booking_id: string, env?: any) {
+  const client = getSupabaseAdmin(env);
   const { data, error } = await client.from('bookings').update({ status: 'cancelled' }).eq('id', booking_id).select().single();
   if (error) throw error;
   return data;
