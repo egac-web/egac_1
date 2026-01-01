@@ -135,7 +135,10 @@ export async function POST({ request, locals }) {
     };
 
     // Persist to Supabase
+    console.log('About to insert enquiry with env type:', typeof env);
+    console.log('Has SUPABASE_URL:', !!env.SUPABASE_URL);
     const inserted = await insertEnquiry(enquiryPayload, env);
+    console.log('Enquiry inserted:', inserted.id);
 
     // Create an invite record for the enquiry
     let invite = null;
@@ -210,9 +213,16 @@ export async function POST({ request, locals }) {
     });
   } catch (err) {
     console.error('Enquiry endpoint error', err);
-    const errorMessage = err instanceof Error ? err.message : 'Server error';
+    const errorMessage = err instanceof Error ? err.message : (typeof err === 'string' ? err : JSON.stringify(err));
     const errorStack = err instanceof Error ? err.stack : '';
-    return new Response(JSON.stringify({ ok: false, error: 'Server error', details: errorMessage, stack: errorStack }), {
+    const errorDetails = {
+      message: errorMessage,
+      stack: errorStack,
+      type: typeof err,
+      constructor: err?.constructor?.name,
+      keys: err ? Object.keys(err) : []
+    };
+    return new Response(JSON.stringify({ ok: false, error: 'Server error', details: errorMessage, debug: errorDetails }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
