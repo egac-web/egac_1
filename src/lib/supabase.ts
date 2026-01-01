@@ -60,7 +60,20 @@ export async function insertEnquiry(payload: Enquiry, env?: any) {
 export async function createInviteForEnquiry(enquiry_id: string, env?: any) {
   const client = getSupabaseAdmin(env);
   const token = generateToken(24);
-  const { data, error } = await client.from('invites').insert([{ token, enquiry_id }]).select().single();
+  const payload = { token, enquiry_id, status: 'pending', send_attempts: 0, last_send_error: null };
+  const { data, error } = await client.from('invites').insert([payload]).select().single();
+  if (error) throw error;
+  return data as Invite;
+}
+
+export async function markInviteSendFailed(invite_id: string, errorMsg: string, env?: any) {
+  const client = getSupabaseAdmin(env);
+  // increment attempts and set status to failed
+  const { data: existing, error: fetchErr } = await client.from('invites').select('send_attempts').eq('id', invite_id).maybeSingle();
+  if (fetchErr) throw fetchErr;
+  const attempts = (existing && typeof existing.send_attempts === 'number') ? existing.send_attempts + 1 : 1;
+  const payload: any = { send_attempts: attempts, last_send_error: errorMsg, status: 'failed' };
+  const { data, error } = await client.from('invites').update(payload).eq('id', invite_id).select().single();
   if (error) throw error;
   return data as Invite;
 }

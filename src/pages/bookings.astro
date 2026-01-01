@@ -1,15 +1,41 @@
 ---
 // This page is NOT linked from the main site navigation. Share the URL directly with those who need access.
 import Layout from "../components/Layout.astro";
+import TrainingBookingSystem from "../components/TrainingBookingSystem";
 import "../styles/bookings.css";
 import { getNextNWeekdayDates, CONFIG } from "../lib/booking";
 
 // Build a simple server-rendered set of slots so the page shows cards immediately.
 const dates = getNextNWeekdayDates(2, 6); // next 6 weeks
 const slots = dates.flatMap((date) => [
-  { id: `${date}-u13-1`, date, time: `${CONFIG.slots.u13.time}-00`, group: CONFIG.slots.u13.label },
-  { id: `${date}-u15-1`, date, time: `${CONFIG.slots.u15plus.time}-00`, group: CONFIG.slots.u15plus.label },
+  { id: `${date}-u13-1`, date, group: 'u13' },
+  { id: `${date}-u15-1`, date, group: 'u15plus' },
 ]);
+
+// If an invite token is present in the URL, fetch server-side invite data from the booking API
+let inviteToken = null;
+let inviteData = null;
+let inviteBanner = null;
+try {
+  const url = new URL(Astro.request.url);
+  inviteToken = url.searchParams.get('invite');
+  if (inviteToken) {
+    const apiUrl = new URL(`/api/booking.json?invite=${encodeURIComponent(inviteToken)}`, url.origin).toString();
+    const res = await fetch(apiUrl);
+    if (res.ok) {
+      const body = await res.json();
+      if (body && body.ok) {
+        inviteData = body;
+        // find a first eligible slot with vacancies
+        const firstAvail = (inviteData.availability || []).find((a) => a.eligibleSlot && a.slots && (a.slots[a.eligibleSlot] > 0));
+        if (firstAvail) inviteBanner = { eligibleSlot: firstAvail.eligibleSlot, date: firstAvail.date };
+      }
+    }
+  }
+} catch (err) {
+  // Non-fatal: page still works if we fail to fetch invite data
+  console.error('Failed to fetch invite data', err);
+}
 ---
 
 <Layout title="Training Session Bookings">
@@ -18,24 +44,56 @@ const slots = dates.flatMap((date) => [
     <p class="bookings-lead">Choose a session below to reserve a free taster. If you received an invite, use the booking link provided in your email.</p>
   </div>
 
-  <div class="booking-grid">
-    {slots.map((slot) => (
-      <article key={slot.id} class="booking-card p-4 border rounded-lg shadow">
-        <div class="booking-meta">
-          <span class="aria-icon">📅</span>
-          <div>
-            <div class="font-semibold">{new Date(slot.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</div>
-            <div class="text-sm bookings-lead">{slot.time} • <span class="booking-slot-group">{slot.group}</span></div>
-          </div>
-        </div>
-        <div class="slot-actions">
-          <a href={`/booking?date=${slot.date}&slot=${slot.group}`} class="btn-primary">Book</a>
-          <button class="bg-gray-100 text-gray-800 py-2 px-4 rounded">Details</button>
-        </div>
-      </article>
-    ))}
+  {inviteData ? (
+    <div class="invite-banner p-4 mb-4 border-l-4 border-blue-500 bg-blue-50">
+      <p class="font-semibold">Invited: {inviteData.enquiry.name || inviteData.enquiry.email}</p>
+      {inviteBanner ? (
+        <p>You're eligible for <strong>{CONFIG.slots[inviteBanner.eligibleSlot].label}</strong> on <strong>{new Date(inviteBanner.date).toLocaleDateString('en-GB')}</strong>. Click the <em>Book (invited)</em> button on that session to reserve your spot.</p>
+      ) : inviteData.booking ? (
+        <p>You already have a booking on {inviteData.booking.session_date}.</p>
+      ) : (
+        <p>We couldn't find an eligible slot with vacancies; check other dates or contact us.</p>
+      )}
+    </div>
+  ) : null}
 
-    <!-- Fallback to interactive client component if needed -->
-    <!-- <TrainingBookingSystem client:load /> -->
+  <div class="booking-grid">
+    {slots.map((slot) => {
+      const slotConfig = CONFIG.slots[slot.group];
+      const dateLabel = new Date(slot.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+      const availabilityForDate = inviteData?.availability?.find((a) => a.date === slot.date);
+      const eligibleForThisDate = availabilityForDate && availabilityForDate.eligibleSlot === slot.group;
+      const slotsLeft = availabilityForDate ? (availabilityForDate.slots[slot.group] ?? 0) : null;
+      return (
+        <article key={slot.id} class="booking-card p-4 border rounded-lg shadow">
+          <div class="booking-meta">
+            <span class="aria-icon">📅</span>
+            <div>
+              <div class="font-semibold">{dateLabel}</div>
+              <div class="text-sm bookings-lead">{slotConfig.time} • <span class="booking-slot-group">{slotConfig.label}</span></div>
+            </div>
+          </div>
+          <div class="slot-actions">
+            {inviteData ? (
+              inviteData.booking ? (
+                <span class="text-sm">You already booked for {inviteData.booking.session_date}</span>
+              ) : eligibleForThisDate ? (
+                <a href={`/bookings?invite=${inviteToken}&date=${slot.date}&slot=${slot.group}`} class="btn-primary">Book (invited)</a>
+              ) : (
+                <button class="bg-gray-100 text-gray-800 py-2 px-4 rounded" disabled>Not eligible</button>
+              )
+            ) : (
+              <>
+                <a href={`/booking?date=${slot.date}&slot=${slot.group}`} class="btn-primary">Book</a>
+                <button class="bg-gray-100 text-gray-800 py-2 px-4 rounded">Details</button>
+              </>
+            )}
+          </div>
+        </article>
+      );
+    })}
+
+    <!-- Interactive client component for invite-aware booking (hydrated only when invite present) -->
+    {inviteToken ? <TrainingBookingSystem client:load inviteToken={inviteToken} /> : null }
   </div>
 </Layout>

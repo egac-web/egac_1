@@ -68,7 +68,7 @@ export async function GET({ request, locals }) {
   }
 }
 
-export async function post({ request, locals }) {
+export async function POST({ request, locals }) {
   try {
     const env = locals?.runtime?.env || process.env;
     const body = await request.json();

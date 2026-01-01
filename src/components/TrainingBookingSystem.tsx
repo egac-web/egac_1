@@ -73,10 +73,48 @@ function getInitialSlots() {
   return slots;
 }
 
-const TrainingBookingSystem: React.FC = () => {
+const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken }) => {
   const [slots, setSlots] = useState<Slot[]>(getInitialSlots());
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [inviteTokenState, setInviteTokenState] = useState<string | null>(inviteToken || null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [statusType, setStatusType] = useState<'success' | 'error' | null>(null);
+  const [bookingDone, setBookingDone] = useState<boolean>(false);
+  const [bookingInfo, setBookingInfo] = useState<any>(null);
+  const statusRef = React.useRef<HTMLDivElement | null>(null);
+
+  // Map server slot keys to client labels
+  const groupKeyToLabel: Record<string, string> = { u13: 'U13s', u15plus: 'U15s+' };
+
+  // If we're loaded with an invite token (either prop or URL), preselect the slot from query params
+  React.useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const qInvite = params.get('invite');
+      const qDate = params.get('date');
+      const qSlot = params.get('slot');
+      if (qInvite && !inviteTokenState) setInviteTokenState(qInvite);
+
+      if (qDate && qSlot) {
+        const targetLabel = groupKeyToLabel[qSlot] || qSlot;
+        const match = slots.find((s) => s.date === qDate && s.group === targetLabel);
+        if (match) {
+          setSelectedSlot(match);
+          setShowModal(true);
+        }
+      }
+    } catch (err) {
+      // ignore
+    }
+  }, []);
+
+  // Auto-focus status message for accessibility whenever it changes
+  React.useEffect(() => {
+    if (statusMessage && statusRef.current) {
+      statusRef.current.focus();
+    }
+  }, [statusMessage]);
 
   const handleSelect = (slot: Slot) => {
     setSelectedSlot(slot);
@@ -89,8 +127,38 @@ const TrainingBookingSystem: React.FC = () => {
   };
 
   // Placeholder for booking action
-  const handleBook = () => {
+  const handleBook = async () => {
     if (!selectedSlot) return;
+
+    // If we have an invite token, POST to booking API so server-side booking is created
+    if (inviteTokenState) {
+      setStatusMessage('Booking in progress...');
+      setStatusType(null);
+      try {
+        const res = await fetch('/api/booking.json', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ invite: inviteTokenState, session_date: selectedSlot.date }),
+        });
+        const body = await res.json();
+        if (!res.ok || !body.ok) throw new Error(body.error || 'Booking failed');
+        // mark local slot as booked
+        setSlots((prev) => prev.map((s) => (s.id === selectedSlot.id ? { ...s, booked: true } : s)));
+        setBookingDone(true);
+        setBookingInfo(body.booking || null);
+        setStatusMessage('Booking confirmed — check your email for confirmation.');
+        setStatusType('success');
+      } catch (err: any) {
+        setStatusMessage('Booking failed: ' + (err?.message || String(err)));
+        setStatusType('error');
+      } finally {
+        setShowModal(false);
+        setSelectedSlot(null);
+      }
+      return;
+    }
+
+    // Fallback local behavior
     setSlots((prev) =>
       prev.map((s) =>
         s.id === selectedSlot.id ? { ...s, booked: true } : s
@@ -98,6 +166,8 @@ const TrainingBookingSystem: React.FC = () => {
     );
     setShowModal(false);
     setSelectedSlot(null);
+    setStatusMessage('Booking reserved locally (dev mode)');
+    setStatusType('success');
     // TODO: Add notification, email, Airtable integration
   };
 
@@ -108,13 +178,22 @@ const TrainingBookingSystem: React.FC = () => {
         <p className="bookings-lead">Choose a session below to reserve a free taster. If you received an invite, use the booking link provided in your email.</p>
       </div>
 
+      {/* Accessible status area */}
+      <div aria-live="polite" aria-atomic="true" tabIndex={-1} ref={statusRef} style={{ outline: 'none' }}>
+        {statusMessage ? (
+          <div className={`p-3 mb-4 rounded ${statusType === 'success' ? 'bg-green-50 border border-green-200 text-green-800' : statusType === 'error' ? 'bg-red-50 border border-red-200 text-red-800' : 'bg-gray-50 border border-gray-200 text-gray-800'}`} role="status">
+            {statusMessage}
+          </div>
+        ) : null}
+      </div>
+
       <div className="booking-grid">
         {slots.map((slot) => (
           <div
             key={slot.id}
             className={`booking-card p-4 border rounded-lg shadow cursor-pointer transition ${slot.booked
-                ? "bg-gray-200 border-gray-400 cursor-not-allowed"
-                : "card"
+              ? "bg-gray-200 border-gray-400 cursor-not-allowed"
+              : "card"
               }`}
             onClick={() => !slot.booked && slot.enabled && handleSelect(slot)}
             aria-disabled={slot.booked || !slot.enabled}
@@ -151,10 +230,10 @@ const TrainingBookingSystem: React.FC = () => {
             <div className="slot-actions">
               <button
                 onClick={() => !slot.booked && slot.enabled && handleSelect(slot)}
-                disabled={slot.booked || !slot.enabled}
-                className={`btn-primary ${slot.booked || !slot.enabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={bookingDone || slot.booked || !slot.enabled}
+                className={`btn-primary ${bookingDone || slot.booked || !slot.enabled ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                {slot.booked ? 'Booked' : 'Book'}
+                {slot.booked || bookingDone ? 'Booked' : 'Book'}
               </button>
               <button
                 onClick={() => alert('More info coming soon')}

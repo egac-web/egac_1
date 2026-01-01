@@ -45,6 +45,10 @@ export async function sendInviteNotification({ enquiryId, inviteId, to, inviteUr
     try {
       await appendEnquiryEvent(enquiryId, { type: 'invite_send_failed', invite_id: inviteId, error: (err && err.response) ? err.response : String(err), at: nowISO() }, env);
     } catch (e) { console.error('Failed to append enquiry event for failed send', e); }
+    try {
+      const { markInviteSendFailed } = await import('./supabase');
+      await markInviteSendFailed(inviteId, (err && err.response) ? JSON.stringify(err.response) : String(err), env);
+    } catch (e) { console.error('Failed to mark invite send failed', e); }
     return { ok: false, error: err };
   }
 }
