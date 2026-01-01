@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import "../styles/bookings.css";
 import { FaCalendarAlt, FaClock, FaUsers } from "react-icons/fa";
 
 function formatDate(date: string): string {
@@ -102,48 +103,74 @@ const TrainingBookingSystem: React.FC = () => {
 
   return (
     <div className="max-w-3xl mx-auto py-8">
-      <h2 className="text-3xl font-bold mb-6 text-center" style={{ color: 'var(--blue)' }}>Book a Training Session</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="bookings-hero">
+        <h2 className="text-3xl font-bold mb-2">Book a Training Session</h2>
+        <p className="bookings-lead">Choose a session below to reserve a free taster. If you received an invite, use the booking link provided in your email.</p>
+      </div>
+
+      <div className="booking-grid">
         {slots.map((slot) => (
           <div
             key={slot.id}
-            className={`p-4 border rounded-lg shadow cursor-pointer transition ${slot.booked
+            className={`booking-card p-4 border rounded-lg shadow cursor-pointer transition ${slot.booked
                 ? "bg-gray-200 border-gray-400 cursor-not-allowed"
-                : "card hover:shadow-lg"
+                : "card"
               }`}
             onClick={() => !slot.booked && slot.enabled && handleSelect(slot)}
+            aria-disabled={slot.booked || !slot.enabled}
+            role="button"
+            tabIndex={slot.booked || !slot.enabled ? -1 : 0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { if (!slot.booked && slot.enabled) handleSelect(slot); } }}
           >
-            <div className="flex items-center gap-2 mb-2">
+            <div className="booking-meta">
               <FaCalendarAlt style={{ color: 'var(--blue)' }} />
-              <span className="font-semibold">{formatDate(slot.date)}</span>
-            </div>
-            <div className="flex items-center gap-2 mb-2">
-              <FaClock style={{ color: 'var(--blue)' }} />
-              <span>{slot.time}</span>
-            </div>
-            <div className="flex items-center gap-2 mb-2">
-              <FaUsers style={{ color: 'var(--blue)' }} />
-              <span>{slot.group}</span>
-            </div>
-            {slot.booked && (
-              <div className="mt-2 text-sm text-gray-600">
-                <strong>Booked</strong>
-                {slot.booker && ` by ${slot.booker}`}
+              <div>
+                <div className="font-semibold">{formatDate(slot.date)}</div>
+                <div className="text-sm bookings-lead">{slot.time} • <span className="booking-slot-group">{slot.group}</span></div>
               </div>
-            )}
+            </div>
+
+            {/* capacity / status */}
+            <div className="mt-2 text-sm text-gray-700">
+              {slot.booked ? (
+                <strong>Booked{slot.booker ? ` by ${slot.booker}` : ''}</strong>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-600">Available</div>
+                  <div className="text-sm text-gray-600">Slots: 2</div>
+                </div>
+              )}
+            </div>
+
             {!slot.enabled && !slot.booked && (
               <div className="mt-2 text-sm text-red-600">
                 <strong>Unavailable</strong>
               </div>
             )}
+
+            <div className="slot-actions">
+              <button
+                onClick={() => !slot.booked && slot.enabled && handleSelect(slot)}
+                disabled={slot.booked || !slot.enabled}
+                className={`btn-primary ${slot.booked || !slot.enabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {slot.booked ? 'Booked' : 'Book'}
+              </button>
+              <button
+                onClick={() => alert('More info coming soon')}
+                className="bg-gray-100 text-gray-800 py-2 px-4 rounded hover:bg-gray-200"
+              >
+                Details
+              </button>
+            </div>
           </div>
         ))}
       </div>
 
       {/* Modal for booking confirmation */}
       {showModal && selectedSlot && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="card p-6 rounded-lg shadow-xl max-w-md w-full">
+        <div className="fixed inset-0 flex items-center justify-center z-50 booking-modal-backdrop">
+          <div className="card p-6 rounded-lg shadow-xl booking-modal">
             <h3 className="text-xl font-bold mb-4">Confirm Booking</h3>
             <p className="mb-2">
               <strong>Date:</strong> {formatDate(selectedSlot.date)}
@@ -159,7 +186,7 @@ const TrainingBookingSystem: React.FC = () => {
                 onClick={handleBook}
                 className="flex-1 btn-primary"
               >
-                Confirm
+                Confirm booking
               </button>
               <button
                 onClick={handleCloseModal}
