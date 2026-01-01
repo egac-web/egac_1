@@ -11,36 +11,51 @@ export async function POST({ request }) {
     const required = ["contact_name", "contact_email", "gdpr_consent"];
     const missing = required.filter((k) => !body[k]);
     if (missing.length) {
-      return {
+      return new Response(JSON.stringify({ ok: false, error: `Missing fields: ${missing.join(", ")}` }), {
         status: 400,
-        body: { ok: false, error: `Missing fields: ${missing.join(", ")}` },
-      };
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     // Message is only required when 'Other' is selected
     if (body.interest === 'Other' && !body.message) {
-      return { status: 400, body: { ok: false, error: 'Message is required when selecting Other' } };
+      return new Response(JSON.stringify({ ok: false, error: 'Message is required when selecting Other' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     // Honeypot check
     if (body.honeypot) {
-      return { status: 400, body: { ok: false, error: "Spam detected" } };
+      return new Response(JSON.stringify({ ok: false, error: "Spam detected" }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     // Email format check (simple)
     const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRe.test(body.contact_email)) {
-      return { status: 400, body: { ok: false, error: "Invalid email" } };
+      return new Response(JSON.stringify({ ok: false, error: "Invalid email" }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     // GDPR consent must be true-ish
     if (!(body.gdpr_consent === true || body.gdpr_consent === "true" || body.gdpr_consent === "on")) {
-      return { status: 400, body: { ok: false, error: "GDPR consent required" } };
+      return new Response(JSON.stringify({ ok: false, error: "GDPR consent required" }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     // If interest is Training, DOB is required (subject DOB is accepted when enquiring for someone else)
     if ((body.interest === 'Training' || body.area_of_interest === 'Training') && !(body.dob || body.subject_dob)) {
-      return { status: 400, body: { ok: false, error: 'Date of birth is required for Training enquiries' } };
+      return new Response(JSON.stringify({ ok: false, error: 'Date of birth is required for Training enquiries' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     // If enquiring on behalf of someone else (parent/guardian), require contact phone and subject details
@@ -52,7 +67,10 @@ export async function POST({ request }) {
       if (!body.subject_last_name) missingForSomeoneElse.push('subject_last_name');
       if (!body.subject_dob && !body.dob) missingForSomeoneElse.push('subject_dob');
       if (missingForSomeoneElse.length) {
-        return { status: 400, body: { ok: false, error: `Missing fields for someone-else enquiries: ${missingForSomeoneElse.join(', ')}` } };
+        return new Response(JSON.stringify({ ok: false, error: `Missing fields for someone-else enquiries: ${missingForSomeoneElse.join(', ')}` }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        });
       }
 
       // Prefer subject_dob as the canonical DOB for age mapping
@@ -177,9 +195,15 @@ export async function POST({ request }) {
       console.log('Saved enquiry:', { enquiry: inserted, invite });
     }
 
-    return { status: 200, body: { ok: true, enquiry_id: inserted.id, invite_id: invite ? invite.id : null } };
+    return new Response(JSON.stringify({ ok: true, enquiry_id: inserted.id, invite_id: invite ? invite.id : null }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
   } catch (err) {
     console.error('Enquiry endpoint error', err);
-    return { status: 500, body: { ok: false, error: 'Server error' } };
+    return new Response(JSON.stringify({ ok: false, error: 'Server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }

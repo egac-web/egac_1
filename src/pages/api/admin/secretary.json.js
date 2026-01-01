@@ -11,9 +11,15 @@ export async function POST({ request }) {
     const client = getSupabaseAdmin();
     const { data, error } = await client.from('secretaries').insert([{ email: body.email.toLowerCase(), display_name: body.display_name || null }]).select().single();
     if (error) return { status: 500, body: { ok: false, error: error.message } };
-    return { status: 200, body: { ok: true, secretary: data } };
+    return new Response(JSON.stringify({ ok: true, secretary: data }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
   } catch (err) {
     console.error('Create secretary error', err);
-    return { status: 500, body: { ok: false, error: 'Server error' } };
+    return new Response(JSON.stringify({ ok: false, error: 'Server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }

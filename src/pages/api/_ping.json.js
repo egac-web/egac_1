@@ -2,5 +2,8 @@
 export const prerender = false;
 
 export async function POST() {
-  return { status: 200, body: { ok: true, message: 'pong', route: '/api/_ping.json' } };
+  return new Response(JSON.stringify({ ok: true, message: 'pong', route: '/api/_ping.json' }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' }
+  });
 }

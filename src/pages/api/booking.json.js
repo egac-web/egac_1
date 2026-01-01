@@ -19,7 +19,10 @@ export async function GET({ request }) {
         return { date: d, slots: { u13: CONFIG.capacityPerSlot - u13Count, u15plus: CONFIG.capacityPerSlot - u15Count } };
       });
       const availability = await Promise.all(availabilityPromises);
-      return { status: 200, body: { ok: true, availability } };
+      return new Response(JSON.stringify({ ok: true, availability }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     if (inviteToken) {
@@ -43,12 +46,21 @@ export async function GET({ request }) {
 
       const existingBooking = await getBookingByInvite(invite.id);
 
-      return { status: 200, body: { ok: true, invite, enquiry, availability, booking: existingBooking } };
+      return new Response(JSON.stringify({ ok: true, invite, enquiry, availability, booking: existingBooking }), {
+
+        status: 200,
+
+        headers: { 'Content-Type': 'application/json' }
+
+      });
     }
 
   } catch (err) {
     console.error('Booking GET error', err);
-    return { status: 500, body: { ok: false, error: 'Server error' } };
+    return new Response(JSON.stringify({ ok: false, error: 'Server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
 
@@ -131,9 +143,18 @@ export async function post({ request }) {
       }
     }
 
-    return { status: 200, body: { ok: true, booking } };
+    return new Response(JSON.stringify({ ok: true, booking }), {
+
+      status: 200,
+
+      headers: { 'Content-Type': 'application/json' }
+
+    });
   } catch (err) {
     console.error('Booking POST error', err);
-    return { status: 500, body: { ok: false, error: 'Server error' } };
+    return new Response(JSON.stringify({ ok: false, error: 'Server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }

@@ -65,6 +65,9 @@ export async function POST({ request }) {
     return { status: 200, body: responsePayload };
   } catch (err) {
     console.error('Attendance endpoint error', err);
-    return { status: 500, body: { ok: false, error: 'Server error' } };
+    return new Response(JSON.stringify({ ok: false, error: 'Server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }

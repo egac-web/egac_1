@@ -27,9 +27,18 @@ export async function POST({ request }) {
       } catch (err) { console.error('Failed to send cancel email', err); }
     }
 
-    return { status: 200, body: { ok: true, cancelled } };
+    return new Response(JSON.stringify({ ok: true, cancelled }), {
+
+      status: 200,
+
+      headers: { 'Content-Type': 'application/json' }
+
+    });
   } catch (err) {
     console.error('Cancel booking error', err);
-    return { status: 500, body: { ok: false, error: 'Server error' } };
+    return new Response(JSON.stringify({ ok: false, error: 'Server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
