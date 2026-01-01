@@ -1,0 +1,7 @@
+name = "egac-retry-trigger"
+main = "./workers/retry-trigger.js"
+compatibility_date = "2026-01-01"
+account_id = "<YOUR_CF_ACCOUNT_ID>"
+
+[env.production]
+route = ""
