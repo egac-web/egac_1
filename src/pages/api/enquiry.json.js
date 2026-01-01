@@ -89,7 +89,10 @@ export async function POST({ request, locals }) {
         body: `secret=${encodeURIComponent(env.RECAPTCHA_SECRET)}&response=${encodeURIComponent(token)}`,
       });
       const json = await verifyRes.json();
-      if (!json.success) return { status: 400, body: { ok: false, error: 'recaptcha failed' } };
+      if (!json.success) return new Response(JSON.stringify({ ok: false, error: 'recaptcha failed' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
     if (env.HCAPTCHA_SECRET && body['h-captcha-response']) {
       const token = body['h-captcha-response'];
@@ -99,7 +102,10 @@ export async function POST({ request, locals }) {
         body: `secret=${encodeURIComponent(env.HCAPTCHA_SECRET)}&response=${encodeURIComponent(token)}`,
       });
       const json = await verifyRes.json();
-      if (!json.success) return { status: 400, body: { ok: false, error: 'hCaptcha failed' } };
+      if (!json.success) return new Response(JSON.stringify({ ok: false, error: 'hCaptcha failed' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     // Build structured enquiry payload for storage

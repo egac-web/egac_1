@@ -5,16 +5,28 @@ export async function POST({ request, locals }) {
   try {
     const env = locals?.runtime?.env || process.env;
     const token = request.headers.get('x-admin-token') || '';
-    if (!env.ADMIN_TOKEN || token !== env.ADMIN_TOKEN) return { status: 401, body: { ok: false, error: 'Unauthorized' } };
+    if (!env.ADMIN_TOKEN || token !== env.ADMIN_TOKEN) return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' }
+    });
 
     const body = await request.json();
     const { enquiry_id, note, send_membership_link } = body || {};
-    if (!enquiry_id) return { status: 400, body: { ok: false, error: 'Missing enquiry_id' } };
+    if (!enquiry_id) return new Response(JSON.stringify({ ok: false, error: 'Missing enquiry_id' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
 
     const client = getSupabaseAdmin(env);
     const { data: enquiry, error: fetchErr } = await client.from('enquiries').select('*').eq('id', enquiry_id).maybeSingle();
-    if (fetchErr) return { status: 500, body: { ok: false, error: fetchErr.message } };
-    if (!enquiry) return { status: 404, body: { ok: false, error: 'Enquiry not found' } };
+    if (fetchErr) return new Response(JSON.stringify({ ok: false, error: fetchErr.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!enquiry) return new Response(JSON.stringify({ ok: false, error: 'Enquiry not found' }), {
+      status: 404,
+      headers: { 'Content-Type': 'application/json' }
+    });
 
     // mark presli confirmed and store note
     const updatedEnquiry = await markEnquiryPresliConfirmed(enquiry_id, note || null, env);

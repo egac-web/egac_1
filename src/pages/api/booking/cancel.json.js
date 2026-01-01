@@ -6,13 +6,22 @@ export async function POST({ request, locals }) {
     const env = locals?.runtime?.env || process.env;
     const body = await request.json();
     const { invite: inviteToken, booking_id } = body;
-    if (!inviteToken || !booking_id) return { status: 400, body: { ok: false, error: 'invite and booking_id required' } };
+    if (!inviteToken || !booking_id) return new Response(JSON.stringify({ ok: false, error: 'invite and booking_id required' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
 
     const invite = await getInviteByToken(inviteToken, env);
-    if (!invite) return { status: 404, body: { ok: false, error: 'Invalid invite' } };
+    if (!invite) return new Response(JSON.stringify({ ok: false, error: 'Invalid invite' }), {
+      status: 404,
+      headers: { 'Content-Type': 'application/json' }
+    });
 
     const booking = await getBookingByInvite(invite.id, env);
-    if (!booking || booking.id !== booking_id) return { status: 404, body: { ok: false, error: 'Booking not found for invite' } };
+    if (!booking || booking.id !== booking_id) return new Response(JSON.stringify({ ok: false, error: 'Booking not found for invite' }), {
+      status: 404,
+      headers: { 'Content-Type': 'application/json' }
+    });
 
     const cancelled = await cancelBooking(booking_id, env);
     // append event

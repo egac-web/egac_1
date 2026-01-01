@@ -28,7 +28,10 @@ export async function GET({ request, locals }) {
 
     if (inviteToken) {
       const invite = await getInviteByToken(inviteToken, env);
-      if (!invite) return { status: 404, body: { ok: false, error: 'Invalid invite' } };
+      if (!invite) return new Response(JSON.stringify({ ok: false, error: 'Invalid invite' }), {
+      status: 404,
+      headers: { 'Content-Type': 'application/json' }
+    });
       // get enquiry to determine eligibility
       const client = getSupabaseAdmin(env);
       const { data: enqRes, error } = await client.from('enquiries').select('*').eq('id', invite.enquiry_id).maybeSingle();
@@ -70,11 +73,20 @@ export async function post({ request, locals }) {
     const env = locals?.runtime?.env || process.env;
     const body = await request.json();
     const { invite: inviteToken, session_date } = body;
-    if (!inviteToken || !session_date) return { status: 400, body: { ok: false, error: 'invite and session_date required' } };
+    if (!inviteToken || !session_date) return new Response(JSON.stringify({ ok: false, error: 'invite and session_date required' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
 
     const invite = await getInviteByToken(inviteToken, env);
-    if (!invite) return { status: 404, body: { ok: false, error: 'Invalid invite' } };
-    if (invite.status !== 'pending') return { status: 400, body: { ok: false, error: 'Invite is not available for booking' } };
+    if (!invite) return new Response(JSON.stringify({ ok: false, error: 'Invalid invite' }), {
+      status: 404,
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (invite.status !== 'pending') return new Response(JSON.stringify({ ok: false, error: 'Invite is not available for booking' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
 
     const client = getSupabaseAdmin(env);
     const { data: enqRes, error } = await client.from('enquiries').select('*').eq('id', invite.enquiry_id).maybeSingle();
@@ -83,15 +95,24 @@ export async function post({ request, locals }) {
 
     // determine slot from age on session_date
     const dob = enquiry.dob;
-    if (!dob) return { status: 400, body: { ok: false, error: 'DOB required to determine age group' } };
+    if (!dob) return new Response(JSON.stringify({ ok: false, error: 'DOB required to determine age group' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
 
     const age = computeAgeOnDate(dob, `${session_date}T00:00:00`);
     const slot = slotForAge(age);
-    if (!slot) return { status: 400, body: { ok: false, error: 'Unable to determine slot for age' } };
+    if (!slot) return new Response(JSON.stringify({ ok: false, error: 'Unable to determine slot for age' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
 
     // capacity check
     const count = await countBookingsForDateSlot(session_date, slot, env);
-    if (count >= CONFIG.capacityPerSlot) return { status: 409, body: { ok: false, error: 'No vacancies for this session' } };
+    if (count >= CONFIG.capacityPerSlot) return new Response(JSON.stringify({ ok: false, error: 'No vacancies for this session' }), {
+      status: 409,
+      headers: { 'Content-Type': 'application/json' }
+    });
 
     // create booking
     const session_time = CONFIG.slots[slot].time + ':00';
