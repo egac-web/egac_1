@@ -54,13 +54,15 @@ export async function POST({ request, locals }) {
         const membershipUrl = `${env.SITE_URL || ''}/membership?token=${invite.token}`;
         const enquiry = booking.enquiry || {};
         if (enquiry && enquiry.email) {
-          const html = `<p>Hello ${enquiry.name || ''},</p><p>Thanks for attending your taster session. To complete your membership, please complete the form: <a href="${membershipUrl}">Complete membership</a></p>`;
-          const text = `Complete your membership: ${membershipUrl}`;
-          await sendInviteEmail({ apiKey: env.RESEND_API_KEY, from: env.RESEND_FROM, to: enquiry.email, subject: 'EGAC: Complete your membership', html, text });
-          await markInviteSent(invite.id, env);
-          const ev = { type: 'membership_link_sent', invite_id: invite.id, to: enquiry.email, timestamp: new Date().toISOString() };
-          await appendEnquiryEvent(enquiry_id, ev, env);
-          responsePayload.membership_sent = true;
+          try {
+            const { sendInviteNotification } = await import('../../lib/notifications');
+            await sendInviteNotification({ enquiryId: enquiry_id, inviteId: invite.id, to: enquiry.email, inviteUrl: membershipUrl, env });
+            responsePayload.membership_sent = true;
+          } catch (err) {
+            console.error('sendInviteNotification failed for membership link', err);
+            responsePayload.membership_sent = false;
+            responsePayload.warning = 'Failed to send membership link';
+          }
         } else {
           responsePayload.membership_sent = false;
           responsePayload.warning = 'No email address to send membership link';

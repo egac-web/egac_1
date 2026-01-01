@@ -44,13 +44,15 @@ export async function POST({ request, locals }) {
 
         const membershipUrl = `${env.SITE_URL || ''}/membership?token=${invite.token}`;
         if (enquiry.email) {
-          const html = `<p>Hello ${enquiry.name || ''},</p><p>Your attendance has been confirmed. To complete your membership, please complete the form: <a href="${membershipUrl}">Complete membership</a></p>`;
-          const text = `Complete your membership: ${membershipUrl}`;
-          await sendInviteEmail({ apiKey: env.RESEND_API_KEY, from: env.RESEND_FROM, to: enquiry.email, subject: 'EGAC: Complete your membership', html, text });
-          await markInviteSent(invite.id, env);
-          const ev = { type: 'membership_link_sent', invite_id: invite.id, to: enquiry.email, timestamp: new Date().toISOString() };
-          await appendEnquiryEvent(enquiry_id, ev, env);
-          response.membership_sent = true;
+          try {
+            const { sendInviteNotification } = await import('../../lib/notifications');
+            await sendInviteNotification({ enquiryId: enquiry_id, inviteId: invite.id, to: enquiry.email, inviteUrl: membershipUrl, env });
+            response.membership_sent = true;
+          } catch (err) {
+            console.error('sendInviteNotification failed for presli confirm', err);
+            response.membership_sent = false;
+            response.warning = 'Failed to send membership link';
+          }
         } else {
           response.membership_sent = false;
           response.warning = 'No email found for enquiry';

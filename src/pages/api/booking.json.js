@@ -29,9 +29,9 @@ export async function GET({ request, locals }) {
     if (inviteToken) {
       const invite = await getInviteByToken(inviteToken, env);
       if (!invite) return new Response(JSON.stringify({ ok: false, error: 'Invalid invite' }), {
-      status: 404,
-      headers: { 'Content-Type': 'application/json' }
-    });
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
       // get enquiry to determine eligibility
       const client = getSupabaseAdmin(env);
       const { data: enqRes, error } = await client.from('enquiries').select('*').eq('id', invite.enquiry_id).maybeSingle();
@@ -124,15 +124,12 @@ export async function post({ request, locals }) {
       await appendEnquiryEvent(enquiry.id, { type: 'booking_created', booking_id: booking.id, session_date, slot, at: new Date().toISOString() }, env);
     } catch (err) { console.error('Failed to mark accepted/append event', err); }
 
-    // send confirmation email via Resend if configured
-    if (env.RESEND_API_KEY && env.RESEND_FROM) {
-      try {
-        const res = await sendBookingConfirmation({ apiKey: env.RESEND_API_KEY, from: env.RESEND_FROM, to: enquiry.email, date: session_date, slotLabel: CONFIG.slots[slot].label });
-        try { await appendEnquiryEvent(enquiry.id, { type: 'booking_confirm_email_sent', booking_id: booking.id, resend_id: res.id, at: new Date().toISOString(), meta: res.raw }, env); } catch (err) { console.error('append event failed', err); }
-      } catch (err) {
-        console.error('Failed to send booking confirmation', err);
-        try { await appendEnquiryEvent(enquiry.id, { type: 'booking_confirm_email_failed', booking_id: booking.id, error: (err && err.response) ? err.response : String(err), at: new Date().toISOString() }, env); } catch (e) { console.error('append event failed', e); }
-      }
+    // send confirmation email via notifications helper (records events)
+    try {
+      const { sendBookingConfirmationNotification } = await import('../../lib/notifications');
+      await sendBookingConfirmationNotification({ enquiryId: enquiry.id, bookingId: booking.id, to: enquiry.email, date: session_date, slotLabel: CONFIG.slots[slot].label, env });
+    } catch (err) {
+      console.error('sendBookingConfirmationNotification failed', err);
     }
 
     // Persist booking reference on the enquiry

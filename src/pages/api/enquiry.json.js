@@ -135,10 +135,7 @@ export async function POST({ request, locals }) {
     };
 
     // Persist to Supabase
-    console.log('About to insert enquiry with env type:', typeof env);
-    console.log('Has SUPABASE_URL:', !!env.SUPABASE_URL);
     const inserted = await insertEnquiry(enquiryPayload, env);
-    console.log('Enquiry inserted:', inserted.id);
 
     // Create an invite record for the enquiry
     let invite = null;
@@ -152,30 +149,13 @@ export async function POST({ request, locals }) {
         console.error('Could not update enquiry with invite id', err);
       }
 
-      // Send invite email via Resend if configured
-      if (env.RESEND_API_KEY && env.RESEND_FROM) {
-        try {
-          const { sendInviteEmail } = await import('../../lib/resend');
-          const inviteUrl = `${env.SITE_BASE_URL || ''}/booking?invite=${encodeURIComponent(invite.token)}`;
-          const html = `<p>Hello ${inserted.name || ''},</p><p>Thanks for your enquiry. To book a free taster, please follow this link:</p><p><a href="${inviteUrl}">${inviteUrl}</a></p><p>If you did not request this, ignore this email.</p>`;
-          const text = `Hello ${inserted.name || ''}\n\nBook here: ${inviteUrl}`;
-          const res = await sendInviteEmail({ apiKey: env.RESEND_API_KEY, from: env.RESEND_FROM, to: inserted.email, subject: 'EGAC: Book a taster / session', html, text });
-          // record event
-          try {
-            const { appendEnquiryEvent } = await import('../../lib/supabase');
-            await appendEnquiryEvent(inserted.id, { type: 'invite_sent', invite_id: invite.id, resend_id: res.id, at: new Date().toISOString(), meta: res.raw }, env);
-          } catch (err) { console.error('Failed to append enquiry event', err); }
-
-          // update invite status
-          try { await markInviteSent(invite.id, env); } catch (e) { console.error('markInviteSent failed', e); }
-        } catch (err) {
-          console.error('Failed to send invite email', err);
-          // Append a failed-send event
-          try {
-            const { appendEnquiryEvent } = await import('../../lib/supabase');
-            await appendEnquiryEvent(inserted.id, { type: 'invite_send_failed', invite_id: invite.id, error: (err && err.response) ? err.response : String(err), at: new Date().toISOString() }, env);
-          } catch (err) { console.error('Failed to append enquiry event for failed send', err); }
-        }
+      // Send invite email via notifications helper (records events and marks invite)
+      try {
+        const { sendInviteNotification } = await import('../../lib/notifications');
+        const inviteUrl = `${env.SITE_BASE_URL || ''}/booking?invite=${encodeURIComponent(invite.token)}`;
+        await sendInviteNotification({ enquiryId: inserted.id, inviteId: invite.id, to: inserted.email, inviteUrl, env });
+      } catch (err) {
+        console.error('sendInviteNotification failed', err);
       }
 
     } catch (err) {
@@ -203,8 +183,6 @@ export async function POST({ request, locals }) {
       } catch (err) {
         console.error('Error forwarding to webhook', err);
       }
-    } else {
-      console.log('Saved enquiry:', { enquiry: inserted, invite });
     }
 
     return new Response(JSON.stringify({ ok: true, enquiry_id: inserted.id, invite_id: invite ? invite.id : null }), {
@@ -213,16 +191,8 @@ export async function POST({ request, locals }) {
     });
   } catch (err) {
     console.error('Enquiry endpoint error', err);
-    const errorMessage = err instanceof Error ? err.message : (typeof err === 'string' ? err : JSON.stringify(err));
-    const errorStack = err instanceof Error ? err.stack : '';
-    const errorDetails = {
-      message: errorMessage,
-      stack: errorStack,
-      type: typeof err,
-      constructor: err?.constructor?.name,
-      keys: err ? Object.keys(err) : []
-    };
-    return new Response(JSON.stringify({ ok: false, error: 'Server error', details: errorMessage, debug: errorDetails }), {
+    // Return a generic server error to callers and keep server log for details
+    return new Response(JSON.stringify({ ok: false, error: 'Server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
