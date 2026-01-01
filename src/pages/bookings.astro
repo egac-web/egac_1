@@ -1,10 +1,41 @@
 ---
 // This page is NOT linked from the main site navigation. Share the URL directly with those who need access.
 import Layout from "../components/Layout.astro";
-import TrainingBookingSystem from "../components/TrainingBookingSystem";
 import "../styles/bookings.css";
+import { getNextNWeekdayDates, CONFIG } from "../lib/booking";
+
+// Build a simple server-rendered set of slots so the page shows cards immediately.
+const dates = getNextNWeekdayDates(2, 6); // next 6 weeks
+const slots = dates.flatMap((date) => [
+  { id: `${date}-u13-1`, date, time: `${CONFIG.slots.u13.time}-00`, group: CONFIG.slots.u13.label },
+  { id: `${date}-u15-1`, date, time: `${CONFIG.slots.u15plus.time}-00`, group: CONFIG.slots.u15plus.label },
+]);
 ---
 
 <Layout title="Training Session Bookings">
-  <TrainingBookingSystem client:load />
+  <div class="bookings-hero">
+    <h2 class="text-3xl font-bold mb-2">Book a Training Session</h2>
+    <p class="bookings-lead">Choose a session below to reserve a free taster. If you received an invite, use the booking link provided in your email.</p>
+  </div>
+
+  <div class="booking-grid">
+    {slots.map((slot) => (
+      <article key={slot.id} class="booking-card p-4 border rounded-lg shadow">
+        <div class="booking-meta">
+          <span class="aria-icon">📅</span>
+          <div>
+            <div class="font-semibold">{new Date(slot.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</div>
+            <div class="text-sm bookings-lead">{slot.time} • <span class="booking-slot-group">{slot.group}</span></div>
+          </div>
+        </div>
+        <div class="slot-actions">
+          <a href={`/booking?date=${slot.date}&slot=${slot.group}`} class="btn-primary">Book</a>
+          <button class="bg-gray-100 text-gray-800 py-2 px-4 rounded">Details</button>
+        </div>
+      </article>
+    ))}
+
+    <!-- Fallback to interactive client component if needed -->
+    <!-- <TrainingBookingSystem client:load /> -->
+  </div>
 </Layout>
