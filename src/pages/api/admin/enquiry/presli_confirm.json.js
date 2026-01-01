@@ -1,7 +1,7 @@
 import { getSupabaseAdmin, markEnquiryPresliConfirmed, getLatestInviteForEnquiry, createInviteForEnquiry, appendEnquiryEvent, markInviteSent } from '../../../../lib/supabase';
 import { sendInviteEmail } from '../../../../lib/resend';
 
-export async function post({ request }) {
+export async function POST({ request }) {
   try {
     const token = request.headers.get('x-admin-token') || '';
     if (!process.env.ADMIN_TOKEN || token !== process.env.ADMIN_TOKEN) return { status: 401, body: { ok: false, error: 'Unauthorized' } };

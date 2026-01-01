@@ -3,7 +3,7 @@ import { getNextNWeekdayDates, slotForAge, computeAgeOnDate, CONFIG } from '../.
 import { countBookingsForDateSlot, createBooking, appendEnquiryEvent, markInviteAccepted, getBookingByInvite, getSupabaseAdmin } from '../../lib/supabase';
 import sendInviteEmail, { sendBookingConfirmation } from '../../lib/resend';
 
-export async function get({ request }) {
+export async function GET({ request }) {
   try {
     const url = new URL(request.url);
     const inviteToken = url.searchParams.get('invite');

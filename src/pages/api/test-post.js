@@ -2,8 +2,8 @@
 export const prerender = false;
 
 export async function POST({ request }) {
-  return new Response(JSON.stringify({ 
-    ok: true, 
+  return new Response(JSON.stringify({
+    ok: true,
     message: 'POST received successfully',
     timestamp: new Date().toISOString()
   }), {
@@ -13,8 +13,8 @@ export async function POST({ request }) {
 }
 
 export async function GET() {
-  return new Response(JSON.stringify({ 
-    ok: true, 
+  return new Response(JSON.stringify({
+    ok: true,
     message: 'GET received successfully',
     timestamp: new Date().toISOString()
   }), {

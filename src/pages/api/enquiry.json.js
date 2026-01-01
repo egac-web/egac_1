@@ -3,7 +3,7 @@ import { insertEnquiry, createInviteForEnquiry, markInviteSent, getSupabaseAdmin
 // This API route must be server-rendered so POST requests are accepted during dev/runtime
 export const prerender = false;
 
-export async function post({ request }) {
+export async function POST({ request }) {
   try {
     const body = await request.json();
 

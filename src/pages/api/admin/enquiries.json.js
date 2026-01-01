@@ -1,6 +1,6 @@
 import { getSupabaseAdmin } from '../../../lib/supabase';
 
-export async function get({ request }) {
+export async function GET({ request }) {
   try {
     const token = request.headers.get('x-admin-token') || '';
     if (!process.env.ADMIN_TOKEN || token !== process.env.ADMIN_TOKEN) return { status: 401, body: { ok: false, error: 'Unauthorized' } };

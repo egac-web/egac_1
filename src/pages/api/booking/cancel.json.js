@@ -1,7 +1,7 @@
 import { getInviteByToken, getBookingByInvite, cancelBooking, appendEnquiryEvent } from '../../../lib/supabase';
 import { sendBookingCancellation } from '../../../lib/resend';
 
-export async function post({ request }) {
+export async function POST({ request }) {
   try {
     const body = await request.json();
     const { invite: inviteToken, booking_id } = body;
