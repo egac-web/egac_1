@@ -205,7 +205,8 @@ export async function POST({ request, locals }) {
   } catch (err) {
     console.error('Enquiry endpoint error', err);
     const errorMessage = err instanceof Error ? err.message : 'Server error';
-    return new Response(JSON.stringify({ ok: false, error: 'Server error', details: errorMessage }), {
+    const errorStack = err instanceof Error ? err.stack : '';
+    return new Response(JSON.stringify({ ok: false, error: 'Server error', details: errorMessage, stack: errorStack }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
