@@ -1,6 +1,6 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
 import { getInviteByToken, getBookingByInvite, cancelBooking, appendEnquiryEvent } from '../../../chunks/supabase_BuGpVBnm.mjs';
-import { sendBookingCancellation } from '../../../chunks/resend_Cp-fLiGF.mjs';
+import { sendBookingCancellation } from '../../../chunks/resend_DtyeWbHC.mjs';
 export { r as renderers } from '../../../chunks/_@astro-renderers_KnGPrR4n.mjs';
 
 async function post({ request }) {

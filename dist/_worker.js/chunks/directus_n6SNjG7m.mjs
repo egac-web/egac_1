@@ -15,10 +15,16 @@ const e={fetch:globalThis.fetch,WebSocket:globalThis.WebSocket,URL:globalThis.UR
 
 const n={},r=(r={})=>i=>{let a={...n,...r};return {async request(n){let o=n();if(o.headers||={},`Content-Type`in o.headers?o.headers[`Content-Type`]===`multipart/form-data`&&delete o.headers[`Content-Type`]:o.headers[`Content-Type`]=`application/json`,`getToken`in this&&!(`Authorization`in o.headers)){let e=await this.getToken();e&&(o.headers.Authorization=`Bearer ${e}`);}let s=n$1(i.url,o.path,o.params),c={method:o.method??`GET`,headers:o.headers??{}};`credentials`in a&&(c.credentials=a.credentials),o.body&&(c.body=o.body),o.onRequest&&(c=await o.onRequest(c)),a.onRequest&&(c=await a.onRequest(c));let l=await t$1(s.toString(),c,i.globals.fetch);return `onResponse`in o&&(l=await o.onResponse(l,c)),`onResponse`in r&&(l=await r.onResponse(l,c)),l}}};
 
-const DIRECTUS_URL = "https://egac-admin.themainhost.co.uk";
-const DIRECTUS_TOKEN = "eU8xb43Id43Ee4eeR_J8OL9ZaGIdBZdP";
-console.log("[EGAC] DIRECTUS_URL:", DIRECTUS_URL);
-console.log("[EGAC] DIRECTUS_TOKEN:", "[set]" );
-const directus = DIRECTUS_URL.includes("placeholder") ? null : t(DIRECTUS_URL).with(r()).with(e$1(DIRECTUS_TOKEN));
+function getDirectusClient(runtime) {
+  const DIRECTUS_URL = runtime?.env?.DIRECTUS_URL || "https://egac-admin.themainhost.co.uk";
+  const DIRECTUS_TOKEN = runtime?.env?.DIRECTUS_TOKEN || "eU8xb43Id43Ee4eeR_J8OL9ZaGIdBZdP";
+  console.log("[EGAC] DIRECTUS_URL:", DIRECTUS_URL);
+  console.log("[EGAC] DIRECTUS_TOKEN:", DIRECTUS_TOKEN ? "[set]" : "[not set]");
+  if (!DIRECTUS_URL) {
+    throw new Error("[EGAC] DIRECTUS_URL is not available");
+  }
+  return t(DIRECTUS_URL).with(r()).with(e$1(DIRECTUS_TOKEN || ""));
+}
+const directus = getDirectusClient();
 
-export { directus as d };
+export { directus as d, getDirectusClient as g };

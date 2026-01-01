@@ -1,5 +1,6 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
 import { countBookingsForDateSlot, getInviteByToken, getSupabaseAdmin, getBookingByInvite, createBooking, markInviteAccepted, appendEnquiryEvent } from '../../chunks/supabase_BuGpVBnm.mjs';
+import { sendBookingConfirmation, sendInviteEmail } from '../../chunks/resend_DtyeWbHC.mjs';
 export { r as renderers } from '../../chunks/_@astro-renderers_KnGPrR4n.mjs';
 
 /**
@@ -712,6 +713,32 @@ async function post({ request }) {
         console.error("Failed to send booking confirmation", err);
         try {
           await appendEnquiryEvent(enquiry.id, { type: "booking_confirm_email_failed", booking_id: booking.id, error: err && err.response ? err.response : String(err), at: (/* @__PURE__ */ new Date()).toISOString() });
+        } catch (e) {
+          console.error("append event failed", e);
+        }
+      }
+    }
+    try {
+      const client2 = getSupabaseAdmin();
+      await client2.from("enquiries").update({ booking_id: booking.id, booking_date: booking.session_date }).eq("id", enquiry.id);
+    } catch (err) {
+      console.error("Failed to update enquiry with booking info", err);
+    }
+    if (process.env.MEMBERSHIP_SECRETARY_EMAIL && process.env.RESEND_API_KEY && process.env.RESEND_FROM) {
+      try {
+        const subject = `EGAC: New taster booking for ${enquiry.name || enquiry.email}`;
+        const html = `<p>A new taster booking has been made:</p><ul><li>Enquiry ID: ${enquiry.id}</li><li>Name: ${enquiry.name || ""}</li><li>Email: ${enquiry.email}</li><li>Session date: ${session_date}</li><li>Slot: ${slot}</li><li>Booking ID: ${booking.id}</li></ul>`;
+        const text = `New taster booking: ${session_date} (${slot}) for ${enquiry.name || enquiry.email}. Booking ID: ${booking.id}`;
+        const res2 = await sendInviteEmail({ apiKey: process.env.RESEND_API_KEY, from: process.env.RESEND_FROM, to: process.env.MEMBERSHIP_SECRETARY_EMAIL, subject, html, text });
+        try {
+          await appendEnquiryEvent(enquiry.id, { type: "booking_notify_secretary_sent", booking_id: booking.id, resend_id: res2.id, at: (/* @__PURE__ */ new Date()).toISOString(), meta: res2.raw });
+        } catch (err) {
+          console.error("append event failed", err);
+        }
+      } catch (err) {
+        console.error("Failed to send booking notification to secretary", err);
+        try {
+          await appendEnquiryEvent(enquiry.id, { type: "booking_notify_secretary_failed", booking_id: booking.id, error: err && err.response ? err.response : String(err), at: (/* @__PURE__ */ new Date()).toISOString() });
         } catch (e) {
           console.error("append event failed", e);
         }

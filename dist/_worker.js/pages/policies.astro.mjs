@@ -1,15 +1,19 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { f as createComponent, k as renderComponent, r as renderTemplate, m as maybeRenderHead, h as addAttribute } from '../chunks/astro/server_Dl2fI4g-.mjs';
-import { $ as $$Layout } from '../chunks/Layout_LDF6ASYP.mjs';
+import { e as createAstro, f as createComponent, k as renderComponent, r as renderTemplate, m as maybeRenderHead, h as addAttribute } from '../chunks/astro/server_Dl2fI4g-.mjs';
+import { $ as $$Layout } from '../chunks/Layout_DCnyML-Y.mjs';
 import { $ as $$Card } from '../chunks/Card_2VvAYOxC.mjs';
-import { d as directus } from '../chunks/directus_DrGb9q1F.mjs';
+import { g as getDirectusClient } from '../chunks/directus_n6SNjG7m.mjs';
 import { n } from '../chunks/items_DNLj5PMx.mjs';
 /* empty css                                    */
 export { r as renderers } from '../chunks/_@astro-renderers_KnGPrR4n.mjs';
 
+const $$Astro = createAstro("https://your-egac-site.pages.dev");
 const $$Policies = createComponent(async ($$result, $$props, $$slots) => {
+  const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
+  Astro2.self = $$Policies;
   let policies = [];
   try {
+    const directus = getDirectusClient(Astro2.locals.runtime);
     const response = await directus.request(
       n("policies", {
         filter: { published: { _eq: true } },

@@ -1,5 +1,5 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { p as post$1 } from '../../chunks/enquiry.json_DPFCtq96.mjs';
+import { p as post$1 } from '../../chunks/enquiry.json_DrDfkOY3.mjs';
 export { r as renderers } from '../../chunks/_@astro-renderers_KnGPrR4n.mjs';
 
 // Ensure this route is server-rendered so POST requests are allowed

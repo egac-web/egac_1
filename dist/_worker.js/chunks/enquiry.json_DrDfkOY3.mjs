@@ -93,7 +93,7 @@ async function post({ request }) {
       }
       if (process.env.RESEND_API_KEY && process.env.RESEND_FROM) {
         try {
-          const { sendInviteEmail } = await import('./resend_Cp-fLiGF.mjs');
+          const { sendInviteEmail } = await import('./resend_DtyeWbHC.mjs');
           const inviteUrl = `${process.env.SITE_BASE_URL || ""}/booking?invite=${encodeURIComponent(invite.token)}`;
           const html = `<p>Hello ${inserted.name || ""},</p><p>Thanks for your enquiry. To book a free taster, please follow this link:</p><p><a href="${inviteUrl}">${inviteUrl}</a></p><p>If you did not request this, ignore this email.</p>`;
           const text = `Hello ${inserted.name || ""}
