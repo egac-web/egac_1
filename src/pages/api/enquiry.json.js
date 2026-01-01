@@ -201,7 +201,8 @@ export async function POST({ request }) {
     });
   } catch (err) {
     console.error('Enquiry endpoint error', err);
-    return new Response(JSON.stringify({ ok: false, error: 'Server error' }), {
+    const errorMessage = err instanceof Error ? err.message : 'Server error';
+    return new Response(JSON.stringify({ ok: false, error: 'Server error', details: errorMessage }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
