@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="/styles/forms.css" />
     <link rel="stylesheet" href="/styles/volunteering.css" />
     <style>
+      [x-cloak] { display: none !important; }
       .footer-nav {
         display: flex;
         flex-wrap: wrap;
@@ -423,5 +424,7 @@
         box-sizing: border-box;
       }
     </style>
+    <!-- Alpine.js must load before any Alpine components are initialized -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
   </body>
 </html>

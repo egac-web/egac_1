@@ -105,7 +105,7 @@ import "../../styles/forms.css";
       </div>
 
         <!-- Subject (person being enquired about) - shown when enquiring on behalf of someone else -->
-        <div class="form-group" x-show="form.enquiry_for === 'someone_else' || form.enquiry_for === 'child'" x-cloak style="display:none">
+        <div class="form-group" x-show="form.enquiry_for === 'someone_else' || form.enquiry_for === 'child'" x-cloak>
           <label class="form-label">Details of the person you are enquiring for</label>
           <div class="form-row">
             <div class="form-group">
@@ -145,7 +145,7 @@ import "../../styles/forms.css";
       </div>
 
       <!-- Training days (only show when Training is selected) -->
-      <div class="form-group" x-show="form.interest === 'Training'" x-cloak style="display:none">
+      <div class="form-group" x-show="form.interest === 'Training'" x-cloak>
         <label class="form-label">Which training days are you interested in?</label>
         <div class="radio-group">
           <label class="radio-label"><input type="checkbox" name="training_days" value="Tuesday" x-model="form.training_days"> Tues</label>
@@ -154,7 +154,11 @@ import "../../styles/forms.css";
       </div>
 
       <!-- Conditional: DOB when Training is selected AND enquiry is for myself -->
-      <div class="form-group" x-show="form.interest === 'Training' && form.enquiry_for === 'myself'" x-cloak>
+      <div 
+        class="form-group" 
+        x-show="form.interest === 'Training' && form.enquiry_for === 'myself'" 
+        x-cloak
+      >
         <label class="form-label" for="dob">Date of birth *</label>
         <input 
           type="date" 
@@ -300,7 +304,7 @@ import "../../styles/forms.css";
     </div>
 
     <!-- DOB for alt form when Training chosen AND enquiry is for myself -->
-    <div class="form-group" x-show="form.interest === 'Training' && form.enquiry_for === 'myself'" x-cloak>
+    <div class="form-group" x-show="form.interest === 'Training' && form.enquiry_for === 'myself'" x-cloak style="display:none">
       <label class="form-label" for="dob_alt">Date of birth *</label>
       <input 
         type="date" 
@@ -346,8 +350,8 @@ import "../../styles/forms.css";
   </form>
 )}
 
-<script>
-  function prefillArea(el) {
+<script is:inline>
+  window.prefillArea = function prefillArea(el) {
     const defaultArea = el.dataset.defaultArea || '';
     const params = typeof location !== 'undefined' ? new URLSearchParams(location.search) : null;
     const queryArea = params ? params.get('area_of_interest') : null;
@@ -362,7 +366,7 @@ import "../../styles/forms.css";
     }, 10);
   }
 
-  function enquiryForm() {
+  window.enquiryForm = function enquiryForm() {
     return {
       form: { 
         enquiry_for: 'myself',
@@ -520,173 +524,6 @@ import "../../styles/forms.css";
   }
 </script>
 
-<!-- Fallback vanilla JS initializer in case Alpine is not present -->
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    function toggleFields(formEl) {
-      const interest = formEl.querySelector('[name="interest"]').value;
-      const dob = formEl.querySelector('#dob');
-      const dobAlt = formEl.querySelector('#dob_alt');
-      const message = formEl.querySelector('#message');
-      const messageAlt = formEl.querySelector('#message_alt');
-
-      // Determine who the enquiry is for (radio)
-      const enqForChecked = formEl.querySelector('[name="enquiry_for"]:checked');
-      const enqFor = enqForChecked ? enqForChecked.value : (formEl.querySelector('[name="enquiry_for"]') ? formEl.querySelector('[name="enquiry_for"]').value : '');
-      const someoneElse = (enqFor === 'someone_else' || enqFor === 'child');
-
-      if (dob) {
-        const g = dob.closest('.form-group');
-        if (interest === 'Training') { g.style.display = ''; g.removeAttribute('x-cloak'); } else { g.style.display = 'none'; g.setAttribute('x-cloak', ''); }
-        dob.required = (interest === 'Training');
-      }
-      if (dobAlt) {
-        const g = dobAlt.closest('.form-group');
-        if (interest === 'Training') { g.style.display = ''; g.removeAttribute('x-cloak'); } else { g.style.display = 'none'; g.setAttribute('x-cloak', ''); }
-        dobAlt.required = (interest === 'Training');
-      }
-      if (message) {
-        const g = message.closest('.form-group');
-        if (interest === 'Other') { g.style.display = ''; g.removeAttribute('x-cloak'); } else { g.style.display = 'none'; g.setAttribute('x-cloak', ''); }
-        message.required = (interest === 'Other');
-      }
-      if (messageAlt) {
-        const g = messageAlt.closest('.form-group');
-        if (interest === 'Other') { g.style.display = ''; g.removeAttribute('x-cloak'); } else { g.style.display = 'none'; g.setAttribute('x-cloak', ''); }
-        messageAlt.required = (interest === 'Other');
-      }
-
-      // Training days visibility (checkbox group)
-      const trainingEls = formEl.querySelectorAll('[name="training_days"]');
-      if (trainingEls && trainingEls.length) {
-        const group = trainingEls[0].closest('.form-group');
-        if (group) {
-          if (interest === 'Training') { group.style.display = ''; group.removeAttribute('x-cloak'); }
-          else { group.style.display = 'none'; group.setAttribute('x-cloak', ''); }
-        }
-      }
-
-      // Subject (person being enquired about) visibility and required toggles
-      const subjectFirst = formEl.querySelector('[name="subject_first_name"]');
-      const subjectLast = formEl.querySelector('[name="subject_last_name"]');
-      const subjectDob = formEl.querySelector('[name="subject_dob"]');
-
-      // Find the outer container for the subject block by locating the form-group whose label matches our block title
-      let subjectContainer = null;
-      Array.from(formEl.querySelectorAll('.form-group')).forEach((g) => {
-        const lbl = g.querySelector('.form-label');
-        if (lbl && /Details of the person you are enquiring for/i.test(lbl.textContent || '')) subjectContainer = g;
-      });
-
-      if (subjectContainer) {
-        if (someoneElse) { subjectContainer.style.display = ''; subjectContainer.removeAttribute('x-cloak'); }
-        else { subjectContainer.style.display = 'none'; subjectContainer.setAttribute('x-cloak', ''); }
-      }
-
-      if (subjectFirst) subjectFirst.required = someoneElse;
-      if (subjectLast) subjectLast.required = someoneElse;
-      if (subjectDob) subjectDob.required = someoneElse;
-
-      // Enquirer phone requirement
-      const phone = formEl.querySelector('[name="contact_phone"]');
-      if (phone) phone.required = someoneElse;
-    }
-
-    document.querySelectorAll('form.enquiry-form').forEach((formEl) => {
-      // Initialize visibility
-      try { toggleFields(formEl); } catch (e) { /* ignore */ }
-
-      // Attach listener to interest selects
-      const interestSel = formEl.querySelector('[name="interest"]');
-      if (interestSel) interestSel.addEventListener('change', () => toggleFields(formEl));
-
-      // Attach listener to enquiry_for radios (someone else / myself)
-      const enqRadios = formEl.querySelectorAll('[name="enquiry_for"]');
-      if (enqRadios && enqRadios.length) {
-        enqRadios.forEach(r => r.addEventListener('change', () => toggleFields(formEl)));
-      }
-
-      // Hook up submit handling (using same logic as Alpine submitForm behavior)
-      formEl.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const webhook = formEl.dataset.webhookUrl || '/api/enquiry.json';
-        const fd = new FormData(formEl);
-        const data = Object.fromEntries(fd.entries());
-        const days = fd.getAll('training_days');
-        if (days && days.length) data.training_days = days;
-        if (!data.contact_name && (formEl.querySelector('[name=first_name]') || formEl.querySelector('[name=last_name]'))) {
-          const fn = formEl.querySelector('[name=first_name]')?.value || '';
-          const ln = formEl.querySelector('[name=last_name]')?.value || '';
-          data.contact_name = (fn + ' ' + ln).trim();
-        }
-        // client-side checks (mirror server rules)
-        const errors = {};
-        if (!data.contact_name || !data.contact_name.trim()) errors.contact_name = 'Please enter your name.';
-        if (!data.contact_email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.contact_email)) errors.contact_email = 'Please enter a valid email address.';
-        // Training DOB can be provided via subject_dob when enquiring for someone else
-        const someoneElseClient = (data.enquiry_for === 'someone_else' || data.enquiry_for === 'child');
-        if (data.interest === 'Training' && !(data.dob || (someoneElseClient && data.subject_dob))) {
-          if (someoneElseClient) errors.subject_dob = 'Please provide the date of birth for the person you are enquiring for.';
-          else errors.dob = 'Please provide a date of birth.';
-        }
-        if (data.interest === 'Other' && (!data.message || !data.message.trim())) errors.message = 'Please add a message.';
-
-        // Someone else flow (parent/guardian) validations
-        const someoneElse = (data.enquiry_for === 'someone_else' || data.enquiry_for === 'child');
-        if (someoneElse) {
-          const hasEnquirerName = (data.contact_name && data.contact_name.trim()) || ((data.first_name && data.first_name.trim()) && (data.last_name && data.last_name.trim()));
-          if (!hasEnquirerName) errors.contact_name = 'Please enter your name.';
-          if (!data.contact_phone || !data.contact_phone.trim()) errors.contact_phone = 'Please enter a phone number.';
-
-          if (!data.subject_first_name || !data.subject_first_name.trim()) errors.subject_first_name = 'Please provide the first name of the person you are enquiring for.';
-          if (!data.subject_last_name || !data.subject_last_name.trim()) errors.subject_last_name = 'Please provide the last name of the person you are enquiring for.';
-          if (!data.subject_dob) errors.subject_dob = 'Please provide the date of birth for the person you are enquiring for.';
-
-          // Make the subject DOB the DOB the server will use for age mapping
-          if (data.subject_dob) data.dob = data.subject_dob;
-        }
-
-        if (!(data.gdpr_consent === true || data.gdpr_consent === 'true' || data.gdpr_consent === 'on')) errors.gdpr_consent = 'You must consent to data processing.';
-
-        // Show errors
-        formEl.querySelectorAll('.form-field-error').forEach(el => el.textContent='');
-        if (Object.keys(errors).length) {
-          Object.entries(errors).forEach(([k,v]) => {
-            const el = formEl.querySelector(`[name="${k}"]`);
-            const errEl = formEl.querySelector(`[x-show][x-text][class*="form-field-error"]`) || formEl.querySelector('.form-field-error');
-            // field-specific
-            const fieldErr = formEl.querySelector(`.form-field-error[for="${k}"]`);
-            if (fieldErr) fieldErr.textContent = v;
-            else {
-              const maybe = formEl.querySelector(`[name="${k}"]`);
-              if (maybe) {
-                let fe = maybe.parentElement.querySelector('.form-field-error');
-                if (fe) fe.textContent = v;
-              }
-            }
-          });
-          return;
-        }
-
-        // Submit
-        try {
-          const res = await fetch(webhook, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-          if (!res.ok) {
-            const j = await res.json().catch(()=>null);
-            throw new Error((j && j.error) ? j.error : 'Submission failed');
-          }
-          // show success
-          const succ = formEl.querySelector('.form-success'); if (succ) { succ.style.display = ''; }
-          formEl.reset();
-          toggleFields(formEl);
-        } catch (err) {
-          const errBox = formEl.querySelector('.form-error'); if (errBox) { errBox.textContent = err.message || 'Submission failed'; errBox.style.display = ''; }
-        }
-      });
-    });
-  });
-</script>
-
 <style>
   .enquiry-form-card {
     box-shadow: 0 10px 40px rgba(20, 95, 186, 0.08);
@@ -760,5 +597,3 @@ import "../../styles/forms.css";
     display: none !important;
   }
 </style>
-
-)}
