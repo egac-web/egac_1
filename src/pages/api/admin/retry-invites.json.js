@@ -5,8 +5,12 @@ async function runRetryLogic(env) {
   const MAX_RETRIES = Number(env.MAX_INVITE_RETRIES || 3);
   const client = getSupabaseAdmin(env);
 
-  const { data: invites, error } = await client.from('invites').select('*').or(`status.eq.failed,status.eq.pending`).lt('send_attempts', MAX_RETRIES).limit(100);
+  const { data: invites, error } = await client.from('invites').select('*').or(`status.eq.failed,status.eq.pending`).limit(100);
   if (error) throw error;
+
+  // Backwards compatible: some installs may not have the `send_attempts` column.
+  // Treat missing `send_attempts` as 0 and filter out invites which already exceeded retries.
+  const pendingInvites = (invites || []).filter(inv => (inv.send_attempts || 0) < MAX_RETRIES);
 
   const results = [];
   for (const invite of invites) {
