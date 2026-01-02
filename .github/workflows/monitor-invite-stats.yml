@@ -1,0 +1,26 @@
+name: Monitor invite stats
+
+on:
+  schedule:
+    - cron: '*/15 * * * *' # every 15 minutes
+  workflow_dispatch: {}
+
+jobs:
+  check-invites:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check invite stats
+        env:
+          PAGES_SITE_URL: ${{ secrets.PAGES_SITE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -e
+          echo "Calling invite-stats on ${PAGES_SITE_URL}"
+          curl -s -f "${PAGES_SITE_URL}/api/admin/invite-stats.json?secret=${CRON_SECRET}" -o stats.json
+          cat stats.json
+          FAILED=$(jq -r '.counts.failed // 0' stats.json)
+          if [ "$FAILED" -gt 0 ]; then
+            echo "Found $FAILED failed invites — failing the job to signal an incident."
+            exit 1
+          fi
+          echo "No failed invites detected." 
