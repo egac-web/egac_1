@@ -1,5 +1,5 @@
-import { getSupabaseAdmin } from '../../../src/lib/supabase';
-import { sendInviteEmail } from '../../../src/lib/resend';
+import { getSupabaseAdmin } from '../../../lib/supabase';
+import { sendInviteEmail } from '../../../lib/resend';
 
 async function runRetryLogic(env) {
   const MAX_RETRIES = Number(env.MAX_INVITE_RETRIES || 3);

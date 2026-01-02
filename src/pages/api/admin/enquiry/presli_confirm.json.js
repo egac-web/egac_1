@@ -45,7 +45,7 @@ export async function POST({ request, locals }) {
         const membershipUrl = `${env.SITE_URL || ''}/membership?token=${invite.token}`;
         if (enquiry.email) {
           try {
-            const { sendInviteNotification } = await import('../../lib/notifications');
+            const { sendInviteNotification } = await import('../../../../lib/notifications');
             await sendInviteNotification({ enquiryId: enquiry_id, inviteId: invite.id, to: enquiry.email, inviteUrl: membershipUrl, env });
             response.membership_sent = true;
           } catch (err) {

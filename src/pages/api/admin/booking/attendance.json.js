@@ -55,7 +55,7 @@ export async function POST({ request, locals }) {
         const enquiry = booking.enquiry || {};
         if (enquiry && enquiry.email) {
           try {
-            const { sendInviteNotification } = await import('../../lib/notifications');
+            const { sendInviteNotification } = await import('../../../../lib/notifications');
             await sendInviteNotification({ enquiryId: enquiry_id, inviteId: invite.id, to: enquiry.email, inviteUrl: membershipUrl, env });
             responsePayload.membership_sent = true;
           } catch (err) {
