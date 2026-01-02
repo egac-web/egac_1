@@ -5,11 +5,16 @@ on:
     - cron: '*/15 * * * *' # every 15 minutes
   workflow_dispatch: {}
 
+# Allow this workflow to create issues
+permissions:
+  issues: write
+  contents: read
+
 jobs:
   check-invites:
     runs-on: ubuntu-latest
     steps:
-      - name: Check invite stats
+      - name: Fetch invite stats
         env:
           PAGES_SITE_URL: ${{ secrets.PAGES_SITE_URL }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
@@ -19,8 +24,45 @@ jobs:
           curl -s -f "${PAGES_SITE_URL}/api/admin/invite-stats.json?secret=${CRON_SECRET}" -o stats.json
           cat stats.json
           FAILED=$(jq -r '.counts.failed // 0' stats.json)
-          if [ "$FAILED" -gt 0 ]; then
-            echo "Found $FAILED failed invites — failing the job to signal an incident."
-            exit 1
-          fi
-          echo "No failed invites detected." 
+          echo "FAILED=$FAILED" >> $GITHUB_ENV
+
+      - name: Open GitHub issue if failures detected
+        if: env.FAILED != '0'
+        uses: actions/github-script@v6
+        env:
+          MONITORING_MENTION: ${{ secrets.MONITORING_MENTION }}
+        with:
+          script: |
+            const failed = parseInt(process.env.FAILED || '0', 10);
+            const mention = (process.env.MONITORING_MENTION || '').trim();
+            const label = 'monitoring';
+            const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+            const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+
+            // Ensure the monitoring label exists
+            try {
+              await github.rest.issues.getLabel({ owner, repo, name: label });
+            } catch (e) {
+              await github.rest.issues.createLabel({ owner, repo, name: label, color: 'ff0000', description: 'Auto-created monitoring alerts' });
+            }
+
+            // Look for an existing open issue for this alert
+            const issues = await github.rest.issues.listForRepo({ owner, repo, labels: label, state: 'open', per_page: 100 });
+            const existing = issues.data.find(i => i.title.includes('Invite retry failures') || i.title.includes('Invite retries failing'));
+
+            const mentionLine = mention ? `${mention} ` : '';
+            const time = new Date().toISOString();
+
+            if (existing) {
+              await github.rest.issues.createComment({ owner, repo, issue_number: existing.number, body: `${mentionLine}Detected ${failed} failed invites at ${time}. See workflow run: ${runUrl}` });
+            } else {
+              const title = `Automated: Invite retry failures (${failed} failed)`;
+              const body = `${mentionLine}Automated alert: ${failed} invite send failures detected.\n\n- Site: ${process.env.PAGES_SITE_URL}\n- Time: ${time}\n- Workflow run: ${runUrl}\n\nPlease investigate failed invites and the retry job.`;
+              await github.rest.issues.create({ owner, repo, title, body, labels: [label] });
+            }
+
+      - name: Fail if failures detected
+        if: env.FAILED != '0'
+        run: |
+          echo "Found $FAILED failed invites — failing the job to signal an incident."
+          exit 1

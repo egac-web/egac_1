@@ -25,6 +25,12 @@ This document collects the steps to operate the retry job that sends invites and
   - `PAGES_SITE_URL` (e.g. `https://egac-1.pages.dev`)
   - `CRON_SECRET` (the secret set in Pages/Worker)
 
+- The workflow now automatically opens a GitHub issue (label: `monitoring`) when failed invites are detected. If an open monitoring issue already exists the workflow will append a comment instead of creating duplicates. The workflow uses the built-in `GITHUB_TOKEN` with `issues: write` permission to create/update issues.
+
+- Optional: set a repository secret `MONITORING_MENTION` (for example `@your-org/your-team` or `@your-github-username`) so the workflow will mention the team or user when creating a new issue or appending a comment.
+
+- An issue template is available at `.github/ISSUE_TEMPLATE/monitoring_alert.md` to help standardise triage actions for these automated alerts.
+
 - When the job fails, integrate an action (Slack, email, Opsgenie, etc.) or rely on your monitoring stack to notify on failed runs.
 
 ## 3) DB migration (send_attempts column)
