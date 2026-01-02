@@ -22,20 +22,17 @@ async function runRetryLogic(env) {
       }
 
       const inviteUrl = `${env.SITE_BASE_URL || ''}/booking?invite=${encodeURIComponent(invite.token)}`;
-      const subject = 'EGAC: Book a taster / session';
-      const html = `<p>Hello,</p><p>Thanks for your enquiry. To book a free taster, please follow this link:</p><p><a href="${inviteUrl}">${inviteUrl}</a></p><p>If you did not request this, ignore this email.</p>`;
-      const text = `Book here: ${inviteUrl}`;
 
-      const res = await sendInviteEmail({ apiKey: env.RESEND_API_KEY, from: env.RESEND_FROM, to: enquiry.email, subject, html, text });
+      // Use the centralized notifications helper which respects RESEND_DRY_RUN and handles
+      // DB event logging and invite status updates (markInviteSent/markInviteSendFailed)
+      const { sendInviteNotification } = await import('../../../lib/notifications');
+      const notifyRes = await sendInviteNotification({ enquiryId: enquiry.id, inviteId: invite.id, to: enquiry.email, inviteUrl, env });
 
-      // Append event
-      const { data: cur } = await client.from('enquiries').select('events').eq('id', enquiry.id).maybeSingle();
-      const events = (cur && cur.events) ? cur.events : [];
-      events.push({ type: 'invite_sent', invite_id: invite.id, resend_id: res.id, at: new Date().toISOString(), meta: res.raw });
-      await client.from('enquiries').update({ events }).eq('id', enquiry.id);
-
-      await client.from('invites').update({ status: 'sent', sent_at: new Date().toISOString() }).eq('id', invite.id);
-      results.push({ invite_id: invite.id, ok: true, resend_id: res.id });
+      if (notifyRes.ok) {
+        results.push({ invite_id: invite.id, ok: true, resend_id: notifyRes.resendId || null, dryRun: !!notifyRes.dryRun });
+      } else {
+        results.push({ invite_id: invite.id, ok: false, error: String(notifyRes.error || 'send_failed') });
+      }
     } catch (err) {
       // increment attempts and record error
       const attempts = (invite.send_attempts || 0) + 1;
