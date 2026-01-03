@@ -1,10 +1,52 @@
+import fs from 'fs';
 import { createClient } from '@supabase/supabase-js';
-import { sendInviteEmail } from '../src/lib/resend.js';
+
+// Simple inline Resend helper to avoid importing compiled TS modules when running scripts
+async function sendViaResend({ apiKey, from, to, subject, html, text }) {
+  if (!apiKey) throw new Error('Missing Resend API key');
+  const payload = { from, to, subject, html, text };
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  const json = await res.json().catch(() => null);
+  if (!res.ok) {
+    const err = new Error('Resend API error');
+    err.response = json;
+    throw err;
+  }
+  return { id: json?.id, status: 'sent', raw: json };
+}
+
+
+// Safe loader for .env (simple parser) so scripts can be run locally without exporting everything
+try {
+  const envText = fs.readFileSync('.env', 'utf8');
+  for (const rawLine of envText.split(/\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) continue;
+    const eq = line.indexOf('=');
+    if (eq === -1) continue;
+    const key = line.slice(0, eq).trim();
+    let val = line.slice(eq + 1).trim();
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+      val = val.slice(1, -1);
+    }
+    if (!process.env[key]) process.env[key] = val;
+  }
+} catch (e) {
+  // ignore if no .env present
+}
 
 // Retry failed invites (up to MAX_RETRIES)
-// Usage: SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... RESEND_API_KEY=... RESEND_FROM=... node scripts/retry_failed_invites.mjs
+// Usage: LIMIT_INVITES=1 node scripts/retry_failed_invites.mjs
 
 const MAX_RETRIES = parseInt(process.env.MAX_INVITE_RETRIES || '3', 10);
+const LIMIT_INVITES = process.env.LIMIT_INVITES ? parseInt(process.env.LIMIT_INVITES, 10) : null;
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -15,10 +57,16 @@ if (!process.env.RESEND_API_KEY || !process.env.RESEND_FROM) {
   console.error('RESEND_API_KEY and RESEND_FROM must be set');
   process.exit(2);
 }
+if (!LIMIT_INVITES) {
+  console.error('Set LIMIT_INVITES=<n> to limit number of invites to send (safety check)');
+  process.exit(2);
+}
 
 async function run() {
-  console.log('Looking for failed invites with attempts <', MAX_RETRIES);
-  const { data, error } = await supabase.from('invites').select('*').or(`status.eq.failed,status.eq.pending`).lt('send_attempts', MAX_RETRIES).limit(50);
+  console.log('Looking for failed invites with attempts <', MAX_RETRIES, 'limit', LIMIT_INVITES);
+  let query = supabase.from('invites').select('*').or(`status.eq.failed,status.eq.pending`).lt('send_attempts', MAX_RETRIES);
+  if (LIMIT_INVITES) query = query.limit(LIMIT_INVITES);
+  const { data, error } = await query;
   if (error) {
     console.error('Failed to query invites', error);
     process.exit(1);
@@ -37,7 +85,7 @@ async function run() {
       const text = `Book here: ${inviteUrl}`;
 
       console.log('Sending invite', invite.id, 'to', enquiry.email, 'attempt', (invite.send_attempts || 0) + 1);
-      const res = await sendInviteEmail({ apiKey: process.env.RESEND_API_KEY, from: process.env.RESEND_FROM, to: enquiry.email, subject, html, text });
+      const res = await sendViaResend({ apiKey: process.env.RESEND_API_KEY, from: process.env.RESEND_FROM, to: enquiry.email, subject, html, text });
       // Append event and mark invite sent
       const { data: cur } = await supabase.from('enquiries').select('events').eq('id', enquiry.id).maybeSingle();
       const events = (cur && cur.events) ? cur.events : [];
