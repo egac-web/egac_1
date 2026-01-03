@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Publish worker
-        uses: cloudflare/wrangler-action@v2
+        uses: cloudflare/wrangler-action@v1
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           working-directory: ./
