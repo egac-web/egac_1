@@ -20,4 +20,6 @@ labels: monitoring, automated
 - [ ] If needed, re-run or escalate to on-call
 
 ## Notes
+If the repository secret `MONITORING_MENTION` is set (for example, `@your-org/your-team`), the workflow will mention that team/user when creating or updating this issue.
+
 Please add findings and steps taken in a comment on this issue.

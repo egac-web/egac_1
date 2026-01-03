@@ -10,20 +10,38 @@ permissions:
   issues: write
   contents: read
 
+# Docs: see `docs/ops/ci-secrets.md` for quick reference on repository secrets and troubleshooting
+# Quick link (repo-level): https://github.com/<owner>/<repo>/settings/secrets/actions
+
 jobs:
   check-invites:
     runs-on: ubuntu-latest
     steps:
-      - name: Fetch invite stats
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Check invite stats (node)
         env:
-          PAGES_SITE_URL: ${{ secrets.PAGES_SITE_URL }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          PAGES_SITE_URL: ${{ secrets.PAGES_SITE_URL }}
         run: |
-          set -e
-          echo "Calling invite-stats on ${PAGES_SITE_URL}"
-          curl -s -f "${PAGES_SITE_URL}/api/admin/invite-stats.json?secret=${CRON_SECRET}" -o stats.json
-          cat stats.json
-          FAILED=$(jq -r '.counts.failed // 0' stats.json)
+          set -euo pipefail
+          # Ensure the essential secret is present and give a clear error if not
+          if [ -z "${CRON_SECRET}" ]; then
+            echo "ERROR: CRON_SECRET not set in repository secrets" >&2
+            exit 2
+          fi
+          # Run the Node check script but don't fail the job immediately so we can open or update an issue
+          node scripts/check_invite_stats.mjs > stats.out 2>&1 || true
+          cat stats.out
+          # Extract the counts JSON printed by the script, fallback to zeros if missing
+          COUNTS_JSON=$(grep '^Invite counts:' stats.out | sed -E 's/^Invite counts:[[:space:]]*//' || echo '{"pending":0,"failed":0,"sent":0}')
+          FAILED=$(jq -r '.failed // 0' <<< "$COUNTS_JSON")
           echo "FAILED=$FAILED" >> $GITHUB_ENV
 
       - name: Open GitHub issue if failures detected

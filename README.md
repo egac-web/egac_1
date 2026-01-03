@@ -52,3 +52,13 @@ See [policies.astro](./src/pages/policies.astro) for club policies.
 - Update [change.md](./change.md) with all project changes.
 - Log issues and fixes in [issues-log.md](./issues-log.md).
 - Review documentation regularly as outlined in [site-docs.md](./site-docs.md).
+
+## Secrets for CI & monitoring 🔐
+- **Repository secrets** (Repository → Settings → **Secrets and variables → Actions**):
+  - `PAGES_SITE_URL` — URL for the deployed site (e.g., `https://egac-1.pages.dev`)
+  - `CRON_SECRET` — secret used to protect cron and admin endpoints
+  - **Optional:** `MONITORING_MENTION` — team or user to mention in alert issues (e.g., `@org/team`)
+- Quick link (replace `<owner>/<repo>`): `https://github.com/<owner>/<repo>/settings/secrets/actions`
+- For more detail and troubleshooting see `docs/ops/invite-retry.md` and `docs/ops/ci-secrets.md`.
+
+> Note: Keep these secrets out of source control and rotate them periodically.
