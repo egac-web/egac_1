@@ -3,5 +3,8 @@ main = "./workers/retry-trigger.js"
 compatibility_date = "2026-01-01"
 account_id = "<YOUR_CF_ACCOUNT_ID>"
 
+# NOTE: Configure your account id and route before deploying.
+# Example cron trigger added below to run the scheduled worker every 15 minutes.
 [env.production]
 route = ""
+triggers = { crons = ["*/15 * * * *"] }
