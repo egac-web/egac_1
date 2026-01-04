@@ -1,0 +1,21 @@
+name: Check migrations
+
+on:
+  workflow_dispatch: {}
+  pull_request:
+    paths:
+      - 'db/migrations/**'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run migration checks
+        run: |
+          node scripts/check_migrations.mjs
