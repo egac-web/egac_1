@@ -1,0 +1,72 @@
+name: E2E — Staging booking tests
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [ main ]
+
+jobs:
+  e2e-staging:
+    name: Run e2e booking scripts against staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+        working-directory: ./egac_1
+
+      - name: Build site
+        run: npm run build
+        working-directory: ./egac_1
+
+      - name: Ensure essential secrets
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -z "${SUPABASE_URL}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY}" ]; then
+            echo "Required secrets not set; skipping e2e tests.";
+            exit 0;
+          fi
+
+      - name: Create test invite
+        working-directory: ./egac_1
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TEST_INVITE_EMAIL: ${{ secrets.TEST_INVITE_EMAIL }}
+        run: |
+          node scripts/run_create_test_invite.js > invite.json
+          cat invite.json
+
+      - name: Extract invite token
+        working-directory: ./egac_1
+        id: token
+        run: |
+          TOKEN=$(node -e "console.log(JSON.parse(require('fs').readFileSync('invite.json','utf8')).invite.token)")
+          echo "token=$TOKEN" >> $GITHUB_OUTPUT
+
+      - name: Run booking e2e test
+        working-directory: ./egac_1
+        env:
+          TEST_INVITE_TOKEN: ${{ steps.token.outputs.token }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM: ${{ secrets.RESEND_FROM }}
+        run: |
+          # Disable real sending if RESEND_API_KEY is not set; the scripts handle this
+          node scripts/run_booking_test.js ${TEST_INVITE_TOKEN}
+
+      - name: Upload e2e logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-invite-json
+          path: egac_1/invite.json
