@@ -24,12 +24,22 @@
 }
 
 .booking-card {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  /* match site "card" treatment used for fixtures: subtle glass, border and rounded corners */
+  background: #ffffff2e; /* light translucent background */
+  border: 1.5px solid rgba(20,95,186,0.10);
+  box-shadow: 0 8px 32px rgba(20,95,186,0.10), 0 1.5px 8px rgba(253,185,19,0.08);
+  border-radius: 1.1rem;
+  backdrop-filter: blur(10px) saturate(1.1);
+  transition: box-shadow .18s, transform .18s, border .18s;
+  color: var(--dark-gray);
 }
 
-.booking-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-lg, 0 10px 30px rgba(2, 6, 23, 0.08));
+.booking-card:hover,
+.booking-card:focus-visible {
+  box-shadow: 0 16px 48px rgba(20,95,186,0.16), 0 4px 24px rgba(253,185,19,0.13);
+  border: 1.5px solid var(--yellow);
+  transform: translateY(-4px) scale(1.025);
+  outline: none;
 }
 
 .booking-meta {
@@ -51,6 +61,132 @@
   gap: 0.75rem;
 }
 
+/* Card grid: center cards and constrain width for visual polish */
+.booking-grid {
+  justify-items: center;
+}
+
+.booking-card {
+  max-width: 420px;
+  width: 100%;
+}
+
+.card-inner {
+  display: flex;
+  gap: 0.75rem;
+  /* tighter spacing between date, content and actions */
+  align-items: center;
+}
+
+.card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+  /* center CTA when single action */
+  min-width: 110px;
+}
+
+@media (min-width: 768px) {
+  .card-actions {
+    align-items: flex-end;
+    /* right align on larger screens */
+  }
+}
+
+.date-block {
+  width: 80px;
+  min-width: 80px;
+  text-align: center;
+  border-right: 1px solid var(--border, #e5e7eb);
+  padding-right: 0.5rem;
+  /* slightly reduced padding */
+}
+
+.date-day {
+  font-size: 0.8rem;
+  color: var(--muted-gray, #6b7280);
+}
+
+.card-title {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--blue);
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.date-number {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.card-body {
+  color: var(--dark-gray);
+  font-size: 1.08rem;
+  line-height: 1.7;
+}
+
+.book-cta {
+  background: var(--blue, #2563eb);
+  color: #fff;
+  padding: 0.5rem 0.9rem;
+  border-radius: 0.5rem;
+  font-weight: 700;
+}
+
+/* Make CTAs full width on small screens, inline on larger */
+@media (max-width: 767px) {
+  .slot-actions {
+    flex-direction: column;
+  }
+
+  .book-cta {
+    width: 100%;
+  }
+}
+
+/* Booking-for boxed options */
+.booking-for-options {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.booking-option {
+  border: 1px solid var(--border, #e5e7eb);
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.6rem;
+  cursor: pointer;
+  background: #fff;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  align-items: flex-start;
+}
+
+.booking-option.selected {
+  border-color: var(--blue, #2563eb);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.08);
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.03), rgba(255, 255, 255, 0));
+}
+
+.booking-option-title {
+  font-weight: 700;
+}
+
+.booking-option-sub {
+  font-size: 0.9rem;
+  color: var(--muted-gray, #6b7280);
+}
+
+@media (max-width: 767px) {
+  .booking-for-options {
+    flex-direction: column;
+  }
+}
+
 /* Modal */
 .booking-modal-backdrop {
   background: rgba(0, 0, 0, 0.6);
@@ -59,6 +195,53 @@
 .booking-modal {
   max-width: 540px;
   width: 100%;
+}
+
+/* Availability badge */
+.availability-chip {
+  margin-left: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.availability-available {
+  background: var(--blue, #2563eb);
+  color: #fff;
+  padding: 0.18rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.availability-full {
+  background: var(--red, #ef4444);
+  color: #fff;
+  padding: 0.18rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.availability-unknown {
+  color: var(--muted-gray, #6b7280);
+  font-size: 0.875rem;
+}
+
+/* Spinner */
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(0, 0, 0, 0.12);
+  border-top-color: var(--blue, #2563eb);
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 `

@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "test": "vitest"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.6.12",
@@ -19,5 +20,8 @@
     "react-dom": "^19.2.3",
     "react-icons": "^5.5.0",
     "tailwindcss": "^4.1.18"
+  },
+  "devDependencies": {
+    "vitest": "^4.0.16"
   }
 }
