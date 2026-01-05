@@ -304,14 +304,15 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { if (!slot.booked && slot.enabled) handleSelect(slot); } }}
             >
               <div className="date-block" aria-hidden="true">
-                <div className="date-day">{new Date(slot.date).toLocaleDateString('en-GB', { weekday: 'short' })}</div>
-                <div className="date-number">{new Date(slot.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                <div className="card-title">{new Date(slot.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase()}</div>
                 <div className="date-time text-sm text-gray-500 mt-1">{slot.time.split('-')[0]}</div>
               </div>
 
               <div className="card-content flex-1">
-                <div className="font-semibold mb-1">{slot.group} <span className="text-sm text-gray-500">• {formatDate(slot.date)}</span></div>
-                <div className="text-sm bookings-lead">{slot.time} • <span className="booking-slot-group">{slot.group}</span></div>
+                <div className="card-body">
+                  <div className="font-semibold mb-1">{slot.group} <span className="text-sm text-gray-500">• {formatDate(slot.date)}</span></div>
+                  <div className="text-sm bookings-lead">{slot.time} • <span className="booking-slot-group">{slot.group}</span></div>
+                </div>
               </div>
 
               <div className="card-actions flex flex-col items-end gap-2">
