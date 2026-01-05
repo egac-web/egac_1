@@ -353,9 +353,32 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
             </p>
 
             {/* Booking for selector and DOB input (if required) */}
-            <div className="mb-3">
-              <label className="mr-4"><input type="radio" name="bookingFor" checked={bookingFor === 'self'} onChange={() => setBookingFor('self')} /> Book for myself</label>
-              <label><input type="radio" name="bookingFor" checked={bookingFor === 'someone-else'} onChange={() => setBookingFor('someone-else')} /> Book for someone else</label>
+            <div className="mb-3 booking-for-options" role="radiogroup" aria-label="Who are we booking for">
+              <div
+                role="radio"
+                aria-checked={bookingFor === 'self'}
+                tabIndex={0}
+                onClick={() => setBookingFor('self')}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setBookingFor('self'); }}
+                className={`booking-option ${bookingFor === 'self' ? 'selected' : ''}`}
+              >
+                <input type="radio" name="bookingFor" checked={bookingFor === 'self'} onChange={() => setBookingFor('self')} className="sr-only" />
+                <div className="booking-option-title">Book for myself</div>
+                <div className="booking-option-sub">Use invite details</div>
+              </div>
+
+              <div
+                role="radio"
+                aria-checked={bookingFor === 'someone-else'}
+                tabIndex={0}
+                onClick={() => setBookingFor('someone-else')}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setBookingFor('someone-else'); }}
+                className={`booking-option ${bookingFor === 'someone-else' ? 'selected' : ''}`}
+              >
+                <input type="radio" name="bookingFor" checked={bookingFor === 'someone-else'} onChange={() => setBookingFor('someone-else')} className="sr-only" />
+                <div className="booking-option-title">Book for someone else</div>
+                <div className="booking-option-sub">Provide subject's date of birth</div>
+              </div>
             </div>
 
             {(bookingFor === 'someone-else' || (!inviteData?.enquiry?.dob && bookingFor === 'self')) && (
