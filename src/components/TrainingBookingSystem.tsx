@@ -329,8 +329,6 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
                     {slot.booked || bookingDone ? 'Booked' : 'Book'}
                   </button>
                 </div>
-
-                <button onClick={(e) => { e.stopPropagation(); alert('More info coming soon'); }} className="bg-gray-100 text-gray-800 py-2 px-4 rounded hover:bg-gray-200">Details</button>
               </div>
             </div>
           </article>
