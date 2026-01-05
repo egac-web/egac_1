@@ -93,8 +93,9 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
   const previousFocusRef = React.useRef<HTMLElement | null>(null);
   const POLL_INTERVAL_MS = 30000; // refresh availability every 30s
 
-  // Map group label (e.g., 'U13s') -> API slot key (e.g., 'u13')
-  const groupLabelToKey = labelToGroupKey;
+  // Map server slot keys to client labels
+  const groupKeyToLabel: Record<string, string> = { u13: 'U13s', u15plus: 'U15s+' };
+  const labelToGroupKey: Record<string, string> = { 'U13s': 'u13', 'U15s+': 'u15plus' };
 
   // Fetch availability (invite-aware when token present) and update slot counts
   async function fetchAvailability() {
@@ -108,7 +109,7 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
           setInviteData(body);
           const map = new Map();
           (body.availability || []).forEach((a: any) => map.set(a.date, a.slots || {}));
-          setSlots((prev) => prev.map((s) => ({ ...s, slotsLeft: (map.get(s.date) ? (map.get(s.date)[groupLabelToKey[s.group]] ?? null) : null) })));
+          setSlots((prev) => prev.map((s) => ({ ...s, slotsLeft: (map.get(s.date) ? (map.get(s.date)[labelToGroupKey[s.group]] ?? null) : null) })));
         }
       } catch (err) {
         // ignore
@@ -125,7 +126,7 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
         setInviteData(body);
         const map = new Map();
         (body.availability || []).forEach((a: any) => map.set(a.date, a.slots || {}));
-        setSlots((prev) => prev.map((s) => ({ ...s, slotsLeft: (map.get(s.date) ? (map.get(s.date)[groupLabelToKey[s.group]] ?? null) : null) })));
+        setSlots((prev) => prev.map((s) => ({ ...s, slotsLeft: (map.get(s.date) ? (map.get(s.date)[labelToGroupKey[s.group]] ?? null) : null) })));
       }
     } catch (err) {
       // ignore
@@ -141,10 +142,6 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
     id = window.setInterval(() => fetchAvailability(), POLL_INTERVAL_MS);
     return () => { if (id) clearInterval(id); };
   }, [inviteTokenState]);
-
-  // Map server slot keys to client labels
-  const groupKeyToLabel: Record<string, string> = { u13: 'U13s', u15plus: 'U15s+' };
-  const labelToGroupKey: Record<string, string> = { 'U13s': 'u13', 'U15s+': 'u15plus' };
 
   // If we're loaded with an invite token (either prop or URL), preselect the slot from query params
   React.useEffect(() => {
