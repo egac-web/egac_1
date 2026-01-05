@@ -24,6 +24,7 @@ type Slot = {
   enabled: boolean;
   booked: boolean;
   booker?: string;
+  slotsLeft?: number | null; // realtime availability if known
 };
 
 // Initial slots (example for 4 weeks)
@@ -84,8 +85,64 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
   const [bookingInfo, setBookingInfo] = useState<any>(null);
   const statusRef = React.useRef<HTMLDivElement | null>(null);
 
+  const [inviteData, setInviteData] = useState<any>(null);
+  const [loadingInviteData, setLoadingInviteData] = useState(false);
+  const [bookingFor, setBookingFor] = useState<'self' | 'someone-else'>('self');
+  const [subjectDob, setSubjectDob] = useState<string>('');
+  const POLL_INTERVAL_MS = 30000; // refresh availability every 30s
+
+  // Map group label (e.g., 'U13s') -> API slot key (e.g., 'u13')
+  const groupLabelToKey = labelToGroupKey;
+
+  // Fetch availability (invite-aware when token present) and update slot counts
+  async function fetchAvailability() {
+    if (!inviteTokenState) {
+      // public availability
+      try {
+        setLoadingInviteData(true);
+        const res = await fetch('/api/booking.json');
+        const body = await res.json();
+        if (body && body.ok) {
+          setInviteData(body);
+          const map = new Map();
+          (body.availability || []).forEach((a: any) => map.set(a.date, a.slots || {}));
+          setSlots((prev) => prev.map((s) => ({ ...s, slotsLeft: (map.get(s.date) ? (map.get(s.date)[groupLabelToKey[s.group]] ?? null) : null) })));
+        }
+      } catch (err) {
+        // ignore
+      } finally { setLoadingInviteData(false); }
+      return;
+    }
+
+    // invite-aware availability
+    try {
+      setLoadingInviteData(true);
+      const res = await fetch(`/api/booking.json?invite=${encodeURIComponent(inviteTokenState)}`);
+      const body = await res.json();
+      if (body && body.ok) {
+        setInviteData(body);
+        const map = new Map();
+        (body.availability || []).forEach((a: any) => map.set(a.date, a.slots || {}));
+        setSlots((prev) => prev.map((s) => ({ ...s, slotsLeft: (map.get(s.date) ? (map.get(s.date)[groupLabelToKey[s.group]] ?? null) : null) })));
+      }
+    } catch (err) {
+      // ignore
+    } finally { setLoadingInviteData(false); }
+  }
+
+  // Poll availability periodically
+  React.useEffect(() => {
+    let id: number | null = null;
+    // initial fetch
+    fetchAvailability();
+    // set interval
+    id = window.setInterval(() => fetchAvailability(), POLL_INTERVAL_MS);
+    return () => { if (id) clearInterval(id); };
+  }, [inviteTokenState]);
+
   // Map server slot keys to client labels
   const groupKeyToLabel: Record<string, string> = { u13: 'U13s', u15plus: 'U15s+' };
+  const labelToGroupKey: Record<string, string> = { 'U13s': 'u13', 'U15s+': 'u15plus' };
 
   // If we're loaded with an invite token (either prop or URL), preselect the slot from query params
   React.useEffect(() => {
@@ -95,6 +152,18 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
       const qDate = params.get('date');
       const qSlot = params.get('slot');
       if (qInvite && !inviteTokenState) setInviteTokenState(qInvite);
+
+      if (qInvite) {
+        // fetch invite data for eligibility and prefilling
+        setLoadingInviteData(true);
+        fetch(`/api/booking.json?invite=${encodeURIComponent(qInvite)}`).then(r => r.json()).then((b) => {
+          if (b && b.ok) {
+            setInviteData(b);
+            // set default bookingFor based on enquiry presence of dob
+            if (b.enquiry && b.enquiry.dob) setBookingFor('self'); else setBookingFor('someone-else');
+          }
+        }).catch(() => { }).finally(() => setLoadingInviteData(false));
+      }
 
       if (qDate && qSlot) {
         const targetLabel = groupKeyToLabel[qSlot] || qSlot;
@@ -130,7 +199,31 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
   const handleBook = async () => {
     if (!selectedSlot) return;
 
-    // If we have an invite token, POST to booking API so server-side booking is created
+    // determine DOB to use
+    const dobToUse = bookingFor === 'self' ? (inviteData?.enquiry?.dob || subjectDob || '') : subjectDob || '';
+    if (!dobToUse) {
+      setStatusMessage('Please provide a date of birth to determine eligibility');
+      setStatusType('error');
+      return;
+    }
+
+    // compute age and slot
+    try {
+      const age = (await import('../lib/booking')).computeAgeOnDate(dobToUse, `${selectedSlot.date}T00:00:00`);
+      const slotCode = (await import('../lib/booking')).slotForAge(age);
+      const selectedCode = labelToGroupKey[selectedSlot.group];
+      if (slotCode !== selectedCode) {
+        setStatusMessage('Selected person is not eligible for this session');
+        setStatusType('error');
+        return;
+      }
+    } catch (e) {
+      setStatusMessage('Could not determine age/eligibility from provided DOB');
+      setStatusType('error');
+      return;
+    }
+
+    // POST to server with booking_for and subject_dob
     if (inviteTokenState) {
       setStatusMessage('Booking in progress...');
       setStatusType(null);
@@ -138,7 +231,7 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
         const res = await fetch('/api/booking.json', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ invite: inviteTokenState, session_date: selectedSlot.date }),
+          body: JSON.stringify({ invite: inviteTokenState, session_date: selectedSlot.date, booking_for: bookingFor, subject_dob: dobToUse }),
         });
         const body = await res.json();
         if (!res.ok || !body.ok) throw new Error(body.error || 'Booking failed');
@@ -216,7 +309,7 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
               ) : (
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-gray-600">Available</div>
-                  <div className="text-sm text-gray-600">Slots: 2</div>
+                  <div className="text-sm text-gray-600">Slots: {typeof slot.slotsLeft === 'number' ? slot.slotsLeft : '—'}</div>
                 </div>
               )}
             </div>
@@ -230,10 +323,10 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
             <div className="slot-actions">
               <button
                 onClick={() => !slot.booked && slot.enabled && handleSelect(slot)}
-                disabled={bookingDone || slot.booked || !slot.enabled}
-                className={`btn-primary ${bookingDone || slot.booked || !slot.enabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={bookingDone || slot.booked || !slot.enabled || (typeof slot.slotsLeft === 'number' && slot.slotsLeft <= 0)}
+                className={`btn-primary ${bookingDone || slot.booked || !slot.enabled || (typeof slot.slotsLeft === 'number' && slot.slotsLeft <= 0) ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                {slot.booked || bookingDone ? 'Booked' : 'Book'}
+                {slot.booked || bookingDone ? 'Booked' : (typeof slot.slotsLeft === 'number' && slot.slotsLeft <= 0 ? 'Full' : 'Book')}
               </button>
               <button
                 onClick={() => alert('More info coming soon')}
@@ -257,9 +350,23 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
             <p className="mb-2">
               <strong>Time:</strong> {selectedSlot.time}
             </p>
-            <p className="mb-4">
+            <p className="mb-2">
               <strong>Group:</strong> {selectedSlot.group}
             </p>
+
+            {/* Booking for selector and DOB input (if required) */}
+            <div className="mb-3">
+              <label className="mr-4"><input type="radio" name="bookingFor" checked={bookingFor === 'self'} onChange={() => setBookingFor('self')} /> Book for myself</label>
+              <label><input type="radio" name="bookingFor" checked={bookingFor === 'someone-else'} onChange={() => setBookingFor('someone-else')} /> Book for someone else</label>
+            </div>
+
+            {(bookingFor === 'someone-else' || (!inviteData?.enquiry?.dob && bookingFor === 'self')) && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Subject Date of Birth</label>
+                <input type="date" value={subjectDob} onChange={(e) => setSubjectDob(e.target.value)} className="border p-2 rounded w-full" />
+              </div>
+            )}
+
             <div className="flex gap-4">
               <button
                 onClick={handleBook}
