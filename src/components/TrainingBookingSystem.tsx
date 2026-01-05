@@ -89,6 +89,8 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
   const [loadingInviteData, setLoadingInviteData] = useState(false);
   const [bookingFor, setBookingFor] = useState<'self' | 'someone-else'>('self');
   const [subjectDob, setSubjectDob] = useState<string>('');
+  const [bookingInProgress, setBookingInProgress] = useState(false);
+  const previousFocusRef = React.useRef<HTMLElement | null>(null);
   const POLL_INTERVAL_MS = 30000; // refresh availability every 30s
 
   // Map group label (e.g., 'U13s') -> API slot key (e.g., 'u13')
@@ -186,13 +188,25 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
   }, [statusMessage]);
 
   const handleSelect = (slot: Slot) => {
+    // remember currently focused element so we can return focus on close
+    previousFocusRef.current = document.activeElement as HTMLElement | null;
     setSelectedSlot(slot);
     setShowModal(true);
+    // ensure focus moves into modal when it opens
+    setTimeout(() => {
+      const btn = document.querySelector('.booking-modal .btn-primary') as HTMLElement | null;
+      if (btn) btn.focus();
+    }, 50);
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
     setSelectedSlot(null);
+    // return focus to previous element
+    if (previousFocusRef.current) {
+      previousFocusRef.current.focus();
+      previousFocusRef.current = null;
+    }
   };
 
   // Placeholder for booking action
@@ -227,6 +241,7 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
     if (inviteTokenState) {
       setStatusMessage('Booking in progress...');
       setStatusType(null);
+      setBookingInProgress(true);
       try {
         const res = await fetch('/api/booking.json', {
           method: 'POST',
@@ -245,6 +260,7 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
         setStatusMessage('Booking failed: ' + (err?.message || String(err)));
         setStatusType('error');
       } finally {
+        setBookingInProgress(false);
         setShowModal(false);
         setSelectedSlot(null);
       }
@@ -296,9 +312,16 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
           >
             <div className="booking-meta">
               <FaCalendarAlt style={{ color: 'var(--blue)' }} />
-              <div>
+              <div style={{ flex: 1 }}>
                 <div className="font-semibold">{formatDate(slot.date)}</div>
                 <div className="text-sm bookings-lead">{slot.time} • <span className="booking-slot-group">{slot.group}</span></div>
+              </div>
+              <div className="availability-chip">
+                {typeof slot.slotsLeft === 'number' ? (
+                  slot.slotsLeft > 0 ? <span className="availability-available">Slots: {slot.slotsLeft}</span> : <span className="availability-full">Full</span>
+                ) : (
+                  <span className="availability-unknown">Slots: —</span>
+                )}
               </div>
             </div>
 
@@ -371,8 +394,14 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
               <button
                 onClick={handleBook}
                 className="flex-1 btn-primary"
+                disabled={bookingInProgress}
+                aria-busy={bookingInProgress}
               >
-                Confirm booking
+                {bookingInProgress ? (
+                  <span className="inline-flex items-center"><span className="spinner mr-2" aria-hidden="true"></span>Booking...</span>
+                ) : (
+                  'Confirm booking'
+                )}
               </button>
               <button
                 onClick={handleCloseModal}
