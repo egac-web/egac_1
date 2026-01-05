@@ -295,67 +295,45 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
 
       <div className="booking-grid">
         {slots.map((slot) => (
-          <div
-            key={slot.id}
-            className={`booking-card p-4 border rounded-lg shadow cursor-pointer transition ${slot.booked
-              ? "bg-gray-200 border-gray-400 cursor-not-allowed"
-              : "card"
-              }`}
-            onClick={() => !slot.booked && slot.enabled && handleSelect(slot)}
-            aria-disabled={slot.booked || !slot.enabled}
-            role="button"
-            tabIndex={slot.booked || !slot.enabled ? -1 : 0}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { if (!slot.booked && slot.enabled) handleSelect(slot); } }}
-          >
-            <div className="booking-meta">
-              <FaCalendarAlt style={{ color: 'var(--blue)' }} />
-              <div style={{ flex: 1 }}>
-                <div className="font-semibold">{formatDate(slot.date)}</div>
+          <article key={slot.id} className={`booking-card p-4 border rounded-lg shadow ${slot.booked ? "bg-gray-200 border-gray-400" : "card"}`}>
+            <div
+              className="card-inner"
+              role={slot.booked || !slot.enabled ? undefined : 'button'}
+              tabIndex={slot.booked || !slot.enabled ? -1 : 0}
+              onClick={() => !slot.booked && slot.enabled && handleSelect(slot)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { if (!slot.booked && slot.enabled) handleSelect(slot); } }}
+            >
+              <div className="date-block" aria-hidden="true">
+                <div className="date-day">{new Date(slot.date).toLocaleDateString('en-GB', { weekday: 'short' })}</div>
+                <div className="date-number">{new Date(slot.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                <div className="date-time text-sm text-gray-500 mt-1">{slot.time.split('-')[0]}</div>
+              </div>
+
+              <div className="card-content flex-1">
+                <div className="font-semibold mb-1">{slot.group} <span className="text-sm text-gray-500">• {formatDate(slot.date)}</span></div>
                 <div className="text-sm bookings-lead">{slot.time} • <span className="booking-slot-group">{slot.group}</span></div>
               </div>
-              <div className="availability-chip">
+
+              <div className="card-actions flex flex-col items-end gap-2">
                 {typeof slot.slotsLeft === 'number' ? (
                   slot.slotsLeft > 0 ? <span className="availability-available">Slots: {slot.slotsLeft}</span> : <span className="availability-full">Full</span>
                 ) : (
                   <span className="availability-unknown">Slots: —</span>
                 )}
-              </div>
-            </div>
 
-            {/* capacity / status */}
-            <div className="mt-2 text-sm text-gray-700">
-              {slot.booked ? (
-                <strong>Booked{slot.booker ? ` by ${slot.booker}` : ''}</strong>
-              ) : (
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-600">Available</div>
-                  <div className="text-sm text-gray-600">Slots: {typeof slot.slotsLeft === 'number' ? slot.slotsLeft : '—'}</div>
+                <div className="w-full md:w-auto mt-2">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); if (!slot.booked && slot.enabled) handleSelect(slot); }}
+                    disabled={bookingDone || slot.booked || !slot.enabled || (typeof slot.slotsLeft === 'number' && slot.slotsLeft <= 0)}
+                    className={`book-cta ${bookingDone || slot.booked || !slot.enabled || (typeof slot.slotsLeft === 'number' && slot.slotsLeft <= 0) ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                    {slot.booked || bookingDone ? 'Booked' : 'Book'}
+                  </button>
                 </div>
-              )}
-            </div>
 
-            {!slot.enabled && !slot.booked && (
-              <div className="mt-2 text-sm text-red-600">
-                <strong>Unavailable</strong>
+                <button onClick={(e) => { e.stopPropagation(); alert('More info coming soon'); }} className="bg-gray-100 text-gray-800 py-2 px-4 rounded hover:bg-gray-200">Details</button>
               </div>
-            )}
-
-            <div className="slot-actions">
-              <button
-                onClick={() => !slot.booked && slot.enabled && handleSelect(slot)}
-                disabled={bookingDone || slot.booked || !slot.enabled || (typeof slot.slotsLeft === 'number' && slot.slotsLeft <= 0)}
-                className={`btn-primary ${bookingDone || slot.booked || !slot.enabled || (typeof slot.slotsLeft === 'number' && slot.slotsLeft <= 0) ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                {slot.booked || bookingDone ? 'Booked' : (typeof slot.slotsLeft === 'number' && slot.slotsLeft <= 0 ? 'Full' : 'Book')}
-              </button>
-              <button
-                onClick={() => alert('More info coming soon')}
-                className="bg-gray-100 text-gray-800 py-2 px-4 rounded hover:bg-gray-200"
-              >
-                Details
-              </button>
             </div>
-          </div>
+          </article>
         ))}
       </div>
 

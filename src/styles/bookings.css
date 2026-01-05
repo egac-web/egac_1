@@ -51,6 +51,54 @@
   gap: 0.75rem;
 }
 
+/* Card grid: center cards and constrain width for visual polish */
+.booking-grid {
+  justify-items: center;
+}
+
+.booking-card {
+  max-width: 420px;
+  width: 100%;
+}
+
+.card-inner {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.date-block {
+  width: 84px;
+  min-width: 84px;
+  text-align: center;
+  border-right: 1px solid var(--border, #e5e7eb);
+  padding-right: 0.75rem;
+}
+
+.date-day {
+  font-size: 0.8rem;
+  color: var(--muted-gray, #6b7280);
+}
+
+.date-number {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.book-cta {
+  background: var(--blue, #2563eb);
+  color: #fff;
+  padding: 0.5rem 0.9rem;
+  border-radius: 0.5rem;
+  font-weight: 700;
+}
+
+/* Make CTAs full width on small screens, inline on larger */
+@media (max-width: 767px) {
+  .slot-actions { flex-direction: column; }
+  .book-cta { width: 100%; }
+}
+
 /* Modal */
 .booking-modal-backdrop {
   background: rgba(0, 0, 0, 0.6);
@@ -67,6 +115,7 @@
   display: inline-flex;
   align-items: center;
 }
+
 .availability-available {
   background: var(--blue, #2563eb);
   color: #fff;
@@ -75,6 +124,7 @@
   font-size: 0.875rem;
   font-weight: 600;
 }
+
 .availability-full {
   background: var(--red, #ef4444);
   color: #fff;
@@ -83,6 +133,7 @@
   font-size: 0.875rem;
   font-weight: 700;
 }
+
 .availability-unknown {
   color: var(--muted-gray, #6b7280);
   font-size: 0.875rem;
@@ -92,12 +143,17 @@
 .spinner {
   width: 1rem;
   height: 1rem;
-  border: 2px solid rgba(0,0,0,0.12);
+  border: 2px solid rgba(0, 0, 0, 0.12);
   border-top-color: var(--blue, #2563eb);
   border-radius: 50%;
   display: inline-block;
   animation: spin 0.8s linear infinite;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 `
