@@ -63,16 +63,30 @@
 
 .card-inner {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem; /* tighter spacing between date, content and actions */
   align-items: center;
 }
 
+.card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center; /* center CTA when single action */
+  min-width: 110px;
+}
+
+@media (min-width: 768px) {
+  .card-actions {
+    align-items: flex-end; /* right align on larger screens */
+  }
+}
+
 .date-block {
-  width: 84px;
-  min-width: 84px;
+  width: 80px;
+  min-width: 80px;
   text-align: center;
   border-right: 1px solid var(--border, #e5e7eb);
-  padding-right: 0.75rem;
+  padding-right: 0.5rem; /* slightly reduced padding */
 }
 
 .date-day {
