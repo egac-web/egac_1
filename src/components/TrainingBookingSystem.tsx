@@ -1,6 +1,5 @@
-import React, { useState } from "react";
-import "../styles/bookings.css";
-import { FaCalendarAlt, FaClock, FaUsers } from "react-icons/fa";
+import React, { useState } from 'react';
+import '../styles/bookings.css';
 
 function formatDate(date: string): string {
   // Expects date in ISO format (e.g., "2024-06-11")
@@ -10,10 +9,9 @@ function formatDate(date: string): string {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
-    year: 'numeric'
+    year: 'numeric',
   });
 }
-
 
 // Session slot type
 type Slot = {
@@ -40,32 +38,32 @@ function getInitialSlots() {
       {
         id: `${dateStr}-u13-1`,
         date: dateStr,
-        time: "18:30-19:30",
-        group: "U13s",
+        time: '18:30-19:30',
+        group: 'U13s',
         enabled: true,
         booked: false,
       },
       {
         id: `${dateStr}-u13-2`,
         date: dateStr,
-        time: "18:30-19:30",
-        group: "U13s",
+        time: '18:30-19:30',
+        group: 'U13s',
         enabled: true,
         booked: false,
       },
       {
         id: `${dateStr}-u15-1`,
         date: dateStr,
-        time: "19:30-20:30",
-        group: "U15s+",
+        time: '19:30-20:30',
+        group: 'U15s+',
         enabled: true,
         booked: false,
       },
       {
         id: `${dateStr}-u15-2`,
         date: dateStr,
-        time: "19:30-20:30",
-        group: "U15s+",
+        time: '19:30-20:30',
+        group: 'U15s+',
         enabled: true,
         booked: false,
       }
@@ -95,7 +93,7 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
 
   // Map server slot keys to client labels
   const groupKeyToLabel: Record<string, string> = { u13: 'U13s', u15plus: 'U15s+' };
-  const labelToGroupKey: Record<string, string> = { 'U13s': 'u13', 'U15s+': 'u15plus' };
+  const labelToGroupKey: Record<string, string> = { U13s: 'u13', 'U15s+': 'u15plus' };
 
   // Fetch availability (invite-aware when token present) and update slot counts
   async function fetchAvailability() {
@@ -109,11 +107,18 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
           setInviteData(body);
           const map = new Map();
           (body.availability || []).forEach((a: any) => map.set(a.date, a.slots || {}));
-          setSlots((prev) => prev.map((s) => ({ ...s, slotsLeft: (map.get(s.date) ? (map.get(s.date)[labelToGroupKey[s.group]] ?? null) : null) })));
+          setSlots((prev) =>
+            prev.map((s) => ({
+              ...s,
+              slotsLeft: map.get(s.date) ? map.get(s.date)[labelToGroupKey[s.group]] ?? null : null,
+            }))
+          );
         }
       } catch (err) {
         // ignore
-      } finally { setLoadingInviteData(false); }
+      } finally {
+        setLoadingInviteData(false);
+      }
       return;
     }
 
@@ -124,13 +129,37 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
       const body = await res.json();
       if (body && body.ok) {
         setInviteData(body);
+
         const map = new Map();
         (body.availability || []).forEach((a: any) => map.set(a.date, a.slots || {}));
-        setSlots((prev) => prev.map((s) => ({ ...s, slotsLeft: (map.get(s.date) ? (map.get(s.date)[labelToGroupKey[s.group]] ?? null) : null) })));
+
+        setSlots((prev) => {
+          // update slotsLeft
+          let updated = prev.map((s) => ({
+            ...s,
+            slotsLeft: map.get(s.date) ? map.get(s.date)[labelToGroupKey[s.group]] ?? null : null,
+          }));
+
+          // build a map of eligibleSlot per date and filter to only eligible groups
+          const eligible = new Map<string, string | null>();
+          (body.availability || []).forEach((a: any) =>
+            eligible.set(a.date, a.eligibleSlot || null)
+          );
+
+          updated = updated.filter((s) => {
+            const e = eligible.get(s.date);
+            if (!e) return true; // if no eligibility info, keep it
+            return e === labelToGroupKey[s.group];
+          });
+
+          return updated;
+        });
       }
     } catch (err) {
       // ignore
-    } finally { setLoadingInviteData(false); }
+    } finally {
+      setLoadingInviteData(false);
+    }
   }
 
   // Poll availability periodically
@@ -140,7 +169,9 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
     fetchAvailability();
     // set interval
     id = window.setInterval(() => fetchAvailability(), POLL_INTERVAL_MS);
-    return () => { if (id) clearInterval(id); };
+    return () => {
+      if (id) clearInterval(id);
+    };
   }, [inviteTokenState]);
 
   // If we're loaded with an invite token (either prop or URL), preselect the slot from query params
@@ -155,13 +186,31 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
       if (qInvite) {
         // fetch invite data for eligibility and prefilling
         setLoadingInviteData(true);
-        fetch(`/api/booking.json?invite=${encodeURIComponent(qInvite)}`).then(r => r.json()).then((b) => {
-          if (b && b.ok) {
-            setInviteData(b);
-            // set default bookingFor based on enquiry presence of dob
-            if (b.enquiry && b.enquiry.dob) setBookingFor('self'); else setBookingFor('someone-else');
-          }
-        }).catch(() => { }).finally(() => setLoadingInviteData(false));
+        fetch(`/api/booking.json?invite=${encodeURIComponent(qInvite)}`)
+          .then((r) => r.json())
+          .then((b) => {
+            if (b && b.ok) {
+              setInviteData(b);
+              // set default bookingFor based on enquiry presence of dob
+              if (b.enquiry && b.enquiry.dob) setBookingFor('self');
+              else setBookingFor('someone-else');
+
+              // filter existing client slots to only show DOB-eligible groups
+              const eligible = new Map<string, string | null>();
+              (b.availability || []).forEach((a: any) =>
+                eligible.set(a.date, a.eligibleSlot || null)
+              );
+              setSlots((prev) =>
+                prev.filter((s) => {
+                  const e = eligible.get(s.date);
+                  if (!e) return true;
+                  return e === labelToGroupKey[s.group];
+                })
+              );
+            }
+          })
+          .catch(() => {})
+          .finally(() => setLoadingInviteData(false));
       }
 
       if (qDate && qSlot) {
@@ -211,7 +260,8 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
     if (!selectedSlot) return;
 
     // determine DOB to use
-    const dobToUse = bookingFor === 'self' ? (inviteData?.enquiry?.dob || subjectDob || '') : subjectDob || '';
+    const dobToUse =
+      bookingFor === 'self' ? inviteData?.enquiry?.dob || subjectDob || '' : subjectDob || '';
     if (!dobToUse) {
       setStatusMessage('Please provide a date of birth to determine eligibility');
       setStatusType('error');
@@ -220,7 +270,10 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
 
     // compute age and slot
     try {
-      const age = (await import('../lib/booking')).computeAgeOnDate(dobToUse, `${selectedSlot.date}T00:00:00`);
+      const age = (await import('../lib/booking')).computeAgeOnDate(
+        dobToUse,
+        `${selectedSlot.date}T00:00:00`
+      );
       const slotCode = (await import('../lib/booking')).slotForAge(age);
       const selectedCode = labelToGroupKey[selectedSlot.group];
       if (slotCode !== selectedCode) {
@@ -243,12 +296,19 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
         const res = await fetch('/api/booking.json', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ invite: inviteTokenState, session_date: selectedSlot.date, booking_for: bookingFor, subject_dob: dobToUse }),
+          body: JSON.stringify({
+            invite: inviteTokenState,
+            session_date: selectedSlot.date,
+            booking_for: bookingFor,
+            subject_dob: dobToUse,
+          }),
         });
         const body = await res.json();
         if (!res.ok || !body.ok) throw new Error(body.error || 'Booking failed');
         // mark local slot as booked
-        setSlots((prev) => prev.map((s) => (s.id === selectedSlot.id ? { ...s, booked: true } : s)));
+        setSlots((prev) =>
+          prev.map((s) => (s.id === selectedSlot.id ? { ...s, booked: true } : s))
+        );
         setBookingDone(true);
         setBookingInfo(body.booking || null);
         setStatusMessage('Booking confirmed — check your email for confirmation.');
@@ -265,11 +325,7 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
     }
 
     // Fallback local behavior
-    setSlots((prev) =>
-      prev.map((s) =>
-        s.id === selectedSlot.id ? { ...s, booked: true } : s
-      )
-    );
+    setSlots((prev) => prev.map((s) => (s.id === selectedSlot.id ? { ...s, booked: true } : s)));
     setShowModal(false);
     setSelectedSlot(null);
     setStatusMessage('Booking reserved locally (dev mode)');
@@ -281,13 +337,31 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
     <div className="max-w-3xl mx-auto py-8">
       <div className="bookings-hero">
         <h2 className="text-3xl font-bold mb-2">Book a Training Session</h2>
-        <p className="bookings-lead">Choose a session below to reserve a free taster. If you received an invite, use the booking link provided in your email.</p>
+        <p className="bookings-lead">
+          Choose a session below to reserve a free taster. If you received an invite, use the
+          booking link provided in your email.
+        </p>
       </div>
 
       {/* Accessible status area */}
-      <div aria-live="polite" aria-atomic="true" tabIndex={-1} ref={statusRef} style={{ outline: 'none' }}>
+      <div
+        aria-live="polite"
+        aria-atomic="true"
+        tabIndex={-1}
+        ref={statusRef}
+        style={{ outline: 'none' }}
+      >
         {statusMessage ? (
-          <div className={`p-3 mb-4 rounded ${statusType === 'success' ? 'bg-green-50 border border-green-200 text-green-800' : statusType === 'error' ? 'bg-red-50 border border-red-200 text-red-800' : 'bg-gray-50 border border-gray-200 text-gray-800'}`} role="status">
+          <div
+            className={`p-3 mb-4 rounded ${
+              statusType === 'success'
+                ? 'bg-green-50 border border-green-200 text-green-800'
+                : statusType === 'error'
+                ? 'bg-red-50 border border-red-200 text-red-800'
+                : 'bg-gray-50 border border-gray-200 text-gray-800'
+            }`}
+            role="status"
+          >
             {statusMessage}
           </div>
         ) : null}
@@ -295,39 +369,119 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
 
       <div className="booking-grid">
         {slots.map((slot) => (
-          <article key={slot.id} className={`booking-card p-4 border rounded-lg shadow ${slot.booked ? "bg-gray-200 border-gray-400" : "card"}`}>
+          <article
+            key={slot.id}
+            className={`booking-card p-4 border rounded-lg shadow ${
+              slot.booked ? 'bg-gray-200 border-gray-400' : 'card'
+            }`}
+          >
             <div
               className="card-inner"
               role={slot.booked || !slot.enabled ? undefined : 'button'}
               tabIndex={slot.booked || !slot.enabled ? -1 : 0}
               onClick={() => !slot.booked && slot.enabled && handleSelect(slot)}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { if (!slot.booked && slot.enabled) handleSelect(slot); } }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  if (!slot.booked && slot.enabled) handleSelect(slot);
+                }
+              }}
             >
               <div className="date-block" aria-hidden="true">
-                <div className="card-title">{new Date(slot.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase()}</div>
-                <div className="date-time text-sm text-gray-500 mt-1">{slot.time.split('-')[0]}</div>
+                <div className="card-title">
+                  {new Date(slot.date)
+                    .toLocaleDateString('en-GB', {
+                      weekday: 'short',
+                      day: 'numeric',
+                      month: 'short',
+                    })
+                    .toUpperCase()}
+                </div>
+                <div className="date-time text-sm text-gray-500 mt-1">
+                  {slot.time.split('-')[0]}
+                </div>
               </div>
 
               <div className="card-content flex-1">
                 <div className="card-body">
-                  <div className="font-semibold mb-1">{slot.group} <span className="text-sm text-gray-500">• {formatDate(slot.date)}</span></div>
-                  <div className="text-sm bookings-lead">{slot.time} • <span className="booking-slot-group">{slot.group}</span></div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <div className="font-semibold mb-1">
+                      {slot.group}{' '}
+                      <span className="text-sm text-gray-500">• {formatDate(slot.date)}</span>
+                    </div>
+                    <div className="session-badge" aria-hidden="true">
+                      {slot.group}
+                    </div>
+                  </div>
+                  <div className="text-sm bookings-lead">
+                    {slot.time} • <span className="booking-slot-group">{slot.group}</span>
+                  </div>
                 </div>
               </div>
 
               <div className="card-actions flex flex-col items-end gap-2">
                 {typeof slot.slotsLeft === 'number' ? (
-                  slot.slotsLeft > 0 ? <span className="availability-available">Slots: {slot.slotsLeft}</span> : <span className="availability-full">Full</span>
+                  slot.slotsLeft > 0 ? (
+                    <span className="availability-available">Slots: {slot.slotsLeft}</span>
+                  ) : (
+                    <span className="availability-full">Full</span>
+                  )
                 ) : (
                   <span className="availability-unknown">Slots: —</span>
                 )}
 
                 <div className="w-full md:w-auto mt-2">
                   <button
-                    onClick={(e) => { e.stopPropagation(); if (!slot.booked && slot.enabled) handleSelect(slot); }}
-                    disabled={bookingDone || slot.booked || !slot.enabled || (typeof slot.slotsLeft === 'number' && slot.slotsLeft <= 0)}
-                    className={`book-cta ${bookingDone || slot.booked || !slot.enabled || (typeof slot.slotsLeft === 'number' && slot.slotsLeft <= 0) ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                    {slot.booked || bookingDone ? 'Booked' : 'Book'}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!slot.booked && slot.enabled) handleSelect(slot);
+                    }}
+                    disabled={
+                      bookingDone ||
+                      slot.booked ||
+                      !slot.enabled ||
+                      (typeof slot.slotsLeft === 'number' && slot.slotsLeft <= 0)
+                    }
+                    className={`egac-btn btn btn-cta btn-lg inline-flex items-center gap-2 ${
+                      bookingDone ||
+                      slot.booked ||
+                      !slot.enabled ||
+                      (typeof slot.slotsLeft === 'number' && slot.slotsLeft <= 0)
+                        ? 'opacity-50 cursor-not-allowed'
+                        : ''
+                    }`}
+                  >
+                    {slot.booked || bookingDone ? (
+                      'Booked'
+                    ) : (
+                      <>
+                        <svg
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          aria-hidden="true"
+                          focusable={false}
+                        >
+                          <path
+                            d="M7 10h10M7 14h4"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          <rect
+                            x="3"
+                            y="4"
+                            width="18"
+                            height="18"
+                            rx="2"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          />
+                        </svg>
+                        Book
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -352,16 +506,28 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
             </p>
 
             {/* Booking for selector and DOB input (if required) */}
-            <div className="mb-3 booking-for-options" role="radiogroup" aria-label="Who are we booking for">
+            <div
+              className="mb-3 booking-for-options"
+              role="radiogroup"
+              aria-label="Who are we booking for"
+            >
               <div
                 role="radio"
                 aria-checked={bookingFor === 'self'}
                 tabIndex={0}
                 onClick={() => setBookingFor('self')}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setBookingFor('self'); }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') setBookingFor('self');
+                }}
                 className={`booking-option ${bookingFor === 'self' ? 'selected' : ''}`}
               >
-                <input type="radio" name="bookingFor" checked={bookingFor === 'self'} onChange={() => setBookingFor('self')} className="sr-only" />
+                <input
+                  type="radio"
+                  name="bookingFor"
+                  checked={bookingFor === 'self'}
+                  onChange={() => setBookingFor('self')}
+                  className="sr-only"
+                />
                 <div className="booking-option-title">Book for myself</div>
                 <div className="booking-option-sub">Use invite details</div>
               </div>
@@ -371,39 +537,52 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
                 aria-checked={bookingFor === 'someone-else'}
                 tabIndex={0}
                 onClick={() => setBookingFor('someone-else')}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setBookingFor('someone-else'); }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') setBookingFor('someone-else');
+                }}
                 className={`booking-option ${bookingFor === 'someone-else' ? 'selected' : ''}`}
               >
-                <input type="radio" name="bookingFor" checked={bookingFor === 'someone-else'} onChange={() => setBookingFor('someone-else')} className="sr-only" />
+                <input
+                  type="radio"
+                  name="bookingFor"
+                  checked={bookingFor === 'someone-else'}
+                  onChange={() => setBookingFor('someone-else')}
+                  className="sr-only"
+                />
                 <div className="booking-option-title">Book for someone else</div>
                 <div className="booking-option-sub">Provide subject's date of birth</div>
               </div>
             </div>
 
-            {(bookingFor === 'someone-else' || (!inviteData?.enquiry?.dob && bookingFor === 'self')) && (
+            {(bookingFor === 'someone-else' ||
+              (!inviteData?.enquiry?.dob && bookingFor === 'self')) && (
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1">Subject Date of Birth</label>
-                <input type="date" value={subjectDob} onChange={(e) => setSubjectDob(e.target.value)} className="border p-2 rounded w-full" />
+                <input
+                  type="date"
+                  value={subjectDob}
+                  onChange={(e) => setSubjectDob(e.target.value)}
+                  className="border p-2 rounded w-full"
+                />
               </div>
             )}
 
             <div className="flex gap-4">
               <button
                 onClick={handleBook}
-                className="flex-1 btn-primary"
+                className="flex-1 egac-btn btn btn-cta"
                 disabled={bookingInProgress}
                 aria-busy={bookingInProgress}
               >
                 {bookingInProgress ? (
-                  <span className="inline-flex items-center"><span className="spinner mr-2" aria-hidden="true"></span>Booking...</span>
+                  <span className="inline-flex items-center">
+                    <span className="spinner mr-2" aria-hidden="true"></span>Booking...
+                  </span>
                 ) : (
                   'Confirm booking'
                 )}
               </button>
-              <button
-                onClick={handleCloseModal}
-                className="flex-1 bg-gray-300 text-gray-800 py-2 px-4 rounded hover:bg-gray-400"
-              >
+              <button onClick={handleCloseModal} className="flex-1 egac-btn btn btn-secondary">
                 Cancel
               </button>
             </div>
