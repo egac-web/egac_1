@@ -6,7 +6,12 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "test": "vitest"
+    "test": "vitest",
+    "check:js-no-ts": "node ./scripts/check-js-no-ts-annotations.js",
+    "lint": "eslint \"src/**/*.{js,ts,jsx,tsx,astro}\" --ext .js,.mjs,.cjs,.ts,.tsx,.jsx,.astro",
+    "format": "prettier --write \"**/*.{js,ts,jsx,tsx,astro,json,md,css}\"",
+    "format:check": "prettier --check \"**/*.{js,ts,jsx,tsx,astro,json,md,css}\"",
+    "lint:ci": "npm run check:js-no-ts && npm run lint -- --max-warnings=0 && npm run format:check"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.6.12",
@@ -22,6 +27,11 @@
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
-    "vitest": "^4.0.16"
+    "vitest": "^4.0.16",
+    "eslint": "^8.45.0",
+    "prettier": "^2.8.8",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-react": "^7.33.0"
   }
 }
