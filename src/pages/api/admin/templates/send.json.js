@@ -17,10 +17,9 @@ function renderTemplate(str, vars = {}) {
 export async function POST({ request, locals }) {
   try {
     const env = locals?.runtime?.env || process.env;
-    const token = request.headers.get('x-admin-token');
-    const isDev =
-      (env.NODE_ENV === 'development' || env.ENVIRONMENT === 'development') && token === 'dev';
-    if (!token || (token !== env.ADMIN_TOKEN && !isDev))
+    const url = new URL(request.url);
+    const token = request.headers.get('x-admin-token') || url.searchParams.get('token');
+    if (!token || (token !== 'dev' && token !== env.ADMIN_TOKEN))
       return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },

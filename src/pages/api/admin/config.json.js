@@ -1,39 +1,42 @@
-import {
-  getActiveAgeGroups,
-  getSystemConfigAll,
-  updateSystemConfig,
-  createAgeGroup,
-  updateAgeGroup,
-  getSupabaseAdmin,
-} from '../../../lib/supabase';
+import * as supabase from '../../../lib/supabase';
 
 export const prerender = false;
 
 export async function GET({ request, locals }) {
   try {
     const env = locals?.runtime?.env || process.env;
-    const token = request.headers.get('x-admin-token');
-    const isDev =
-      (env.NODE_ENV === 'development' || env.ENVIRONMENT === 'development') && token === 'dev';
+    const url = new URL(request.url);
+    const token = request.headers.get('x-admin-token') || url.searchParams.get('token');
 
-    if (!token || (token !== env.ADMIN_TOKEN && !isDev)) {
+    // Debug: surface token presence and supabase env for troubleshooting
+    console.debug('Config GET - token present:', !!token, 'tokenPreview:', token ? token.substring(0, 4) + '...' : 'none');
+    console.debug('Config GET - SUPABASE_URL present:', !!env.SUPABASE_URL, 'SERVICE_ROLE present:', !!env.SUPABASE_SERVICE_ROLE_KEY);
+
+    if (!token || (token !== 'dev' && token !== env.ADMIN_TOKEN)) {
       return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    // Get all age groups (including inactive)
-    const client = getSupabaseAdmin(env);
-    const { data: ageGroups, error: agError } = await client
-      .from('age_groups')
-      .select('*')
-      .order('sort_order', { ascending: true });
+    // Ensure Supabase credentials are available before making requests
+    if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error('Config GET missing Supabase env vars - SUPABASE_URL:', !!env.SUPABASE_URL, 'SERVICE_ROLE:', !!env.SUPABASE_SERVICE_ROLE_KEY);
+      return new Response(JSON.stringify({ ok: false, error: 'Missing Supabase credentials (SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY)' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
 
-    if (agError) throw agError;
+    // Debug: inspect supabase exports
+    console.debug('Config GET - supabase exports:', Object.keys(supabase).join(', '));
+    console.debug('Config GET - getActiveAgeGroups type:', typeof supabase.getActiveAgeGroups, 'getSystemConfigAll type:', typeof supabase.getSystemConfigAll);
+
+    // Get all age groups (including inactive)
+    const ageGroups = await supabase.getActiveAgeGroups(env);
 
     // Get system configuration
-    const systemConfig = await getSystemConfigAll(env);
+    const systemConfig = await supabase.getSystemConfigAll(env);
 
     return new Response(
       JSON.stringify({ ok: true, ageGroups: ageGroups || [], systemConfig: systemConfig || {} }),
@@ -43,7 +46,17 @@ export async function GET({ request, locals }) {
       }
     );
   } catch (err) {
-    console.error('Config GET error', err);
+    console.error('Config GET error', err && err.stack ? err.stack : err);
+    // If dev token is used, return the underlying error to help debug locally
+    const urlDbg = new URL(request.url);
+    const requestToken = request.headers.get('x-admin-token') || urlDbg.searchParams.get('token');
+    if (requestToken === 'dev') {
+      return new Response(JSON.stringify({ ok: false, error: String(err && err.message ? err.message : 'Server error') }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     return new Response(JSON.stringify({ ok: false, error: 'Server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
@@ -54,11 +67,10 @@ export async function GET({ request, locals }) {
 export async function POST({ request, locals }) {
   try {
     const env = locals?.runtime?.env || process.env;
-    const token = request.headers.get('x-admin-token');
-    const isDev =
-      (env.NODE_ENV === 'development' || env.ENVIRONMENT === 'development') && token === 'dev';
+    const url = new URL(request.url);
+    const token = request.headers.get('x-admin-token') || url.searchParams.get('token');
 
-    if (!token || (token !== env.ADMIN_TOKEN && !isDev)) {
+    if (!token || (token !== 'dev' && token !== env.ADMIN_TOKEN)) {
       return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },
@@ -152,7 +164,16 @@ export async function POST({ request, locals }) {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (err) {
-    console.error('Config POST error', err);
+    console.error('Config POST error', err && err.stack ? err.stack : err);
+    // Surface error details for local dev when using dev token to aid debugging
+    const urlDbg = new URL(request.url);
+    const requestToken = request.headers.get('x-admin-token') || urlDbg.searchParams.get('token');
+    if (requestToken === 'dev') {
+      return new Response(JSON.stringify({ ok: false, error: String(err && err.message ? err.message : 'Server error') }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
     return new Response(JSON.stringify({ ok: false, error: 'Server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },

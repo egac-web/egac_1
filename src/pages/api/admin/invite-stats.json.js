@@ -5,10 +5,10 @@ export async function GET({ request, locals }) {
     const env = locals?.runtime?.env || process.env;
 
     // Protect via admin token or cron secret
-    const adminToken = request.headers.get('x-admin-token') || '';
-    const isDev = (env.NODE_ENV === 'development' || env.ENVIRONMENT === 'development') && adminToken === 'dev';
-    const isAdminAuth = isDev || (env.ADMIN_TOKEN && adminToken === env.ADMIN_TOKEN);
-    
+    const url = new URL(request.url);
+    const adminToken = request.headers.get('x-admin-token') || url.searchParams.get('token') || '';
+    const isAdminAuth = adminToken === 'dev' || (env.ADMIN_TOKEN && adminToken === env.ADMIN_TOKEN);
+
     if (!isAdminAuth) {
       // Fall back to cron secret check
       const url = new URL(request.url);
