@@ -89,7 +89,7 @@ export async function POST({ request, locals }) {
 
       // Persist each setting separately
       for (const k of Object.keys(updates)) {
-        await updateSystemConfig(k, String(updates[k]), env);
+        await supabase.updateSystemConfig(k, String(updates[k]), env);
       }
 
       return new Response(JSON.stringify({ ok: true }), {
@@ -109,7 +109,7 @@ export async function POST({ request, locals }) {
         });
       }
 
-      const newAgeGroup = await createAgeGroup(
+      const newAgeGroup = await supabase.createAgeGroup(
         {
           code,
           label,
@@ -151,7 +151,7 @@ export async function POST({ request, locals }) {
       if (capacity !== undefined) updates.capacity = capacity;
       if (active !== undefined) updates.active = active;
 
-      await updateAgeGroup(id, updates, env);
+      await supabase.updateAgeGroup(id, updates, env);
 
       return new Response(JSON.stringify({ ok: true }), {
         status: 200,

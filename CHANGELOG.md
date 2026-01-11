@@ -1,7 +1,56 @@
 # Changelog - January 11, 2026 Conversation Thread
 
 ## Summary
-This conversation thread focused on adding code quality tools (ESLint, Prettier, testing) and admin portal features to the EGAC website. Initial work was done on the wrong base branch, causing styling issues, which were then corrected.
+This conversation thread focused on adding code quality tools (ESLint, Prettier, testing) and building a comprehensive admin portal for the EGAC website. Major features include: admin authentication, enquiry/booking management, Academy invitations (U11), configuration management (age groups & booking settings), email template editing with plain text and HTML modes, and a visual dashboard with reports.
+
+---
+
+## Latest Updates - Admin Portal UI Polish (January 11, 2026 Evening)
+
+### Template Editor Improvements
+- **Plain Text Editor**: Default editor now shows stripped plain text (not raw HTML)
+  - Improved `stripHtmlToText()` function in `src/lib/admin-ui.js` to properly decode HTML entities and preserve structure
+  - Text editor converts to HTML automatically on save using `textToHtml()` helper
+  - Advanced mode (toggle checkbox) reveals raw HTML editor for power users
+- **Visual Polish**: Added inline styles for better card appearance, rounded textareas, and preview vars styling
+
+### Age Groups Configuration
+- **Session Day/Time Clarity**: Added helper text explaining that these fields define when the age group trains (e.g., "Tuesday 18:30")
+- **Booking Settings Integration**: Moved "Weeks Ahead Booking" and "Academy Max Age" settings into the Age Groups section for better context
+- **Simplified Structure**: Removed redundant System Settings section, consolidated into Age Groups & Booking Settings
+
+### Reports Dashboard
+- **Hero Section**: Added gradient hero banner with context: "Overview of enquiries, bookings, attendance, and academy invitations"
+- **Enhanced Stat Cards**: Each metric now includes:
+  - Color-coded borders (green for attended, red for no-shows, purple for academy, orange for attendance %)
+  - Descriptive labels explaining what each metric represents
+  - Better visual hierarchy and spacing
+- **Contextual Descriptions**: Added sub-labels like "All contact form submissions", "Taster session reservations", etc.
+
+### Enquiries & Academy Sections
+- **Hero Sections**: Added gradient hero banners to Enquiries (blue) and Academy (purple) tabs
+- **Consistent Branding**: Applied card-based layouts and CTAs matching the main site design
+- **Better Context**: Clear descriptions for each section's purpose
+
+### Configuration Tab
+- **Hero Section**: Added green gradient hero banner explaining "Manage age groups, booking settings, and email templates"
+- **Unified Structure**: Consolidated Age Groups & Booking Settings into one section with clear visual hierarchy
+
+### Files Modified
+- `src/lib/admin-ui.js` - Enhanced `stripHtmlToText()` to properly decode HTML entities and preserve line breaks
+- `src/pages/admin/members.astro`:
+  - Added hero sections to all tabs (Enquiries, Academy, Reports, Configuration)
+  - Improved template editor with plain text default and HTML toggle
+  - Moved booking settings to Age Groups section
+  - Enhanced Reports dashboard with color-coded metrics and descriptions
+  - Added helper text for session_day and session_time fields
+  - Improved card styling and visual polish throughout
+- `src/pages/api/admin/config.json.js` - Fixed missing `supabase.` namespace for `updateSystemConfig`, `createAgeGroup`, and `updateAgeGroup` calls
+
+### Bug Fixes
+- Fixed `updateSystemConfig is not defined` error in config API endpoint (was calling bare function instead of `supabase.updateSystemConfig`)
+- Fixed template plain text editor showing raw HTML instead of decoded text
+- Fixed Age Groups table showing `data.age_groups` when API returns `data.ageGroups` (added fallback)
 
 ---
 
