@@ -325,6 +325,27 @@ npm run format
 - `curl -i "http://localhost:3000/api/admin/templates.json?token=dev"` → **200 OK** with `templates` payload
 
 **Note**: If anything else fails, server logs now provide detailed debug output and dev-only error messages when using `?token=dev` to aid diagnosis.
+
+---
+
+### 6. Admin UI polish (Commit: Pending)
+
+**Goal**: Improve admin UX and accessibility, add template preview UX, and persist admin token for local dev convenience.
+
+**Planned changes implemented so far**:
+- **Accessibility**: Added ARIA attributes (`aria-selected`, `aria-controls`, `aria-hidden`) and keyboard navigation (ArrowLeft/Right/Home/End) for admin tabs in `src/pages/admin/members.astro`.
+- **Token persistence**: Admin token is persisted to `sessionStorage` on successful login and autofills on page reload; logout button added to clear token.
+- **Template editor**: Added a JSON `Preview variables` textarea per template and improved preview rendering to show HTML preview returned by the server.
+
+**Files Modified**:
+- `src/pages/admin/members.astro` (tab ARIA/keyboard, token persistence, template preview vars UI)
+
+**Next steps**:
+- Improve template editor save UX and add more accessible form controls.
+- Add unit tests for tab keyboard behavior and template preview rendering.
+- Iterate on styling and responsiveness in `feat/admin-ui-polish` branch.
+
+**Result**: Admin UI polish work is in progress; basic accessibility and preview features are in place and verified manually.
 ---
 
 ## Conversation Context

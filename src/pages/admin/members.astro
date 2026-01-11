@@ -20,33 +20,33 @@ import '../../styles/forms.css';
     <div id="admin-portal" style="display:none">
       <!-- Tabs Navigation -->
       <nav class="admin-tabs" role="tablist">
-        <button class="tab-btn active" data-tab="enquiries" role="tab" aria-selected="true">Enquiries & Bookings</button>
-        <button class="tab-btn" data-tab="academy" role="tab" aria-selected="false">Academy (U11)</button>
-        <button class="tab-btn" data-tab="reports" role="tab" aria-selected="false">Reports</button>
-        <button class="tab-btn" data-tab="config" role="tab" aria-selected="false">Configuration</button>
+        <button id="tab-btn-enquiries" class="tab-btn active" data-tab="enquiries" role="tab" aria-selected="true" aria-controls="tab-enquiries" tabindex="0">Enquiries & Bookings</button>
+        <button id="tab-btn-academy" class="tab-btn" data-tab="academy" role="tab" aria-selected="false" aria-controls="tab-academy" tabindex="-1">Academy (U11)</button>
+        <button id="tab-btn-reports" class="tab-btn" data-tab="reports" role="tab" aria-selected="false" aria-controls="tab-reports" tabindex="-1">Reports</button>
+        <button id="tab-btn-config" class="tab-btn" data-tab="config" role="tab" aria-selected="false" aria-controls="tab-config" tabindex="-1">Configuration</button>
       </nav>
 
       <!-- Enquiries & Bookings Tab -->
-      <div id="tab-enquiries" class="tab-content active" role="tabpanel">
+      <div id="tab-enquiries" class="tab-content active" role="tabpanel" aria-labelledby="tab-btn-enquiries" aria-hidden="false">
         <h2>Enquiries & Bookings</h2>
         <div id="enquiries-list"></div>
       </div>
 
       <!-- Academy Tab -->
-      <div id="tab-academy" class="tab-content" role="tabpanel" style="display:none">
+      <div id="tab-academy" class="tab-content" role="tabpanel" style="display:none" aria-labelledby="tab-btn-academy" aria-hidden="true">
         <h2>Academy Invitations (U11)</h2>
         <div id="academy-stats"></div>
         <div id="academy-list"></div>
       </div>
 
       <!-- Reports Tab -->
-      <div id="tab-reports" class="tab-content" role="tabpanel" style="display:none">
+      <div id="tab-reports" class="tab-content" role="tabpanel" style="display:none" aria-labelledby="tab-btn-reports" aria-hidden="true">
         <h2>Summary Reports</h2>
         <div id="reports-dashboard"></div>
       </div>
 
       <!-- Configuration Tab -->
-      <div id="tab-config" class="tab-content" role="tabpanel" style="display:none">
+      <div id="tab-config" class="tab-content" role="tabpanel" style="display:none" aria-labelledby="tab-btn-config" aria-hidden="true">
         <h2>Configuration</h2>
         
         <section class="config-section">
@@ -288,10 +288,16 @@ import '../../styles/forms.css';
   // Check for token in URL query params
   const urlParams = new URLSearchParams(window.location.search);
   const urlToken = urlParams.get('token');
+  const storedToken = sessionStorage.getItem('adminToken');
   
+  // Prefer URL token, then sessionStorage
   if (urlToken) {
     document.getElementById('admintoken').value = urlToken;
     // Auto-login if token is present
+    setTimeout(() => document.getElementById('login-btn').click(), 100);
+  } else if (storedToken) {
+    document.getElementById('admintoken').value = storedToken;
+    // Auto-login using stored token
     setTimeout(() => document.getElementById('login-btn').click(), 100);
   }
 
@@ -318,42 +324,80 @@ import '../../styles/forms.css';
       }
 
       // Login successful
+      sessionStorage.setItem('adminToken', token);
       document.getElementById('login-section').style.display = 'none';
       document.getElementById('admin-portal').style.display = 'block';
+      // Add a logout button for convenience
+      if (!document.getElementById('admin-logout')) {
+        const logoutBtn = document.createElement('button');
+        logoutBtn.id = 'admin-logout';
+        logoutBtn.className = 'btn btn-secondary btn-sm';
+        logoutBtn.style.marginLeft = '1rem';
+        logoutBtn.textContent = 'Logout';
+        logoutBtn.addEventListener('click', () => {
+          sessionStorage.removeItem('adminToken');
+          location.reload();
+        });
+        document.querySelector('.admin-tabs').appendChild(logoutBtn);
+      }
       loadEnquiries();
     } catch (err) {
       showStatus('login-status', 'Connection error', 'error');
     }
   });
 
-  // Tab switching
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const tabName = btn.dataset.tab;
-      
-      // Update tab buttons
-      document.querySelectorAll('.tab-btn').forEach(b => {
-        b.classList.remove('active');
-        b.setAttribute('aria-selected', 'false');
-      });
-      btn.classList.add('active');
-      btn.setAttribute('aria-selected', 'true');
+  // Tab switching with keyboard accessibility
+  function setActiveTab(tabName, focusButton = false) {
+    const buttons = Array.from(document.querySelectorAll('.tab-btn'));
+    buttons.forEach(b => {
+      const isActive = b.dataset.tab === tabName;
+      b.classList.toggle('active', isActive);
+      b.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      b.setAttribute('tabindex', isActive ? '0' : '-1');
+    });
 
-      // Update tab content
-      document.querySelectorAll('.tab-content').forEach(content => {
-        content.style.display = 'none';
-        content.classList.remove('active');
-      });
-      const activeTab = document.getElementById(`tab-${tabName}`);
-      activeTab.style.display = 'block';
-      activeTab.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(content => {
+      const isActive = content.id === `tab-${tabName}`;
+      content.style.display = isActive ? 'block' : 'none';
+      content.classList.toggle('active', isActive);
+      content.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+    });
 
-      // Load tab data
-      if (tabName === 'academy') loadAcademy();
-      else if (tabName === 'reports') loadReports();
-      else if (tabName === 'config') loadConfiguration();
+    if (focusButton) {
+      const btn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+      if (btn) btn.focus();
+    }
+
+    // Load tab data lazily
+    if (tabName === 'academy') loadAcademy();
+    else if (tabName === 'reports') loadReports();
+    else if (tabName === 'config') loadConfiguration();
+  }
+
+  const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
+  tabButtons.forEach((btn, idx) => {
+    btn.addEventListener('click', () => setActiveTab(btn.dataset.tab, true));
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') {
+        const next = tabButtons[(idx + 1) % tabButtons.length];
+        setActiveTab(next.dataset.tab, true);
+        e.preventDefault();
+      } else if (e.key === 'ArrowLeft') {
+        const prev = tabButtons[(idx - 1 + tabButtons.length) % tabButtons.length];
+        setActiveTab(prev.dataset.tab, true);
+        e.preventDefault();
+      } else if (e.key === 'Home') {
+        setActiveTab(tabButtons[0].dataset.tab, true);
+        e.preventDefault();
+      } else if (e.key === 'End') {
+        setActiveTab(tabButtons[tabButtons.length - 1].dataset.tab, true);
+        e.preventDefault();
+      }
     });
   });
+
+  // Ensure initial tab state is correct
+  setActiveTab(document.querySelector('.tab-btn.active')?.dataset.tab || 'enquiries');
 
   // Helper to show status messages
   function showStatus(containerId, message, type = 'info') {
@@ -720,14 +764,27 @@ import '../../styles/forms.css';
           <h3>${template.name}</h3>
           <div class="template-editor">
             <label>Subject:</label>
-            <input type="text" value="${template.subject}" id="subject-${template.id}" />
+            <input type="text" value="${template.subject || ''}" id="subject-${template.id}" />
             
-            <label style="margin-top:1rem">Body:</label>
-            <textarea id="body-${template.id}">${template.body}</textarea>
-            
-            <button class="btn btn-primary btn-sm" style="margin-top:0.5rem" onclick="saveTemplate('${template.id}')">Save</button>
-            <button class="btn btn-secondary btn-sm" style="margin-top:0.5rem" onclick="previewTemplate('${template.id}')">Preview</button>
+            <label style="margin-top:1rem">Body (HTML):</label>
+            <textarea id="body-${template.id}">${template.body || template.html || template.text || ''}</textarea>
+
+            <label style="margin-top:0.5rem">Preview variables (JSON):</label>
+            <textarea id="vars-${template.id}" style="min-height:80px">{
+  "siteName": "East Grinstead AC",
+  "childName": "Junior",
+  "responseYesUrl": "https://example.com/yes",
+  "responseNoUrl": "https://example.com/no",
+  "inviteUrl": "https://example.com/invite/abc123",
+  "date": "2026-03-15"
+}</textarea>
+
+            <div style="margin-top:0.5rem">
+              <button class="btn btn-primary btn-sm" onclick="saveTemplate('${template.id}')">Save</button>
+              <button class="btn btn-secondary btn-sm" onclick="previewTemplate('${template.id}')">Preview</button>
+            </div>
             <div id="template-result-${template.id}"></div>
+            <div id="template-preview-html-${template.id}" style="margin-top:0.5rem"></div>
           </div>
         `;
         container.appendChild(card);
@@ -772,10 +829,21 @@ import '../../styles/forms.css';
 
   window.previewTemplate = async function(templateId) {
     const resultDiv = document.getElementById(`template-result-${templateId}`);
+    const previewHtmlDiv = document.getElementById(`template-preview-html-${templateId}`);
     resultDiv.innerHTML = '<p class="status-info">Loading preview...</p>';
+    previewHtmlDiv.innerHTML = '';
 
     const subject = document.getElementById(`subject-${templateId}`).value;
     const body = document.getElementById(`body-${templateId}`).value;
+    const varsText = document.getElementById(`vars-${templateId}`).value;
+
+    let variables = {};
+    try {
+      variables = JSON.parse(varsText);
+    } catch (parseErr) {
+      resultDiv.innerHTML = `<p class="status-error">Invalid JSON in preview variables: ${parseErr.message}</p>`;
+      return;
+    }
 
     try {
       const res = await fetch('/api/admin/templates/preview.json', {
@@ -785,29 +853,24 @@ import '../../styles/forms.css';
           'x-admin-token': adminToken
         },
         body: JSON.stringify({
-          template_id: templateId,
-          variables: {
-            name: 'John Doe',
-            email: 'john@example.com',
-            date: '2026-01-15',
-            token: 'sample-token-123'
-          }
+          id: templateId,
+          key: null,
+          vars: variables,
+          html: body,
+          subject
         })
       });
 
       const data = await res.json();
       if (data.ok) {
-        resultDiv.innerHTML = `
-          <div class="status-info" style="margin-top:1rem">
-            <strong>Preview:</strong>
-            <pre style="white-space: pre-wrap; margin-top:0.5rem">${data.rendered}</pre>
-          </div>
-        `;
+        resultDiv.innerHTML = `<p class="status-success">Preview rendered</p>`;
+        // Show HTML preview
+        previewHtmlDiv.innerHTML = data.rendered || data.html || '<em>No HTML returned</em>';
       } else {
         resultDiv.innerHTML = `<p class="status-error">${data.error || 'Failed'}</p>`;
       }
     } catch (err) {
-      resultDiv.innerHTML = '<p class="status-error">Connection error</p>';
+      resultDiv.innerHTML = `<p class="status-error">Connection error: ${err.message}</p>`;
     }
   };
 </script>
