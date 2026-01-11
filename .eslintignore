@@ -1,0 +1,6 @@
+node_modules/
+dist/
+build/
+public/
+.egac_1/.astro/
+.vscode/
