@@ -5,7 +5,13 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check:js-no-ts": "node scripts/check-js-no-ts-annotations.js"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.6.12",
@@ -19,5 +25,13 @@
     "react-dom": "^19.2.3",
     "react-icons": "^5.5.0",
     "tailwindcss": "^4.1.18"
+  },
+  "devDependencies": {
+    "@typescript-eslint/parser": "^6.8.0",
+    "eslint": "^8.57.1",
+    "eslint-plugin-astro": "^0.14.0",
+    "prettier": "^2.8.8",
+    "prettier-plugin-astro": "^0.12.0",
+    "vitest": "^4.0.16"
   }
 }

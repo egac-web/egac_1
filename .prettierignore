@@ -1,0 +1,11 @@
+dist/
+build/
+public/
+node_modules/
+.astropy/
+.astro/
+.egac_1/.astro/
+**/dist/
+**/build/
+**/*.astro
+src/styles/bookings.css
