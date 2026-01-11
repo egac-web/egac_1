@@ -1,175 +1,814 @@
 ---
+import Layout from '../../components/Layout.astro';
 import '../../styles/forms.css';
 ---
 
-<head>
-  <title>Admin — Enquiries & Bookings</title>
-</head>
+<Layout title="Admin Portal">
+  <main class="page page--narrow">
+    <h1>Admin Portal</h1>
 
-<main class="page page--narrow">
-  <h1>Admin — Enquiries & Bookings</h1>
+    <div id="login-section">
+      <p>Enter admin token to access the portal</p>
+      <div class="form-group">
+        <label for="admintoken">Admin Token</label>
+        <input id="admintoken" type="password" placeholder="Enter token or use ?token=dev" />
+        <button id="login-btn" class="btn btn-primary">Login</button>
+      </div>
+      <div id="login-status"></div>
+    </div>
 
-  <p>This page is protected by an admin token. Enter it below.</p>
+    <div id="admin-portal" style="display:none">
+      <!-- Tabs Navigation -->
+      <nav class="admin-tabs" role="tablist">
+        <button class="tab-btn active" data-tab="enquiries" role="tab" aria-selected="true">Enquiries & Bookings</button>
+        <button class="tab-btn" data-tab="academy" role="tab" aria-selected="false">Academy (U11)</button>
+        <button class="tab-btn" data-tab="reports" role="tab" aria-selected="false">Reports</button>
+        <button class="tab-btn" data-tab="config" role="tab" aria-selected="false">Configuration</button>
+      </nav>
 
-  <div>
-    <label for="admintoken">Admin token</label>
-    <input id="admintoken" type="password" />
-    <button id="login">Load data</button>
-  </div>
+      <!-- Enquiries & Bookings Tab -->
+      <div id="tab-enquiries" class="tab-content active" role="tabpanel">
+        <h2>Enquiries & Bookings</h2>
+        <div id="enquiries-list"></div>
+      </div>
 
-  <div id="status"></div>
-  <div id="data"></div>
-</main>
+      <!-- Academy Tab -->
+      <div id="tab-academy" class="tab-content" role="tabpanel" style="display:none">
+        <h2>Academy Invitations (U11)</h2>
+        <div id="academy-stats"></div>
+        <div id="academy-list"></div>
+      </div>
+
+      <!-- Reports Tab -->
+      <div id="tab-reports" class="tab-content" role="tabpanel" style="display:none">
+        <h2>Summary Reports</h2>
+        <div id="reports-dashboard"></div>
+      </div>
+
+      <!-- Configuration Tab -->
+      <div id="tab-config" class="tab-content" role="tabpanel" style="display:none">
+        <h2>Configuration</h2>
+        
+        <section class="config-section">
+          <h3>System Settings</h3>
+          <div id="system-config"></div>
+        </section>
+
+        <section class="config-section">
+          <h3>Age Groups</h3>
+          <div id="age-groups-config"></div>
+        </section>
+
+        <section class="config-section">
+          <h3>Email Templates</h3>
+          <div id="templates-config"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .admin-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin: 2rem 0 1rem;
+    border-bottom: 2px solid #e5e7eb;
+  }
+
+  .tab-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-weight: 600;
+    color: #6b7280;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+  }
+
+  .tab-btn:hover {
+    color: var(--yellow, #FDB913);
+  }
+
+  .tab-btn.active {
+    color: var(--blue, #003DA5);
+    border-bottom-color: var(--blue, #003DA5);
+  }
+
+  .tab-content {
+    padding: 2rem 0;
+  }
+
+  .form-group {
+    margin: 1rem 0;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+
+  .form-group input {
+    width: 100%;
+    max-width: 400px;
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+  }
+
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--blue, #003DA5);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: var(--yellow, #FDB913);
+    color: var(--blue, #003DA5);
+  }
+
+  .btn-secondary {
+    background: #6b7280;
+    color: white;
+  }
+
+  .btn-success {
+    background: #10b981;
+    color: white;
+  }
+
+  .btn-danger {
+    background: #ef4444;
+    color: white;
+  }
+
+  .btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .card h3 {
+    margin: 0 0 1rem 0;
+    color: var(--blue, #003DA5);
+  }
+
+  .config-section {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: #f9fafb;
+    border-radius: 8px;
+  }
+
+  .config-section h3 {
+    margin: 0 0 1rem 0;
+    color: var(--blue, #003DA5);
+  }
+
+  .status-message {
+    padding: 0.75rem;
+    margin: 1rem 0;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+
+  .status-success {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #10b981;
+  }
+
+  .status-error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #ef4444;
+  }
+
+  .status-info {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #3b82f6;
+  }
+
+  .booking-item {
+    background: #f3f4f6;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    border-radius: 4px;
+  }
+
+  .booking-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .template-editor {
+    margin: 1rem 0;
+  }
+
+  .template-editor label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+
+  .template-editor input,
+  .template-editor textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-family: monospace;
+  }
+
+  .template-editor textarea {
+    min-height: 200px;
+    font-size: 0.875rem;
+  }
+
+  .age-group-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+
+  .stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid var(--blue, #003DA5);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .stat-card .value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--blue, #003DA5);
+  }
+
+  .stat-card .label {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-top: 0.5rem;
+  }
+</style>
 
 <script>
-  document.getElementById('login').addEventListener('click', async () => {
+  let adminToken = '';
+
+  // Check for token in URL query params
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlToken = urlParams.get('token');
+  
+  if (urlToken) {
+    document.getElementById('admintoken').value = urlToken;
+    // Auto-login if token is present
+    setTimeout(() => document.getElementById('login-btn').click(), 100);
+  }
+
+  // Login handler
+  document.getElementById('login-btn').addEventListener('click', async () => {
     const token = document.getElementById('admintoken').value;
-    document.getElementById('status').textContent = 'Loading…';
+    if (!token) {
+      showStatus('login-status', 'Please enter a token', 'error');
+      return;
+    }
+
+    adminToken = token;
+    showStatus('login-status', 'Verifying...', 'info');
+
     try {
-      const res = await fetch('/api/admin/enquiries.json', { headers: { 'x-admin-token': token } });
-      const j = await res.json();
-      if (!j.ok) { document.getElementById('status').textContent = 'Error: ' + (j.error || 'Unauthorized'); return; }
-      document.getElementById('status').textContent = '';
-      const container = document.getElementById('data');
-      container.innerHTML = '';
-      j.enquiries.forEach(e => {
-        const el = document.createElement('div');
-        el.className = 'card card--padded';
-        el.innerHTML = `<h3>${e.name || e.email || 'No name'}</h3>
-        <p><strong>Email:</strong> ${e.email || ''}</p>
-        <p><strong>Note:</strong> ${e.note || ''}</p>
-        <p><strong>Events:</strong> ${JSON.stringify(e.events || [])}</p>
-        <p><strong>Invite:</strong> ${e.invites && e.invites.length ? e.invites[0].token : 'none'}</p>
-        <div>
-          <label>Presli note: <input data-enquiry-id="${e.id}" class="presli-note" type="text" placeholder="Optional note" /></label>
-          <button class="presli-confirm" data-enquiry-id="${e.id}">Confirm Presli attendance & send membership link</button>
-          <div class="presli-result" data-enquiry-id="${e.id}" style="margin-top:0.5rem"></div>
-        </div>
-        <div class="bookings"><strong>Bookings:</strong></div>`;
-        // add bookings list
-        const bookingsContainer = document.createElement('div');
-
-        // presli confirm handler
-        const presliBtn = el.querySelector('.presli-confirm');
-        const presliNoteInput = el.querySelector('.presli-note');
-        presliBtn && presliBtn.addEventListener('click', async (ev) => {
-          const eid = presliBtn.dataset.enquiryId;
-          const note = presliNoteInput ? presliNoteInput.value : '';
-          const resultDiv = el.querySelector('.presli-result');
-          resultDiv.textContent = 'Processing…';
-          try {
-            const res = await fetch('/api/admin/enquiry/presli_confirm.json', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
-              body: JSON.stringify({ enquiry_id: eid, note, send_membership_link: true }),
-            });
-            const j2 = await res.json();
-            if (!j2.ok && res.status !== 200) { resultDiv.textContent = 'Error: ' + (j2.error || 'Unauthorized'); return; }
-            const parts = [];
-            if (j2.membership_sent) parts.push('<div>Membership link sent</div>');
-            if (j2.membership_error) parts.push(`<div style="color:darkred">${j2.membership_error}</div>`);
-            if (j2.event) parts.push(`<div>Event recorded: ${j2.event.type}</div>`);
-            resultDiv.innerHTML = parts.join('');
-          } catch (err) {
-            resultDiv.textContent = 'Server error';
-          }
-        });
-        bookingsContainer.className = 'booking-list';
-        if (e.bookings && e.bookings.length) {
-          e.bookings.forEach(b => {
-            const bEl = document.createElement('div');
-            bEl.className = 'booking-item';
-            bEl.dataset.bookingId = b.id;
-            const status = b.status || 'scheduled';
-            bEl.innerHTML = `<div><strong>${b.session_date} ${b.slot} (${status})</strong></div><div>${b.session_time || ''}</div>`;
-            const controls = document.createElement('div');
-            controls.style.marginTop = '0.5rem';
-
-            const attendedBtn = document.createElement('button');
-            attendedBtn.textContent = 'Mark attended';
-            attendedBtn.addEventListener('click', () => handleAttendanceClick(token, b.id, 'attended'));
-
-            const noshowBtn = document.createElement('button');
-            noshowBtn.textContent = 'Mark no-show';
-            noshowBtn.style.marginLeft = '0.5rem';
-            noshowBtn.addEventListener('click', () => handleAttendanceClick(token, b.id, 'no_show'));
-
-            const sendLinkChk = document.createElement('label');
-            sendLinkChk.style.marginLeft = '0.5rem';
-            sendLinkChk.innerHTML = `<input type="checkbox" data-booking-id="${b.id}" /> Send membership link`;
-
-            const coachMsgBtn = document.createElement('button');
-            coachMsgBtn.style.marginLeft = '0.5rem';
-            coachMsgBtn.textContent = 'Get coach message';
-            coachMsgBtn.addEventListener('click', () => handleAttendanceClick(token, b.id, status, false, true));
-
-            controls.appendChild(attendedBtn);
-            controls.appendChild(noshowBtn);
-            controls.appendChild(sendLinkChk);
-            controls.appendChild(coachMsgBtn);
-
-            bEl.appendChild(controls);
-
-            const resultDiv = document.createElement('div');
-            resultDiv.className = 'booking-result';
-            resultDiv.style.marginTop = '0.5rem';
-            bEl.appendChild(resultDiv);
-
-            bookingsContainer.appendChild(bEl);
-          });
-        } else {
-          bookingsContainer.textContent = 'none';
-        }
-        el.appendChild(bookingsContainer);
-        container.appendChild(el);
+      const res = await fetch('/api/admin/enquiries.json', {
+        headers: { 'x-admin-token': token }
       });
+      const data = await res.json();
+
+      if (!data.ok) {
+        showStatus('login-status', 'Invalid token', 'error');
+        return;
+      }
+
+      // Login successful
+      document.getElementById('login-section').style.display = 'none';
+      document.getElementById('admin-portal').style.display = 'block';
+      loadEnquiries();
     } catch (err) {
-      document.getElementById('status').textContent = 'Server error';
+      showStatus('login-status', 'Connection error', 'error');
     }
   });
 
-  async function handleAttendanceClick(token, bookingId, status, sendMembershipLink = null, justGetMessage = false) {
-    const bookingItem = document.querySelector(`.booking-item[data-booking-id="${bookingId}"]`);
-    const resultDiv = bookingItem && bookingItem.querySelector('.booking-result');
-    if (!resultDiv) return;
-    resultDiv.textContent = 'Processing…';
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tabName = btn.dataset.tab;
+      
+      // Update tab buttons
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
 
-    // determine sendMembershipLink from checkbox if not explicitly provided
-    if (sendMembershipLink === null) {
-      const chk = bookingItem.querySelector('input[type="checkbox"]');
-      sendMembershipLink = chk ? chk.checked : false;
+      // Update tab content
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.style.display = 'none';
+        content.classList.remove('active');
+      });
+      const activeTab = document.getElementById(`tab-${tabName}`);
+      activeTab.style.display = 'block';
+      activeTab.classList.add('active');
+
+      // Load tab data
+      if (tabName === 'academy') loadAcademy();
+      else if (tabName === 'reports') loadReports();
+      else if (tabName === 'config') loadConfiguration();
+    });
+  });
+
+  // Helper to show status messages
+  function showStatus(containerId, message, type = 'info') {
+    const container = document.getElementById(containerId);
+    container.innerHTML = `<div class="status-message status-${type}">${message}</div>`;
+  }
+
+  // Load enquiries and bookings
+  async function loadEnquiries() {
+    const container = document.getElementById('enquiries-list');
+    container.innerHTML = '<p>Loading...</p>';
+
+    try {
+      const res = await fetch('/api/admin/enquiries.json', {
+        headers: { 'x-admin-token': adminToken }
+      });
+      const data = await res.json();
+
+      if (!data.ok) {
+        container.innerHTML = '<p class="status-error">Failed to load enquiries</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      data.enquiries.forEach(enquiry => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <h3>${enquiry.name || enquiry.email || 'No name'}</h3>
+          <p><strong>Email:</strong> ${enquiry.email || 'N/A'}</p>
+          <p><strong>DOB:</strong> ${enquiry.dob || 'Not provided'}</p>
+          <p><strong>Note:</strong> ${enquiry.note || 'None'}</p>
+          <p><strong>Events:</strong> ${(enquiry.events || []).join(', ') || 'None'}</p>
+          <p><strong>Created:</strong> ${new Date(enquiry.created_at).toLocaleString()}</p>
+          ${renderBookings(enquiry)}
+        `;
+        container.appendChild(card);
+      });
+    } catch (err) {
+      container.innerHTML = '<p class="status-error">Connection error</p>';
     }
+  }
+
+  function renderBookings(enquiry) {
+    if (!enquiry.bookings || enquiry.bookings.length === 0) {
+      return '<p><strong>Bookings:</strong> None</p>';
+    }
+
+    let html = '<div style="margin-top: 1.5rem;"><strong>Bookings:</strong></div>';
+    enquiry.bookings.forEach(booking => {
+      html += `
+        <div class="booking-item" data-booking-id="${booking.id}">
+          <div><strong>${booking.session_date}</strong> - ${booking.slot} (${booking.status || 'scheduled'})</div>
+          <div class="booking-actions">
+            <button class="btn btn-success btn-sm" onclick="markAttendance('${booking.id}', 'attended')">Mark Attended</button>
+            <button class="btn btn-danger btn-sm" onclick="markAttendance('${booking.id}', 'no_show')">Mark No-Show</button>
+            <label><input type="checkbox" data-booking="${booking.id}"> Send membership link</label>
+          </div>
+          <div id="booking-result-${booking.id}"></div>
+        </div>
+      `;
+    });
+    return html;
+  }
+
+  // Mark attendance
+  window.markAttendance = async function(bookingId, status) {
+    const resultDiv = document.getElementById(`booking-result-${bookingId}`);
+    resultDiv.innerHTML = '<p class="status-info">Processing...</p>';
+
+    const sendLink = document.querySelector(`input[data-booking="${bookingId}"]`)?.checked || false;
 
     try {
       const res = await fetch('/api/admin/booking/attendance.json', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
-        body: JSON.stringify({ booking_id: bookingId, status: status === 'no_show' ? 'no_show' : 'attended', send_membership_link: sendMembershipLink }),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': adminToken
+        },
+        body: JSON.stringify({
+          booking_id: bookingId,
+          status,
+          send_membership_link: sendLink
+        })
       });
-      const j = await res.json();
-      if (!j.ok && res.status !== 200) { resultDiv.textContent = 'Error: ' + (j.error || 'Unauthorized'); return; }
 
-      // show coach message and CSV and membership status
-      const parts = [];
-      if (j.coachMessage) {
-        parts.push(`<div><strong>Coach message:</strong> <pre style="white-space:pre-wrap;">${j.coachMessage}</pre><button class="copy-btn">Copy</button></div>`);
+      const data = await res.json();
+      if (data.ok) {
+        resultDiv.innerHTML = `<p class="status-success">Updated to ${status}${sendLink ? ' and sent membership link' : ''}</p>`;
+      } else {
+        resultDiv.innerHTML = `<p class="status-error">${data.error || 'Failed'}</p>`;
       }
-      if (j.presliCSV) {
-        parts.push(`<div><strong>Presli CSV row:</strong> <code>${j.presliCSV}</code></div>`);
-      }
-      if (j.membership_sent !== undefined) {
-        parts.push(`<div><strong>Membership email sent:</strong> ${j.membership_sent}</div>`);
-      }
-      if (j.membership_error) {
-        parts.push(`<div style="color:darkred"><strong>Membership error:</strong> ${j.membership_error}</div>`);
-      }
-      resultDiv.innerHTML = parts.join('');
-
-      // copy button handler
-      const copyBtn = resultDiv.querySelector('.copy-btn');
-      if (copyBtn) copyBtn.addEventListener('click', () => navigator.clipboard.writeText(j.coachMessage || ''));
     } catch (err) {
-      resultDiv.textContent = 'Server error';
+      resultDiv.innerHTML = '<p class="status-error">Connection error</p>';
+    }
+  };
+
+  // Load Academy invitations
+  async function loadAcademy() {
+    const statsContainer = document.getElementById('academy-stats');
+    const listContainer = document.getElementById('academy-list');
+    
+    statsContainer.innerHTML = '<p>Loading stats...</p>';
+    listContainer.innerHTML = '<p>Loading invitations...</p>';
+
+    try {
+      const res = await fetch('/api/admin/invite-stats.json', {
+        headers: { 'x-admin-token': adminToken }
+      });
+      const data = await res.json();
+
+      if (data.ok) {
+        statsContainer.innerHTML = `
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="value">${data.pending || 0}</div>
+              <div class="label">Pending Invitations</div>
+            </div>
+            <div class="stat-card">
+              <div class="value">${data.sent || 0}</div>
+              <div class="label">Sent Invitations</div>
+            </div>
+            <div class="stat-card">
+              <div class="value">${data.failed || 0}</div>
+              <div class="label">Failed Sends</div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Load invitations list from enquiries with academy flag
+      const enquiriesRes = await fetch('/api/admin/enquiries.json', {
+        headers: { 'x-admin-token': adminToken }
+      });
+      const enquiriesData = await enquiriesRes.json();
+
+      if (enquiriesData.ok) {
+        const academyEnquiries = enquiriesData.enquiries.filter(e => 
+          e.dob && calculateAge(e.dob) <= 10
+        );
+
+        if (academyEnquiries.length === 0) {
+          listContainer.innerHTML = '<p>No Academy-eligible enquiries (age ≤ 10)</p>';
+        } else {
+          listContainer.innerHTML = '';
+          academyEnquiries.forEach(enquiry => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+              <h3>${enquiry.name || enquiry.email}</h3>
+              <p><strong>Age:</strong> ${calculateAge(enquiry.dob)} (DOB: ${enquiry.dob})</p>
+              <p><strong>Email:</strong> ${enquiry.email}</p>
+              <p><strong>Status:</strong> ${enquiry.academy_invited ? 'Invited' : 'Not invited'}</p>
+            `;
+            listContainer.appendChild(card);
+          });
+        }
+      }
+    } catch (err) {
+      statsContainer.innerHTML = '<p class="status-error">Connection error</p>';
     }
   }
+
+  function calculateAge(dob) {
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  }
+
+  // Load reports
+  async function loadReports() {
+    const container = document.getElementById('reports-dashboard');
+    container.innerHTML = '<p>Loading reports...</p>';
+
+    try {
+      const [enquiriesRes, statsRes] = await Promise.all([
+        fetch('/api/admin/enquiries.json', { headers: { 'x-admin-token': adminToken } }),
+        fetch('/api/admin/invite-stats.json', { headers: { 'x-admin-token': adminToken } })
+      ]);
+
+      const enquiriesData = await enquiriesRes.json();
+      const statsData = await statsRes.json();
+
+      if (!enquiriesData.ok) {
+        container.innerHTML = '<p class="status-error">Failed to load data</p>';
+        return;
+      }
+
+      const totalEnquiries = enquiriesData.enquiries.length;
+      const totalBookings = enquiriesData.enquiries.reduce((sum, e) => 
+        sum + (e.bookings?.length || 0), 0
+      );
+      const attendedBookings = enquiriesData.enquiries.reduce((sum, e) => 
+        sum + (e.bookings?.filter(b => b.status === 'attended').length || 0), 0
+      );
+      const noShows = enquiriesData.enquiries.reduce((sum, e) => 
+        sum + (e.bookings?.filter(b => b.status === 'no_show').length || 0), 0
+      );
+
+      container.innerHTML = `
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="value">${totalEnquiries}</div>
+            <div class="label">Total Enquiries</div>
+          </div>
+          <div class="stat-card">
+            <div class="value">${totalBookings}</div>
+            <div class="label">Total Bookings</div>
+          </div>
+          <div class="stat-card">
+            <div class="value">${attendedBookings}</div>
+            <div class="label">Attended Sessions</div>
+          </div>
+          <div class="stat-card">
+            <div class="value">${noShows}</div>
+            <div class="label">No-Shows</div>
+          </div>
+          <div class="stat-card">
+            <div class="value">${statsData.sent || 0}</div>
+            <div class="label">Academy Invites Sent</div>
+          </div>
+          <div class="stat-card">
+            <div class="value">${Math.round((attendedBookings / totalBookings) * 100) || 0}%</div>
+            <div class="label">Attendance Rate</div>
+          </div>
+        </div>
+      `;
+    } catch (err) {
+      container.innerHTML = '<p class="status-error">Connection error</p>';
+    }
+  }
+
+  // Load configuration
+  async function loadConfiguration() {
+    loadSystemConfig();
+    loadAgeGroups();
+    loadTemplates();
+  }
+
+  async function loadSystemConfig() {
+    const container = document.getElementById('system-config');
+    container.innerHTML = '<p>Loading...</p>';
+
+    try {
+      const res = await fetch('/api/admin/config.json', {
+        headers: { 'x-admin-token': adminToken }
+      });
+      const data = await res.json();
+
+      if (!data.ok) {
+        container.innerHTML = '<p class="status-error">Failed to load config</p>';
+        return;
+      }
+
+      const config = data.config || {};
+      container.innerHTML = `
+        <div class="age-group-form">
+          <div>
+            <label>Academy Max Age</label>
+            <input type="number" id="academy_max_age" value="${config.academy_max_age || 10}" />
+          </div>
+          <div>
+            <label>Weeks Ahead Booking</label>
+            <input type="number" id="weeks_ahead_booking" value="${config.weeks_ahead_booking || 6}" />
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="saveSystemConfig()">Save System Settings</button>
+        <div id="system-config-result"></div>
+      `;
+    } catch (err) {
+      container.innerHTML = '<p class="status-error">Connection error</p>';
+    }
+  }
+
+  window.saveSystemConfig = async function() {
+    const resultDiv = document.getElementById('system-config-result');
+    resultDiv.innerHTML = '<p class="status-info">Saving...</p>';
+
+    try {
+      const res = await fetch('/api/admin/config.json', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': adminToken
+        },
+        body: JSON.stringify({
+          action: 'update_system',
+          academy_max_age: parseInt(document.getElementById('academy_max_age').value),
+          weeks_ahead_booking: parseInt(document.getElementById('weeks_ahead_booking').value)
+        })
+      });
+
+      const data = await res.json();
+      if (data.ok) {
+        resultDiv.innerHTML = '<p class="status-success">Settings saved successfully</p>';
+      } else {
+        resultDiv.innerHTML = `<p class="status-error">${data.error || 'Failed to save'}</p>`;
+      }
+    } catch (err) {
+      resultDiv.innerHTML = '<p class="status-error">Connection error</p>';
+    }
+  };
+
+  async function loadAgeGroups() {
+    const container = document.getElementById('age-groups-config');
+    container.innerHTML = '<p>Loading...</p>';
+
+    try {
+      const res = await fetch('/api/admin/config.json', {
+        headers: { 'x-admin-token': adminToken }
+      });
+      const data = await res.json();
+
+      if (!data.ok) {
+        container.innerHTML = '<p class="status-error">Failed to load age groups</p>';
+        return;
+      }
+
+      let html = '<table style="width:100%; border-collapse: collapse;"><thead><tr><th>Name</th><th>Min Age</th><th>Max Age</th><th>Slot Code</th></tr></thead><tbody>';
+      (data.age_groups || []).forEach(group => {
+        html += `
+          <tr>
+            <td>${group.name}</td>
+            <td>${group.min_age}</td>
+            <td>${group.max_age}</td>
+            <td>${group.slot_code}</td>
+          </tr>
+        `;
+      });
+      html += '</tbody></table>';
+      html += '<p style="margin-top:1rem"><em>Age groups configuration available via API. UI for editing coming soon.</em></p>';
+      
+      container.innerHTML = html;
+    } catch (err) {
+      container.innerHTML = '<p class="status-error">Connection error</p>';
+    }
+  }
+
+  async function loadTemplates() {
+    const container = document.getElementById('templates-config');
+    container.innerHTML = '<p>Loading...</p>';
+
+    try {
+      const res = await fetch('/api/admin/templates.json', {
+        headers: { 'x-admin-token': adminToken }
+      });
+      const data = await res.json();
+
+      if (!data.ok) {
+        container.innerHTML = '<p class="status-error">Failed to load templates</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      (data.templates || []).forEach(template => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <h3>${template.name}</h3>
+          <div class="template-editor">
+            <label>Subject:</label>
+            <input type="text" value="${template.subject}" id="subject-${template.id}" />
+            
+            <label style="margin-top:1rem">Body:</label>
+            <textarea id="body-${template.id}">${template.body}</textarea>
+            
+            <button class="btn btn-primary btn-sm" style="margin-top:0.5rem" onclick="saveTemplate('${template.id}')">Save</button>
+            <button class="btn btn-secondary btn-sm" style="margin-top:0.5rem" onclick="previewTemplate('${template.id}')">Preview</button>
+            <div id="template-result-${template.id}"></div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    } catch (err) {
+      container.innerHTML = '<p class="status-error">Connection error</p>';
+    }
+  }
+
+  window.saveTemplate = async function(templateId) {
+    const resultDiv = document.getElementById(`template-result-${templateId}`);
+    resultDiv.innerHTML = '<p class="status-info">Saving...</p>';
+
+    const subject = document.getElementById(`subject-${templateId}`).value;
+    const body = document.getElementById(`body-${templateId}`).value;
+
+    try {
+      const res = await fetch('/api/admin/templates.json', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': adminToken
+        },
+        body: JSON.stringify({
+          action: 'update',
+          id: templateId,
+          subject,
+          body
+        })
+      });
+
+      const data = await res.json();
+      if (data.ok) {
+        resultDiv.innerHTML = '<p class="status-success">Template saved</p>';
+      } else {
+        resultDiv.innerHTML = `<p class="status-error">${data.error || 'Failed'}</p>`;
+      }
+    } catch (err) {
+      resultDiv.innerHTML = '<p class="status-error">Connection error</p>';
+    }
+  };
+
+  window.previewTemplate = async function(templateId) {
+    const resultDiv = document.getElementById(`template-result-${templateId}`);
+    resultDiv.innerHTML = '<p class="status-info">Loading preview...</p>';
+
+    const subject = document.getElementById(`subject-${templateId}`).value;
+    const body = document.getElementById(`body-${templateId}`).value;
+
+    try {
+      const res = await fetch('/api/admin/templates/preview.json', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': adminToken
+        },
+        body: JSON.stringify({
+          template_id: templateId,
+          variables: {
+            name: 'John Doe',
+            email: 'john@example.com',
+            date: '2026-01-15',
+            token: 'sample-token-123'
+          }
+        })
+      });
+
+      const data = await res.json();
+      if (data.ok) {
+        resultDiv.innerHTML = `
+          <div class="status-info" style="margin-top:1rem">
+            <strong>Preview:</strong>
+            <pre style="white-space: pre-wrap; margin-top:0.5rem">${data.rendered}</pre>
+          </div>
+        `;
+      } else {
+        resultDiv.innerHTML = `<p class="status-error">${data.error || 'Failed'}</p>`;
+      }
+    } catch (err) {
+      resultDiv.innerHTML = '<p class="status-error">Connection error</p>';
+    }
+  };
 </script>
+</Layout>
