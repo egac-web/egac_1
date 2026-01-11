@@ -338,7 +338,12 @@ npm run format
 - **Template editor**: Added a JSON `Preview variables` textarea per template and improved preview rendering to show HTML preview returned by the server.
 
 **Files Modified**:
-- `src/pages/admin/members.astro` (tab ARIA/keyboard, token persistence, template preview vars UI)
+- `src/pages/admin/members.astro` (tab ARIA/keyboard, token persistence, template preview vars UI, improved template cards)
+
+**Recent UI updates**:
+- Template cards now show `key (language)` and subject as a friendly heading, and include an Active toggle for each template.
+- Template editor now uses a widened HTML textarea, a styled HTML preview panel, a Load sample button for preview variables, and a Send Test button for quick validation.
+- JSON variables are validated client-side with helpful error messages for non-technical users.
 
 **Next steps**:
 - Improve template editor save UX and add more accessible form controls.

@@ -346,58 +346,41 @@ import '../../styles/forms.css';
     }
   });
 
-  // Tab switching with keyboard accessibility
-  function setActiveTab(tabName, focusButton = false) {
-    const buttons = Array.from(document.querySelectorAll('.tab-btn'));
-    buttons.forEach(b => {
-      const isActive = b.dataset.tab === tabName;
-      b.classList.toggle('active', isActive);
-      b.setAttribute('aria-selected', isActive ? 'true' : 'false');
-      b.setAttribute('tabindex', isActive ? '0' : '-1');
-    });
-
-    document.querySelectorAll('.tab-content').forEach(content => {
-      const isActive = content.id === `tab-${tabName}`;
-      content.style.display = isActive ? 'block' : 'none';
-      content.classList.toggle('active', isActive);
-      content.setAttribute('aria-hidden', isActive ? 'false' : 'true');
-    });
-
-    if (focusButton) {
-      const btn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
-      if (btn) btn.focus();
-    }
-
-    // Load tab data lazily
-    if (tabName === 'academy') loadAcademy();
-    else if (tabName === 'reports') loadReports();
-    else if (tabName === 'config') loadConfiguration();
-  }
+  // Tab switching with keyboard accessibility (delegated to shared helpers)
+  import { setActiveTabByElements } from '../../lib/admin-ui.js';
 
   const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
+  const tabContents = Array.from(document.querySelectorAll('.tab-content'));
+
   tabButtons.forEach((btn, idx) => {
-    btn.addEventListener('click', () => setActiveTab(btn.dataset.tab, true));
+    btn.addEventListener('click', () => {
+      setActiveTabByElements(tabButtons, tabContents, btn.dataset.tab, true);
+      // Load data lazily
+      if (btn.dataset.tab === 'academy') loadAcademy();
+      else if (btn.dataset.tab === 'reports') loadReports();
+      else if (btn.dataset.tab === 'config') loadConfiguration();
+    });
     btn.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowRight') {
         const next = tabButtons[(idx + 1) % tabButtons.length];
-        setActiveTab(next.dataset.tab, true);
+        setActiveTabByElements(tabButtons, tabContents, next.dataset.tab, true);
         e.preventDefault();
       } else if (e.key === 'ArrowLeft') {
         const prev = tabButtons[(idx - 1 + tabButtons.length) % tabButtons.length];
-        setActiveTab(prev.dataset.tab, true);
+        setActiveTabByElements(tabButtons, tabContents, prev.dataset.tab, true);
         e.preventDefault();
       } else if (e.key === 'Home') {
-        setActiveTab(tabButtons[0].dataset.tab, true);
+        setActiveTabByElements(tabButtons, tabContents, tabButtons[0].dataset.tab, true);
         e.preventDefault();
       } else if (e.key === 'End') {
-        setActiveTab(tabButtons[tabButtons.length - 1].dataset.tab, true);
+        setActiveTabByElements(tabButtons, tabContents, tabButtons[tabButtons.length - 1].dataset.tab, true);
         e.preventDefault();
       }
     });
   });
 
   // Ensure initial tab state is correct
-  setActiveTab(document.querySelector('.tab-btn.active')?.dataset.tab || 'enquiries');
+  setActiveTabByElements(tabButtons, tabContents, document.querySelector('.tab-btn.active')?.dataset.tab || 'enquiries');
 
   // Helper to show status messages
   function showStatus(containerId, message, type = 'info') {
@@ -761,16 +744,26 @@ import '../../styles/forms.css';
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
-          <h3>${template.name}</h3>
-          <div class="template-editor">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <h3 style="margin:0">${template.key} <small style="color:#6b7280;font-weight:600">(${template.language || 'en'})</small></h3>
+              <div style="color:#374151;margin-top:6px">${template.subject || ''}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.5rem">
+              <label style="display:flex;align-items:center;gap:0.375rem"><input type="checkbox" id="active-${template.id}" ${template.active ? 'checked' : ''}/> Active</label>
+            </div>
+          </div>
+          <div class="template-editor" style="margin-top:1rem">
             <label>Subject:</label>
-            <input type="text" value="${template.subject || ''}" id="subject-${template.id}" />
+            <input type="text" value="${template.subject || ''}" id="subject-${template.id}" style="width:100%" />
             
             <label style="margin-top:1rem">Body (HTML):</label>
-            <textarea id="body-${template.id}">${template.body || template.html || template.text || ''}</textarea>
+            <textarea id="body-${template.id}" style="width:100%;min-height:220px">${template.html || template.text || ''}</textarea>
 
-            <label style="margin-top:0.5rem">Preview variables (JSON):</label>
-            <textarea id="vars-${template.id}" style="min-height:80px">{
+            <div style="display:flex;gap:0.5rem;margin-top:0.5rem;align-items:flex-start">
+              <div style="flex:1">
+                <label>Preview variables (JSON):</label>
+                <textarea id="vars-${template.id}" style="width:100%;min-height:100px">{
   "siteName": "East Grinstead AC",
   "childName": "Junior",
   "responseYesUrl": "https://example.com/yes",
@@ -778,13 +771,22 @@ import '../../styles/forms.css';
   "inviteUrl": "https://example.com/invite/abc123",
   "date": "2026-03-15"
 }</textarea>
+                <div style="margin-top:0.5rem">
+                  <button class="btn btn-sm btn-secondary" onclick="document.getElementById('vars-${template.id}').value = '{\\n  \"siteName\": \"East Grinstead AC\",\\n  \"childName\": \"Junior\",\\n  \"responseYesUrl\": \"https://example.com/yes\",\\n  \"responseNoUrl\": \"https://example.com/no\"\\n}';">Load sample</button>
+                  <button class="btn btn-sm" onclick="copySampleVars('${template.id}')">Copy sample</button>
+                </div>
+              </div>
 
-            <div style="margin-top:0.5rem">
-              <button class="btn btn-primary btn-sm" onclick="saveTemplate('${template.id}')">Save</button>
-              <button class="btn btn-secondary btn-sm" onclick="previewTemplate('${template.id}')">Preview</button>
+              <div style="width:360px;flex-shrink:0;">
+                <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem">
+                  <button class="btn btn-primary btn-sm" onclick="saveTemplate('${template.id}')">Save</button>
+                  <button class="btn btn-secondary btn-sm" onclick="previewTemplate('${template.id}')">Preview</button>
+                  <button class="btn btn-secondary btn-sm" onclick="sendTestEmail('${template.id}')">Send test</button>
+                </div>
+                <div id="template-result-${template.id}"></div>
+                <div id="template-preview-html-${template.id}" style="margin-top:0.5rem; border:1px solid #e5e7eb; padding:8px; background:#fff; min-height:120px; overflow:auto"></div>
+              </div>
             </div>
-            <div id="template-result-${template.id}"></div>
-            <div id="template-preview-html-${template.id}" style="margin-top:0.5rem"></div>
           </div>
         `;
         container.appendChild(card);
@@ -794,14 +796,28 @@ import '../../styles/forms.css';
     }
   }
 
+  import { stripHtmlToText, parsePreviewVars } from '../../lib/admin-ui.js';
+
   window.saveTemplate = async function(templateId) {
     const resultDiv = document.getElementById(`template-result-${templateId}`);
     resultDiv.innerHTML = '<p class="status-info">Saving...</p>';
 
-    const subject = document.getElementById(`subject-${templateId}`).value;
-    const body = document.getElementById(`body-${templateId}`).value;
+    const subject = (document.getElementById(`subject-${templateId}`).value || '').trim();
+    const body = (document.getElementById(`body-${templateId}`).value || '').trim();
+
+    if (!subject) {
+      resultDiv.innerHTML = '<p class="status-error">Subject is required</p>';
+      return;
+    }
+    if (!body) {
+      resultDiv.innerHTML = '<p class="status-error">Body is required</p>';
+      return;
+    }
+
+    const text = stripHtmlToText(body);
 
     try {
+      const active = !!document.getElementById(`active-${templateId}`)?.checked;
       const res = await fetch('/api/admin/templates.json', {
         method: 'POST',
         headers: {
@@ -809,10 +825,12 @@ import '../../styles/forms.css';
           'x-admin-token': adminToken
         },
         body: JSON.stringify({
-          action: 'update',
+          action: 'update_template',
           id: templateId,
           subject,
-          body
+          html: body,
+          text,
+          active
         })
       });
 
@@ -823,7 +841,61 @@ import '../../styles/forms.css';
         resultDiv.innerHTML = `<p class="status-error">${data.error || 'Failed'}</p>`;
       }
     } catch (err) {
-      resultDiv.innerHTML = '<p class="status-error">Connection error</p>';
+      resultDiv.innerHTML = `<p class="status-error">Connection error: ${err.message}</p>`;
+    }
+  };
+
+  window.copySampleVars = function(templateId) {
+    const varsText = document.getElementById(`vars-${templateId}`).value;
+    if (!navigator.clipboard) {
+      alert('Clipboard API not available');
+      return;
+    }
+    navigator.clipboard.writeText(varsText).then(() => {
+      const resultDiv = document.getElementById(`template-result-${templateId}`);
+      resultDiv.innerHTML = '<p class="status-success">Sample vars copied to clipboard</p>';
+    }).catch((err) => {
+      const resultDiv = document.getElementById(`template-result-${templateId}`);
+      resultDiv.innerHTML = `<p class="status-error">Could not copy: ${err.message}</p>`;
+    });
+  };
+
+  window.sendTestEmail = async function(templateId) {
+    const resultDiv = document.getElementById(`template-result-${templateId}`);
+    resultDiv.innerHTML = '<p class="status-info">Sending test email...</p>';
+
+    const to = prompt('Enter recipient email for test send:');
+    if (!to) {
+      resultDiv.innerHTML = '<p class="status-error">Recipient email required</p>';
+      return;
+    }
+
+    const varsText = document.getElementById(`vars-${templateId}`).value;
+    let variables = {};
+    try {
+      variables = JSON.parse(varsText);
+    } catch (e) {
+      resultDiv.innerHTML = `<p class="status-error">Invalid JSON variables: ${e.message}</p>`;
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/admin/templates/send.json', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': adminToken
+        },
+        body: JSON.stringify({ id: templateId, to, vars: variables })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        resultDiv.innerHTML = '<p class="status-success">Test email sent</p>';
+      } else {
+        resultDiv.innerHTML = `<p class="status-error">${data.error || 'Failed to send'}</p>`;
+      }
+    } catch (err) {
+      resultDiv.innerHTML = `<p class="status-error">Connection error: ${err.message}</p>`;
     }
   };
 
