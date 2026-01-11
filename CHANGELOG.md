@@ -346,6 +346,28 @@ npm run format
 - Iterate on styling and responsiveness in `feat/admin-ui-polish` branch.
 
 **Result**: Admin UI polish work is in progress; basic accessibility and preview features are in place and verified manually.
+
+**Recent UI updates (committed)**:
+- **Debug banner**: Added a visible admin banner showing branch (`feat/admin-ui-polish`) and token state (present/hidden) for quick verification in the browser.
+- **Token persistence**: Admin token stored in `sessionStorage` on login with a **Logout** button to clear it.
+- **Template editor**: Added `Preview variables` JSON textarea and improved preview rendering to display server-rendered HTML output.
+
+**Commits & PRs**:
+- Commits: `f47fbd5` — feat(admin-ui): add tab accessibility, token persistence, and template preview vars UI
+- Branch: `feat/admin-ui-polish` (PR: #16)
+
+**How to verify (quick)**:
+1. Start dev server and open: `http://localhost:<PORT>/admin/members?token=dev` ✅
+2. Look for top-left **Admin UI** banner showing the branch and token state ✅
+3. Verify **Logout** button appears beside the tabs and clears session token ✅
+4. Open **Configuration** tab, check **Preview variables (JSON)** textarea and **Preview** renders HTML from the server ✅
+
+**Next UI steps**:
+- Finish template save UX and validation
+- Add unit tests for tab keyboard navigation and template preview rendering
+- Polish styling and responsiveness
+
+
 ---
 
 ## Conversation Context
