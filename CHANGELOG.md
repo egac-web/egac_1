@@ -7,6 +7,8 @@ This conversation thread focused on adding code quality tools (ESLint, Prettier,
 
 ## Latest Updates - Admin Portal UI Polish (January 11, 2026 Evening)
 
+- **WIP**: Add `TemplateEditor` React component (TipTap + CodeMirror) for richer template editing (client-side). Will integrate with the admin UI, add server-side sanitization (`sanitize-html`), and add tests; this is a work-in-progress commit.
+
 ### Template Editor Improvements
 - **Plain Text Editor**: Default editor now shows stripped plain text (not raw HTML)
   - Improved `stripHtmlToText()` function in `src/lib/admin-ui.js` to properly decode HTML entities and preserve structure
