@@ -1434,10 +1434,12 @@ import '../../styles/forms.css';
   "inviteUrl": "https://example.com/invite/abc123",
   "date": "2026-03-15"
 }</textarea>
-                <div style="margin-top:0.5rem">
+                <div style="margin-top:0.5rem;display:flex;gap:0.5rem;align-items:center">
                   <button class="btn btn-sm btn-secondary" onclick="document.getElementById('vars-${template.id}').value = '{\\n  \"siteName\": \"East Grinstead AC\",\\n  \"childName\": \"Junior\",\\n  \"responseYesUrl\": \"https://example.com/yes\",\\n  \"responseNoUrl\": \"https://example.com/no\"\\n}';">Load sample</button>
                   <button class="btn btn-sm" onclick="copySampleVars('${template.id}')">Copy sample</button>
+                  <label style="margin-left:0.5rem;display:flex;align-items:center;gap:0.375rem"><input id="live-${template.id}" type="checkbox" /> Live preview</label>
                 </div>
+                <div id="vars-error-${template.id}" style="margin-top:0.5rem;color:#ef4444;display:none"></div>
               </div>
 
               <div style="width:360px;flex-shrink:0;">
@@ -1446,6 +1448,9 @@ import '../../styles/forms.css';
                   <button class="btn btn-secondary btn-sm" onclick="previewTemplate('${template.id}')">Preview</button>
                   <button class="btn btn-secondary btn-sm" onclick="sendTestEmail('${template.id}')">Send test</button>
                 </div>
+                <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem">
+                  <button class="btn btn-ghost btn-sm" onclick="revertTemplate('${template.id}')">Revert</button>
+                </div>
                 <div id="template-result-${template.id}"></div>
                 <div id="template-preview-html-${template.id}" style="margin-top:0.5rem; border:1px solid #e5e7eb; padding:8px; background:#fff; min-height:120px; overflow:auto"></div>
               </div>
@@ -1453,6 +1458,63 @@ import '../../styles/forms.css';
           </div>
         `;
         container.appendChild(card);
+
+        // Insert a React mount point and dynamically mount the TemplateEditor component (client-only)
+        try {
+          const reactRoot = document.createElement('div');
+          reactRoot.id = `template-react-root-${template.id}`;
+          // insert after the template editor block
+          card.appendChild(reactRoot);
+          (async function mountEditor() {
+            try {
+              const [{ default: TemplateEditor }, ReactDOM, React] = await Promise.all([
+                import('/src/components/TemplateEditor.jsx'),
+                import('react-dom/client'),
+                import('react')
+              ]);
+              const rootEl = document.getElementById(`template-react-root-${template.id}`);
+              if (!rootEl) return;
+              const root = ReactDOM.createRoot(rootEl);
+              root.render(
+                React.createElement(TemplateEditor, {
+                  initialHtml: template.html || template.text || '',
+                  initialSubject: template.subject || '',
+                  initialVars: {},
+                  onSave: async ({ subject, html, text, vars }) => {
+                    const res = await fetch('/api/admin/templates.json', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+                      body: JSON.stringify({ action: 'update_template', id: template.id, subject, html, text, active: !!document.getElementById(`active-${template.id}`)?.checked })
+                    });
+                    const data = await res.json();
+                    if (!data.ok) alert('Save failed: ' + (data.error || 'Unknown'));
+                  },
+                  onPreview: async ({ html, vars }) => {
+                    const res = await fetch('/api/admin/templates/preview.json', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+                      body: JSON.stringify({ html, vars, subject: document.getElementById(`subject-${template.id}`)?.value || template.subject })
+                    });
+                    const data = await res.json();
+                    if (!data.ok) alert('Preview failed: ' + (data.error || 'Unknown'));
+                  },
+                  onSendTest: async ({ to, html, subject, vars }) => {
+                    const res = await fetch('/api/admin/templates/send.json', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+                      body: JSON.stringify({ id: template.id, to, vars })
+                    });
+                    const data = await res.json();
+                    if (!data.ok) alert('Send failed: ' + (data.error || 'Unknown'));
+                    else alert('Test sent');
+                  }
+                })
+              );
+            } catch (err) {
+              console.warn('Failed to mount TemplateEditor', err && err.message);
+            }
+          })();
+        } catch (err) { console.warn('React mount insertion failed', err); }
 
         // Set up editor content and mode switching
         try {
@@ -1464,6 +1526,19 @@ import '../../styles/forms.css';
           // Initialize simple editor with HTML content
           if (simpleEditor) {
             simpleEditor.innerHTML = template.html || template.text || '';
+            // Live preview on edit
+            simpleEditor.addEventListener('input', () => livePreviewDebounce(template.id));
+          }
+
+          // Vars live preview
+          const varsArea = document.getElementById(`vars-${template.id}`);
+          if (varsArea) {
+            varsArea.addEventListener('input', () => livePreviewDebounce(template.id));
+          }
+
+          // HTML editor live preview
+          if (htmlEditor) {
+            htmlEditor.addEventListener('input', () => livePreviewDebounce(template.id));
           }
 
           // Mode switching
@@ -1484,8 +1559,21 @@ import '../../styles/forms.css';
                 toolbar.style.display = 'none';
                 htmlEditor.style.display = 'block';
               }
+              // Update preview when switching mode
+              livePreviewDebounce(template.id);
             });
           });
+
+          // Live preview toggle
+          const liveCheckbox = document.getElementById(`live-${template.id}`);
+          if (liveCheckbox) {
+            liveCheckbox.addEventListener('change', () => {
+              if (liveCheckbox.checked) updatePreviewLocal(template.id); else document.getElementById(`template-preview-html-${template.id}`).innerHTML = '';
+            });
+          }
+
+          // Initialize preview to current content
+          updatePreviewLocal(template.id);
         } catch (e) {
           console.warn('Template UI wiring failed for', template.id, e && e.message);
         }
@@ -1538,6 +1626,86 @@ import '../../styles/forms.css';
       .join('\n');
   }
 
+  // Templates editor helpers
+  const templatesCache = {};
+  function debounce(fn, wait = 300) {
+    let t = null;
+    return (...args) => {
+      clearTimeout(t);
+      t = setTimeout(() => fn(...args), wait);
+    };
+  }
+
+  function renderTemplateClient(str, vars = {}) {
+    if (!str) return '';
+    let s = String(str);
+    // handle simple {{#if logoUrl}} blocks
+    if (!vars.logoUrl) {
+      s = s.replace(/\{\{#if logoUrl\}\}[\s\S]*?\{\{\/if\}\}/g, '');
+    } else {
+      s = s.replace(/\{\{#if logoUrl\}\}/g, '');
+      s = s.replace(/\{\{\/if\}\}/g, '');
+    }
+    Object.keys(vars).forEach(k => {
+      const v = vars[k] == null ? '' : String(vars[k]);
+      s = s.split(`{{${k}}}`).join(v);
+    });
+    return s;
+  }
+
+  function sanitizeHtml(html) {
+    // Very small sanitizer: remove <script> blocks and on* attributes and javascript: hrefs
+    let s = String(html || '');
+    s = s.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '');
+    s = s.replace(/on[a-z]+\s*=\s*"[^"]*"/gi, '');
+    s = s.replace(/on[a-z]+\s*=\s*'[^']*'/gi, '');
+    s = s.replace(/href\s*=\s*"javascript:[^\"]*"/gi, 'href="#"');
+    s = s.replace(/href\s*=\s*'javascript:[^']*'/gi, "href='#'");
+    return s;
+  }
+
+  const livePreviewDebounce = debounce(function(templateId) {
+    try {
+      const live = document.getElementById(`live-${templateId}`)?.checked;
+      if (!live) return;
+      updatePreviewLocal(templateId);
+    } catch (e) { /* silent */ }
+  }, 250);
+
+  function updatePreviewLocal(templateId) {
+    const previewDiv = document.getElementById(`template-preview-html-${templateId}`);
+    const varsText = document.getElementById(`vars-${templateId}`).value;
+    const modeRadios = document.querySelectorAll(`input[name="mode-${templateId}"]`);
+    let isAdvancedMode = false;
+    modeRadios.forEach(r => { if (r.checked && r.value === 'advanced') isAdvancedMode = true; });
+    const body = isAdvancedMode ? (document.getElementById(`html-editor-${templateId}`).value || '') : (document.getElementById(`simple-editor-${templateId}`).innerHTML || '');
+    const parsed = parsePreviewVars(varsText);
+    const varsErrDiv = document.getElementById(`vars-error-${templateId}`);
+    if (!parsed.ok) {
+      if (varsErrDiv) { varsErrDiv.style.display = 'block'; varsErrDiv.textContent = `Invalid JSON: ${parsed.error}`; }
+      return;
+    } else {
+      if (varsErrDiv) { varsErrDiv.style.display = 'none'; varsErrDiv.textContent = ''; }
+    }
+    const rendered = renderTemplateClient(body, Object.assign({}, parsed.vars, { siteName: window.SITE_NAME || 'EGAC', logoUrl: window.SITE_LOGO_URL || '' }));
+    previewDiv.innerHTML = rendered || '<em>No preview</em>';
+  }
+
+  function revertTemplate(templateId) {
+    const original = templatesCache[templateId];
+    if (!original) return;
+    document.getElementById(`subject-${templateId}`).value = original.subject || '';
+    const simple = document.getElementById(`simple-editor-${templateId}`);
+    const htmlEd = document.getElementById(`html-editor-${templateId}`);
+    if (simple) simple.innerHTML = original.html || original.text || '';
+    if (htmlEd) htmlEd.value = original.html || original.text || '';
+    document.getElementById(`vars-${templateId}`).value = JSON.stringify({ siteName: 'East Grinstead AC' }, null, 2);
+    document.getElementById(`active-${templateId}`).checked = !!original.active;
+    const resultDiv = document.getElementById(`template-result-${templateId}`);
+    if (resultDiv) resultDiv.innerHTML = '<p class="status-info">Reverted to saved version</p>';
+    updatePreviewLocal(templateId);
+  }
+
   window.saveTemplate = async function(templateId) {
     const resultDiv = document.getElementById(`template-result-${templateId}`);
     resultDiv.innerHTML = '<p class="status-info">Saving...</p>';
@@ -1559,6 +1727,9 @@ import '../../styles/forms.css';
       // Get HTML from the simple contenteditable editor
       htmlValue = (document.getElementById(`simple-editor-${templateId}`).innerHTML || '').trim();
     }
+
+    // Sanitize before saving
+    htmlValue = sanitizeHtml(htmlValue);
 
     const textValue = stripHtmlToText(htmlValue);
 
@@ -1592,6 +1763,13 @@ import '../../styles/forms.css';
 
       const data = await res.json();
       if (data.ok) {
+        // update cache
+        if (templatesCache[templateId]) {
+          templatesCache[templateId].subject = subject;
+          templatesCache[templateId].html = htmlValue;
+          templatesCache[templateId].text = textValue;
+          templatesCache[templateId].active = active;
+        }
         resultDiv.innerHTML = '<p class="status-success">Template saved</p>';
       } else {
         resultDiv.innerHTML = `<p class="status-error">${data.error || 'Failed'}</p>`;
@@ -1651,6 +1829,8 @@ import '../../styles/forms.css';
       } else {
         html = (document.getElementById(`simple-editor-${templateId}`).innerHTML || '').trim();
       }
+      // Sanitize html for test send
+      html = sanitizeHtml(html);
 
       const res = await fetch('/api/admin/templates/send.json', {
         method: 'POST',
@@ -1692,6 +1872,8 @@ import '../../styles/forms.css';
     } else {
       body = (document.getElementById(`simple-editor-${templateId}`).innerHTML || '').trim();
     }
+    // Sanitize preview body
+    body = sanitizeHtml(body);
 
     const varsText = document.getElementById(`vars-${templateId}`).value;
 

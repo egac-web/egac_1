@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from '../../../../lib/supabase';
 import { sendInviteEmail } from '../../../../lib/resend';
+import sanitizeHtml from 'sanitize-html';
 
 export const prerender = false;
 
@@ -63,8 +64,10 @@ export async function POST({ request, locals }) {
       logoUrl: env.SITE_LOGO_URL || '',
     });
     const subject = renderTemplate(tpl.subject, renderVars);
-    const html = renderTemplate(tpl.html, renderVars);
+    const rawHtml = renderTemplate(tpl.html, renderVars);
     const text = renderTemplate(tpl.text, renderVars);
+    // Sanitize html before sending
+    const html = sanitizeHtml(rawHtml, { allowedSchemes: ['http','https','mailto','tel','data'] });
 
     // send
     const res = await sendInviteEmail({

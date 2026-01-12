@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from '../../../../lib/supabase';
+import sanitizeHtml from 'sanitize-html';
 
 export const prerender = false;
 
@@ -64,8 +65,10 @@ export async function POST({ request, locals }) {
       logoUrl: env.SITE_LOGO_URL || '',
     });
     const subject = renderTemplate(tpl.subject, renderVars);
-    const html = renderTemplate(tpl.html, renderVars);
+    const rawHtml = renderTemplate(tpl.html, renderVars);
     const text = renderTemplate(tpl.text, renderVars);
+    // Sanitize preview html to prevent scripts and unsafe attributes
+    const html = sanitizeHtml(rawHtml, { allowedSchemes: ['http','https','mailto','tel','data'] });
 
     return new Response(JSON.stringify({ ok: true, subject, html, text }), {
       status: 200,
