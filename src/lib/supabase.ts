@@ -52,7 +52,8 @@ function generateToken(length = 24) {
 
 export async function insertEnquiry(payload: Enquiry, env?: any) {
   const client = getSupabaseAdmin(env);
-  const { data, error } = await client.from('enquiries').insert([{ ...payload }]).select().single();
+  const environment = env?.APP_ENV || process.env.APP_ENV || 'production';
+  const { data, error } = await client.from('enquiries').insert([{ ...payload, environment }]).select().single();
   if (error) throw error;
   return data as Enquiry;
 }
@@ -60,7 +61,8 @@ export async function insertEnquiry(payload: Enquiry, env?: any) {
 export async function createInviteForEnquiry(enquiry_id: string, env?: any) {
   const client = getSupabaseAdmin(env);
   const token = generateToken(24);
-  const payload = { token, enquiry_id, status: 'pending', send_attempts: 0, last_send_error: null };
+  const environment = env?.APP_ENV || process.env.APP_ENV || 'production';
+  const payload = { token, enquiry_id, status: 'pending', send_attempts: 0, last_send_error: null, environment };
   const { data, error } = await client.from('invites').insert([payload]).select().single();
   if (error) throw error;
   return data as Invite;
@@ -159,7 +161,8 @@ export async function countBookingsForDateSlot(session_date: string, slot: strin
 
 export async function createBooking(enquiry_id: string, invite_id: string, session_date: string, slot: string, session_time: string, env?: any) {
   const client = getSupabaseAdmin(env);
-  const payload = { enquiry_id, invite_id, session_date, slot, session_time };
+  const environment = env?.APP_ENV || process.env.APP_ENV || 'production';
+  const payload = { enquiry_id, invite_id, session_date, slot, session_time, environment };
   const { data, error } = await client.from('bookings').insert([payload]).select().single();
   if (error) throw error;
   return data;
@@ -260,6 +263,48 @@ export async function createAgeGroup(payload: any, env?: any) {
 export async function updateAgeGroup(id: string, updates: any, env?: any) {
   const client = getSupabaseAdmin(env);
   const { data, error } = await client.from('age_groups').update({ ...updates, updated_at: (new Date()).toISOString() }).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+// Academy invitations helpers
+export async function createAcademyInvitation(enquiry_id: string, env?: any) {
+  const client = getSupabaseAdmin(env);
+  const token = generateToken(24);
+  const environment = env?.APP_ENV || process.env.APP_ENV || 'production';
+  const payload: any = {
+    token,
+    enquiry_id,
+    status: 'pending',
+    sent_at: null,
+    response: null,
+    response_at: null,
+    environment,
+    created_at: new Date().toISOString(),
+  };
+  const { data, error } = await client.from('academy_invitations').insert([payload]).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function markAcademyInvitationSent(invitation_id: string, env?: any) {
+  const client = getSupabaseAdmin(env);
+  const { data, error } = await client.from('academy_invitations').update({ status: 'sent', sent_at: new Date().toISOString() }).eq('id', invitation_id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getAcademyInvitationByToken(token: string, env?: any) {
+  const client = getSupabaseAdmin(env);
+  const { data, error } = await client.from('academy_invitations').select('*').eq('token', token).maybeSingle();
+  if (error) throw error;
+  return data || null;
+}
+
+export async function updateAcademyInvitationResponse(token: string, response: string, env?: any) {
+  const client = getSupabaseAdmin(env);
+  const payload: any = { response, response_at: new Date().toISOString(), status: 'responded' };
+  const { data, error } = await client.from('academy_invitations').update(payload).eq('token', token).select().single();
   if (error) throw error;
   return data;
 }
