@@ -17,6 +17,7 @@ export default defineConfig({
     define: {
       'process.env.DIRECTUS_URL': JSON.stringify(process.env.DIRECTUS_URL),
       'process.env.DIRECTUS_TOKEN': JSON.stringify(process.env.DIRECTUS_TOKEN),
+      'process.env.ADMIN_TOKEN': JSON.stringify(process.env.ADMIN_TOKEN),
     }
   }
 });

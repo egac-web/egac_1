@@ -1,0 +1,175 @@
+---
+import '../../styles/forms.css';
+---
+
+<head>
+  <title>Admin — Enquiries & Bookings</title>
+</head>
+
+<main class="page page--narrow">
+  <h1>Admin — Enquiries & Bookings</h1>
+
+  <p>This page is protected by an admin token. Enter it below.</p>
+
+  <div>
+    <label for="admintoken">Admin token</label>
+    <input id="admintoken" type="password" />
+    <button id="login">Load data</button>
+  </div>
+
+  <div id="status"></div>
+  <div id="data"></div>
+</main>
+
+<script>
+  document.getElementById('login').addEventListener('click', async () => {
+    const token = document.getElementById('admintoken').value;
+    document.getElementById('status').textContent = 'Loading…';
+    try {
+      const res = await fetch('/api/admin/enquiries.json', { headers: { 'x-admin-token': token } });
+      const j = await res.json();
+      if (!j.ok) { document.getElementById('status').textContent = 'Error: ' + (j.error || 'Unauthorized'); return; }
+      document.getElementById('status').textContent = '';
+      const container = document.getElementById('data');
+      container.innerHTML = '';
+      j.enquiries.forEach(e => {
+        const el = document.createElement('div');
+        el.className = 'card card--padded';
+        el.innerHTML = `<h3>${e.name || e.email || 'No name'}</h3>
+        <p><strong>Email:</strong> ${e.email || ''}</p>
+        <p><strong>Note:</strong> ${e.note || ''}</p>
+        <p><strong>Events:</strong> ${JSON.stringify(e.events || [])}</p>
+        <p><strong>Invite:</strong> ${e.invites && e.invites.length ? e.invites[0].token : 'none'}</p>
+        <div>
+          <label>Presli note: <input data-enquiry-id="${e.id}" class="presli-note" type="text" placeholder="Optional note" /></label>
+          <button class="presli-confirm" data-enquiry-id="${e.id}">Confirm Presli attendance & send membership link</button>
+          <div class="presli-result" data-enquiry-id="${e.id}" style="margin-top:0.5rem"></div>
+        </div>
+        <div class="bookings"><strong>Bookings:</strong></div>`;
+        // add bookings list
+        const bookingsContainer = document.createElement('div');
+
+        // presli confirm handler
+        const presliBtn = el.querySelector('.presli-confirm');
+        const presliNoteInput = el.querySelector('.presli-note');
+        presliBtn && presliBtn.addEventListener('click', async (ev) => {
+          const eid = presliBtn.dataset.enquiryId;
+          const note = presliNoteInput ? presliNoteInput.value : '';
+          const resultDiv = el.querySelector('.presli-result');
+          resultDiv.textContent = 'Processing…';
+          try {
+            const res = await fetch('/api/admin/enquiry/presli_confirm.json', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
+              body: JSON.stringify({ enquiry_id: eid, note, send_membership_link: true }),
+            });
+            const j2 = await res.json();
+            if (!j2.ok && res.status !== 200) { resultDiv.textContent = 'Error: ' + (j2.error || 'Unauthorized'); return; }
+            const parts = [];
+            if (j2.membership_sent) parts.push('<div>Membership link sent</div>');
+            if (j2.membership_error) parts.push(`<div style="color:darkred">${j2.membership_error}</div>`);
+            if (j2.event) parts.push(`<div>Event recorded: ${j2.event.type}</div>`);
+            resultDiv.innerHTML = parts.join('');
+          } catch (err) {
+            resultDiv.textContent = 'Server error';
+          }
+        });
+        bookingsContainer.className = 'booking-list';
+        if (e.bookings && e.bookings.length) {
+          e.bookings.forEach(b => {
+            const bEl = document.createElement('div');
+            bEl.className = 'booking-item';
+            bEl.dataset.bookingId = b.id;
+            const status = b.status || 'scheduled';
+            bEl.innerHTML = `<div><strong>${b.session_date} ${b.slot} (${status})</strong></div><div>${b.session_time || ''}</div>`;
+            const controls = document.createElement('div');
+            controls.style.marginTop = '0.5rem';
+
+            const attendedBtn = document.createElement('button');
+            attendedBtn.textContent = 'Mark attended';
+            attendedBtn.addEventListener('click', () => handleAttendanceClick(token, b.id, 'attended'));
+
+            const noshowBtn = document.createElement('button');
+            noshowBtn.textContent = 'Mark no-show';
+            noshowBtn.style.marginLeft = '0.5rem';
+            noshowBtn.addEventListener('click', () => handleAttendanceClick(token, b.id, 'no_show'));
+
+            const sendLinkChk = document.createElement('label');
+            sendLinkChk.style.marginLeft = '0.5rem';
+            sendLinkChk.innerHTML = `<input type="checkbox" data-booking-id="${b.id}" /> Send membership link`;
+
+            const coachMsgBtn = document.createElement('button');
+            coachMsgBtn.style.marginLeft = '0.5rem';
+            coachMsgBtn.textContent = 'Get coach message';
+            coachMsgBtn.addEventListener('click', () => handleAttendanceClick(token, b.id, status, false, true));
+
+            controls.appendChild(attendedBtn);
+            controls.appendChild(noshowBtn);
+            controls.appendChild(sendLinkChk);
+            controls.appendChild(coachMsgBtn);
+
+            bEl.appendChild(controls);
+
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'booking-result';
+            resultDiv.style.marginTop = '0.5rem';
+            bEl.appendChild(resultDiv);
+
+            bookingsContainer.appendChild(bEl);
+          });
+        } else {
+          bookingsContainer.textContent = 'none';
+        }
+        el.appendChild(bookingsContainer);
+        container.appendChild(el);
+      });
+    } catch (err) {
+      document.getElementById('status').textContent = 'Server error';
+    }
+  });
+
+  async function handleAttendanceClick(token, bookingId, status, sendMembershipLink = null, justGetMessage = false) {
+    const bookingItem = document.querySelector(`.booking-item[data-booking-id="${bookingId}"]`);
+    const resultDiv = bookingItem && bookingItem.querySelector('.booking-result');
+    if (!resultDiv) return;
+    resultDiv.textContent = 'Processing…';
+
+    // determine sendMembershipLink from checkbox if not explicitly provided
+    if (sendMembershipLink === null) {
+      const chk = bookingItem.querySelector('input[type="checkbox"]');
+      sendMembershipLink = chk ? chk.checked : false;
+    }
+
+    try {
+      const res = await fetch('/api/admin/booking/attendance.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
+        body: JSON.stringify({ booking_id: bookingId, status: status === 'no_show' ? 'no_show' : 'attended', send_membership_link: sendMembershipLink }),
+      });
+      const j = await res.json();
+      if (!j.ok && res.status !== 200) { resultDiv.textContent = 'Error: ' + (j.error || 'Unauthorized'); return; }
+
+      // show coach message and CSV and membership status
+      const parts = [];
+      if (j.coachMessage) {
+        parts.push(`<div><strong>Coach message:</strong> <pre style="white-space:pre-wrap;">${j.coachMessage}</pre><button class="copy-btn">Copy</button></div>`);
+      }
+      if (j.presliCSV) {
+        parts.push(`<div><strong>Presli CSV row:</strong> <code>${j.presliCSV}</code></div>`);
+      }
+      if (j.membership_sent !== undefined) {
+        parts.push(`<div><strong>Membership email sent:</strong> ${j.membership_sent}</div>`);
+      }
+      if (j.membership_error) {
+        parts.push(`<div style="color:darkred"><strong>Membership error:</strong> ${j.membership_error}</div>`);
+      }
+      resultDiv.innerHTML = parts.join('');
+
+      // copy button handler
+      const copyBtn = resultDiv.querySelector('.copy-btn');
+      if (copyBtn) copyBtn.addEventListener('click', () => navigator.clipboard.writeText(j.coachMessage || ''));
+    } catch (err) {
+      resultDiv.textContent = 'Server error';
+    }
+  }
+</script>
