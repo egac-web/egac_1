@@ -16,10 +16,11 @@ describe('admin-ui helpers', () => {
     expect(res.ok).toBe(false);
   });
 
-  it('stripHtmlToText should remove tags and collapse whitespace', () => {
+  it('stripHtmlToText should remove tags and preserve paragraph breaks', () => {
     const html = '<p>Hello <strong>World</strong></p>\n\n<p>Next</p>';
     const text = stripHtmlToText(html);
-    expect(text).toBe('Hello World Next');
+    // Function preserves paragraph breaks as line breaks
+    expect(text).toBe('Hello World\n\nNext');
   });
 
   it('setActiveTabByElements toggles classes and aria attributes', () => {
