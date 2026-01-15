@@ -142,15 +142,16 @@ For more detail and troubleshooting see:
 
 ## 🤝 Contributing
 
-1. Create a feature branch from `main`
+1. Create a feature branch from `staging`
 2. Make your changes
 3. Run tests: `npm test`
 4. Run linting: `npm run lint`
 5. Format code: `npm run format`
 6. Commit with descriptive message
-7. Create pull request to `main`
+7. Create pull request to `staging`
+8. After testing on staging, merge `staging` → `main` for production
 
-See branch retention policy in [docs/ops/branch-retention.md](./docs/ops/branch-retention.md)
+See [branching strategy](./docs/development/branching-strategy.md) and [branch retention policy](./docs/ops/branch-retention.md)
 
 ---
 

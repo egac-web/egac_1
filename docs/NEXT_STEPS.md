@@ -31,9 +31,9 @@ Follow the guide: [`docs/deployment/test-site-setup.md`](./deployment/test-site-
 ### Quick Start:
 
 1. **Create Cloudflare Pages Project**
-   - Name: `egac-test` or `egac-staging`
+   - Name: `egac-staging`
    - Connect to GitHub: `egac-web/egac_1`
-   - Branch: `main`
+   - **Branch**: `staging` (auto-deploys on push to staging)
    - Build command: `npm run build`
    - Output directory: `dist`
 
@@ -41,29 +41,31 @@ Follow the guide: [`docs/deployment/test-site-setup.md`](./deployment/test-site-
    ```bash
    DIRECTUS_URL=https://egac-admin.themainhost.co.uk
    DIRECTUS_TOKEN=<get-from-directus>
-   SUPABASE_URL=https://kfxuosuyhgankyjvldlc.supabase.co
+   SUPABASE_URL=<staging-database-url>
    SUPABASE_SERVICE_ROLE_KEY=<get-from-supabase>
    SUPABASE_ANON_KEY=<get-from-supabase>
-   RESEND_API_KEY=<get-from-resend>
-   RESEND_FROM="EGAC Test <noreply@test.eastgrinsteadac.co.uk>"
+   RESEND_API_KEY=<your-resend-api-key>
+   RESEND_FROM="EGAC Staging <noreply@eastgrinsteadac.co.uk>"
    ADMIN_TOKEN=<generate-new-token>
-   MEMBERSHIP_SECRETARY_EMAIL=test-membership@eastgrinsteadac.co.uk
-   SITE_BASE_URL=https://egac-test.pages.dev
+   MEMBERSHIP_SECRETARY_EMAIL=staging-membership@eastgrinsteadac.co.uk
+   SITE_BASE_URL=https://staging.eastgrinsteadac.co.uk
    ```
 
-3. **Run Database Migrations**
-   - Apply all migrations from `db/migrations/`
-   - See [Test Deployment Guide](./deployment/test-site-setup.md#5-migration-checklist)
+3. **Configure Custom Domain**
+   - Add DNS CNAME: `staging` → `egac-staging.pages.dev`
+   - In Pages settings, add custom domain: `staging.eastgrinsteadac.co.uk`
+   - Wait for SSL certificate (1-2 minutes)
 
-4. **Test the Site**
+4. **Create Staging Database**
+   - New Supabase project: `egac-staging`
+   - Run migrations from `db/migrations/`
+   - Update environment variables with staging DB URL
+
+5. **Deploy & Test**
+   - Push to `staging` branch (auto-deploys to staging.eastgrinsteadac.co.uk)
+   - Visit: `https://staging.eastgrinsteadac.co.uk`
    - Run through testing checklist
-   - Verify all features work
-   - Fix any issues
-
-5. **Prepare for Production**
-   - Complete [Pre-Production Checklist](./deployment/pre-production-checklist.md)
-   - Get stakeholder approval
-   - Schedule production deployment
+   - After testing, merge `staging` → `main` for production
 
 ---
 
@@ -102,15 +104,25 @@ Follow the guide: [`docs/deployment/test-site-setup.md`](./deployment/test-site-
 
 ## 🔐 Security Notes
 
-**Before test deployment:**
-- Generate a new `ADMIN_TOKEN` (different from local dev)
-- Use: `openssl rand -hex 32`
-- Store securely in password manager
-- Set in Cloudflare environment variables only
+**Staging Environment Setup:**
+- Generate a new `ADMIN_TOKEN` (different from local dev and production)
+  ```bash
+  openssl rand -hex 32
+  ```
+- Use same Resend API key as production (domain: `eastgrinsteadac.co.uk`)
+- Create separate Supabase project for staging database
+- Use staging-specific email addresses for notifications
+- Store all secrets in Cloudflare Pages environment variables only
+
+**Email Configuration:**
+- Staging can send from `@eastgrinsteadac.co.uk` (same domain as production)
+- Use different recipient addresses (e.g., `staging-membership@...`)
+- Consider adding `[STAGING]` prefix to email subjects for clarity
 
 **For production:**
 - Rotate ALL tokens and API keys
-- Use different credentials than test
+- Use different `ADMIN_TOKEN` than staging
+- Use production email recipient addresses
 - Review security checklist in pre-production doc
 
 ---

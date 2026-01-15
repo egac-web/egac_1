@@ -7,11 +7,12 @@ This guide covers deploying the EGAC website to a test environment before produc
 
 ### 1. Cloudflare Pages - Test Environment
 
-#### Create Test Project
+#### Create Staging Project
 1. Go to Cloudflare Dashboard → Pages
-2. Create new project: `egac-test` (or `egac-staging`)
+2. Create new project: `egac-staging`
 3. Connect to GitHub repo: `egac-web/egac_1`
-4. Set branch: `main` (or create a `staging` branch)
+4. Set branch: `staging` (auto-deploys when `staging` branch updates)
+5. Set production branch: `main` (for future production project)
 
 #### Build Settings
 - **Framework preset**: Astro
@@ -36,44 +37,76 @@ SUPABASE_SERVICE_ROLE_KEY=<get-from-supabase-dashboard>
 SUPABASE_ANON_KEY=<get-from-supabase-dashboard>
 
 # Email Service (Resend)
-RESEND_API_KEY=<test-api-key>
-RESEND_FROM="EGAC Test <noreply@test.eastgrinsteadac.co.uk>"
+# Use production Resend API key (same domain for staging & production)
+RESEND_API_KEY=<your-resend-api-key>
+RESEND_FROM="EGAC Staging <noreply@eastgrinsteadac.co.uk>"
 
 # Admin Portal Access
-ADMIN_TOKEN=<generate-new-secure-token-for-test>
+ADMIN_TOKEN=<generate-new-secure-token-for-staging>
 
-# Email Recipients
-MEMBERSHIP_SECRETARY_EMAIL=test-membership@eastgrinsteadac.co.uk
+# Email Recipients (use staging/test email addresses)
+MEMBERSHIP_SECRETARY_EMAIL=staging-membership@eastgrinsteadac.co.uk
 
 # Site Configuration
-SITE_BASE_URL=https://egac-test.pages.dev
+SITE_BASE_URL=https://staging.eastgrinsteadac.co.uk
 ```
 
-### 3. Test Domain Setup
+### 3. Staging Domain Setup
 
-#### Option A: Cloudflare Pages Domain
-- Automatically provided: `https://egac-test.pages.dev`
-- Use for initial testing
+**Recommended Approach**: Use `staging.eastgrinsteadac.co.uk`
 
-#### Option B: Custom Test Subdomain (Recommended)
-1. Add DNS record in Cloudflare:
-   - Type: CNAME
-   - Name: `test` (or `staging`)
-   - Target: `egac-test.pages.dev`
-2. Configure custom domain in Pages settings
-3. Access at: `https://test.eastgrinsteadac.co.uk`
+This allows you to:
+- Test with the actual domain name for email delivery (Resend)
+- Verify DNS and SSL configuration
+- Test cookies and CORS with real domain
+- Keep staging completely isolated from production
+
+#### Setup Steps:
+
+1. **Add DNS Record** (Cloudflare DNS Dashboard):
+   - Type: `CNAME`
+   - Name: `staging`
+   - Target: `egac-staging.pages.dev` (your Pages project URL)
+   - Proxy status: ✅ Proxied (orange cloud icon)
+   - TTL: Auto
+
+2. **Configure Custom Domain** (Cloudflare Pages → Settings → Domains):
+   - Click "Set up a custom domain"
+   - Enter: `staging.eastgrinsteadac.co.uk`
+   - Cloudflare will automatically provision SSL certificate
+   - Wait 1-2 minutes for DNS propagation
+
+3. **Verify Setup**:
+   - Visit: `https://staging.eastgrinsteadac.co.uk`
+   - Check SSL certificate is valid (lock icon in browser)
+   - Verify site loads correctly
+
+#### Alternative: Pages-only Domain
+If you need to test before DNS setup:
+- Use the automatically provided domain: `https://egac-staging.pages.dev`
+- Note: Email `From` addresses must match this domain for testing
 
 ### 4. Database Setup - Test Environment
-
-#### Option A: Separate Test Database (Recommended)
-1. Create new Supabase project: `egac-test`
+Recommended: Separate Staging Database
+1. Create new Supabase project: `egac-staging`
 2. Run all migrations from `db/migrations/`
-3. Seed test data
-4. Update environment variables with test DB credentials
+3. Seed with realistic test data
+4. Update environment variables with staging DB credentials
 
-#### Option B: Shared Database with Namespace
-- Use same database but prefix all test bookings/enquiries
-- Add `test_mode` column or use different age groups
+**Benefits**:
+- Complete isolation from production data
+- Safe to test destructive operations
+- Can reset/reseed anytime without risk
+- Accurate testing of migrations
+
+#### Alternative: Shared Database (Not Recommended)
+- Use same database as production
+- Add `environment` column to track staging vs production records
+- **Risks**: 
+  - Test data pollutes production
+  - Accidental data deletion/corruption
+  - Harder to debug issues
+  - Cannot test migrations safelyoups
 - **Risk**: Test data mixed with production data
 
 ### 5. Migration Checklist
