@@ -5,6 +5,33 @@ Development of the EGAC website with comprehensive admin portal, code quality to
 
 ---
 
+## [2026-01-15] - Branching Strategy & Deployment Architecture
+
+### Added
+- **Branching Strategy**: Created `staging` branch for pre-production testing
+  - `main` → Production (`eastgrinsteadac.co.uk`)
+  - `staging` → Staging (`staging.eastgrinsteadac.co.uk`)
+  - Feature branches → Development workflow
+- **Documentation**: Comprehensive branching strategy guide at `docs/development/branching-strategy.md`
+- **Deployment Architecture**: 
+  - Staging Cloudflare Pages project deploys from `staging` branch
+  - Production Cloudflare Pages project deploys from `main` branch
+  - Separate Supabase databases for staging and production
+  - Custom domain: `staging.eastgrinsteadac.co.uk` for staging environment
+
+### Changed
+- **Deployment Workflow**: Updated to use staging branch before production
+- **Documentation**: Updated deployment guides to reflect staging/main workflow
+- **Email Strategy**: Staging uses same domain (`@eastgrinsteadac.co.uk`) with different recipients
+
+### Workflow
+```
+feature branches → staging → main
+                  (test)   (production)
+```
+
+---
+
 ## [2026-01-15] - Branch Consolidation & Test Deployment Preparation
 
 ### Changed
