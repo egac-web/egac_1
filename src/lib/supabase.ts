@@ -195,5 +195,74 @@ export async function cancelBooking(booking_id: string, env?: any) {
   return data;
 }
 
+// Email templates helpers
+export async function getEmailTemplate(key: string, language = 'en', env?: any) {
+  const client = getSupabaseAdmin(env);
+  const { data, error } = await client.from('email_templates').select('*').eq('key', key).eq('language', language).maybeSingle();
+  if (error) throw error;
+  return data || null;
+}
+
+export async function listEmailTemplates(env?: any) {
+  const client = getSupabaseAdmin(env);
+  const { data, error } = await client.from('email_templates').select('*').order('key', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function createEmailTemplate(payload: any, env?: any) {
+  const client = getSupabaseAdmin(env);
+  const { data, error } = await client.from('email_templates').insert([payload]).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateEmailTemplate(id: string, updates: any, env?: any) {
+  const client = getSupabaseAdmin(env);
+  const { data, error } = await client.from('email_templates').update({ ...updates, updated_at: (new Date()).toISOString() }).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+// Additional admin helpers
+export async function getActiveAgeGroups(env?: any) {
+  const client = getSupabaseAdmin(env);
+  const { data, error } = await client.from('age_groups').select('*').eq('active', true).order('sort_order', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getSystemConfigAll(env?: any) {
+  const client = getSupabaseAdmin(env);
+  const { data, error } = await client.from('system_config').select('*');
+  if (error) throw error;
+  const map: any = {};
+  (data || []).forEach((r: any) => {
+    map[r.key] = r.value;
+  });
+  return map;
+}
+
+export async function updateSystemConfig(key: string, value: string, env?: any) {
+  const client = getSupabaseAdmin(env);
+  const { data, error } = await client.from('system_config').upsert({ key, value, updated_at: (new Date()).toISOString() }).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function createAgeGroup(payload: any, env?: any) {
+  const client = getSupabaseAdmin(env);
+  const { data, error } = await client.from('age_groups').insert([payload]).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateAgeGroup(id: string, updates: any, env?: any) {
+  const client = getSupabaseAdmin(env);
+  const { data, error } = await client.from('age_groups').update({ ...updates, updated_at: (new Date()).toISOString() }).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
 // Named exports already provided above; do not re-export here.
 export default getSupabaseAdmin;
