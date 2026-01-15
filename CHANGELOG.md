@@ -1,7 +1,48 @@
-# Changelog - January 11, 2026 Conversation Thread
+# Changelog - EGAC Website Development
 
 ## Summary
-This conversation thread focused on adding code quality tools (ESLint, Prettier, testing) and building a comprehensive admin portal for the EGAC website. Major features include: admin authentication, enquiry/booking management, Academy invitations (U11), configuration management (age groups & booking settings), email template editing with plain text and HTML modes, and a visual dashboard with reports.
+Development of the EGAC website with comprehensive admin portal, code quality tools, automated testing, and production-ready deployment configuration. This log tracks all major features, bug fixes, and architectural decisions from January 11-15, 2026.
+
+---
+
+## [2026-01-15] - Branch Consolidation & Test Deployment Preparation
+
+### Changed
+- **Branch Strategy**: Consolidated `feat/add-code-quality-tools` and `feat/admin-ui-polish` into `main` branch
+- **Test Environment**: All features now on main branch, ready for test deployment
+- **Dependencies**: Added `jsdom` dev dependency to fix Vitest warnings
+
+### Added
+- **Documentation**: Created comprehensive test deployment guide at `docs/deployment/test-site-setup.md`
+- **Documentation**: Created pre-production launch checklist at `docs/deployment/pre-production-checklist.md`
+- **Deployment Planning**: 
+  - Cloudflare Pages configuration instructions
+  - Environment variable setup guide
+  - Database migration checklist
+  - Testing verification procedures
+  - Rollback procedures
+
+### Merged Commits
+- `8ec46fe` - chore: add jsdom dev dependency for Vitest
+- `Merge feat/admin-ui-polish` - TemplateEditor, accessibility, token persistence (103 files changed)
+- `Merge feat/add-code-quality-tools` - ESLint, Prettier, CI, 44 tests, admin portal (33 files changed)
+
+### Testing
+- ✅ All 50 unit tests passing
+- ✅ ESLint passes
+- ✅ No TypeScript annotations in JS files
+- ✅ All admin endpoints functional
+
+### Next Steps
+1. Deploy to Cloudflare Pages test environment
+2. Run full testing checklist from `docs/deployment/test-site-setup.md`
+3. Complete pre-production checklist items
+4. Get stakeholder approval
+5. Deploy to production
+
+### Removed Branches
+- Deleted `feat/add-code-quality-tools` (merged to main)
+- Deleted `feat/admin-ui-polish` (merged to main)
 
 ---
 
