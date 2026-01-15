@@ -18,44 +18,54 @@ import '../../styles/forms.css';
     </div>
 
     <div id="admin-portal" style="display:none">
+      <div id="admin-debug-banner" style="background:linear-gradient(90deg,#003DA5,#FDB913);color:white;padding:0.5rem 1rem;border-radius:6px;display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <div id="admin-debug-info" style="font-weight:700">Admin UI</div>
+        <div style="display:flex;gap:0.5rem;align-items:center">
+          <button id="admin-open-config" class="btn btn-sm btn-secondary">Open Configuration</button>
+        </div>
+      </div>
+
       <!-- Tabs Navigation -->
       <nav class="admin-tabs" role="tablist">
-        <button class="tab-btn active" data-tab="enquiries" role="tab" aria-selected="true">Enquiries & Bookings</button>
-        <button class="tab-btn" data-tab="academy" role="tab" aria-selected="false">Academy (U11)</button>
-        <button class="tab-btn" data-tab="reports" role="tab" aria-selected="false">Reports</button>
-        <button class="tab-btn" data-tab="config" role="tab" aria-selected="false">Configuration</button>
+        <button id="tab-btn-enquiries" class="tab-btn active" data-tab="enquiries" role="tab" aria-selected="true" aria-controls="tab-enquiries" tabindex="0">Enquiries & Bookings</button>
+        <button id="tab-btn-academy" class="tab-btn" data-tab="academy" role="tab" aria-selected="false" aria-controls="tab-academy" tabindex="-1">Academy (U11)</button>
+        <button id="tab-btn-reports" class="tab-btn" data-tab="reports" role="tab" aria-selected="false" aria-controls="tab-reports" tabindex="-1">Reports</button>
+        <button id="tab-btn-config" class="tab-btn" data-tab="config" role="tab" aria-selected="false" aria-controls="tab-config" tabindex="-1">Configuration</button>
       </nav>
 
       <!-- Enquiries & Bookings Tab -->
-      <div id="tab-enquiries" class="tab-content active" role="tabpanel">
-        <h2>Enquiries & Bookings</h2>
+      <div id="tab-enquiries" class="tab-content active" role="tabpanel" aria-labelledby="tab-btn-enquiries" aria-hidden="false">
+        <div class="hero-section" style="background:linear-gradient(135deg,#003DA5,#0052CC);color:white;padding:2rem;border-radius:8px;margin-bottom:2rem">
+          <h2 style="margin:0 0 0.5rem 0;font-size:1.75rem">Enquiries & Bookings</h2>
+          <p style="margin:0;opacity:0.9">Manage taster session enquiries, bookings, and attendance tracking</p>
+        </div>
         <div id="enquiries-list"></div>
       </div>
 
       <!-- Academy Tab -->
-      <div id="tab-academy" class="tab-content" role="tabpanel" style="display:none">
-        <h2>Academy Invitations (U11)</h2>
+      <div id="tab-academy" class="tab-content" role="tabpanel" style="display:none" aria-labelledby="tab-btn-academy" aria-hidden="true">
+        <div class="hero-section" style="background:linear-gradient(135deg,#8b5cf6,#a78bfa);color:white;padding:2rem;border-radius:8px;margin-bottom:2rem">
+          <h2 style="margin:0 0 0.5rem 0;font-size:1.75rem">Academy Invitations (U11)</h2>
+          <p style="margin:0;opacity:0.9">Track and send academy invitations to athletes aged 10 and under</p>
+        </div>
         <div id="academy-stats"></div>
         <div id="academy-list"></div>
       </div>
 
       <!-- Reports Tab -->
-      <div id="tab-reports" class="tab-content" role="tabpanel" style="display:none">
-        <h2>Summary Reports</h2>
+      <div id="tab-reports" class="tab-content" role="tabpanel" style="display:none" aria-labelledby="tab-btn-reports" aria-hidden="true">
         <div id="reports-dashboard"></div>
       </div>
 
       <!-- Configuration Tab -->
-      <div id="tab-config" class="tab-content" role="tabpanel" style="display:none">
-        <h2>Configuration</h2>
+      <div id="tab-config" class="tab-content" role="tabpanel" style="display:none" aria-labelledby="tab-btn-config" aria-hidden="true">
+        <div class="hero-section" style="background:linear-gradient(135deg,#059669,#10b981);color:white;padding:2rem;border-radius:8px;margin-bottom:2rem">
+          <h2 style="margin:0 0 0.5rem 0;font-size:1.75rem">Configuration</h2>
+          <p style="margin:0;opacity:0.9">Manage age groups, booking settings, and email templates</p>
+        </div>
         
         <section class="config-section">
-          <h3>System Settings</h3>
-          <div id="system-config"></div>
-        </section>
-
-        <section class="config-section">
-          <h3>Age Groups</h3>
+          <h3>Age Groups & Booking Settings</h3>
           <div id="age-groups-config"></div>
         </section>
 
@@ -280,6 +290,52 @@ import '../../styles/forms.css';
     color: #6b7280;
     margin-top: 0.5rem;
   }
+
+  /* Templates UI polish */
+  .templates-config .card {
+    padding: 1rem;
+    border-left: 4px solid var(--blue, #003DA5);
+    background: linear-gradient(180deg, #ffffff, #fbfdff);
+  }
+  .templates-config h3 {
+    margin: 0 0 0.25rem 0;
+    color: var(--blue, #003DA5);
+  }
+  .template-editor textarea {
+    min-height: 160px;
+    font-size: 0.95rem;
+    line-height: 1.35;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 0.5rem;
+    background: #ffffff;
+  }
+  .template-sample {
+    background: #f8fafc;
+    border: 1px solid #e6eef8;
+    padding: 0.5rem;
+    border-radius: 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace;
+    color: #374151;
+    font-size: 0.9rem;
+  }
+  .template-actions button { margin-right: 0.5rem; }
+  .template-actions input[type="checkbox"] { margin-right: 0.5rem; }
+  #admin-debug-banner { box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+
+  /* Age groups table */
+  .age-groups-table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+  .age-groups-table thead th { background:#f3f4f6; text-align:left; padding:0.5rem; font-weight:700; font-size:0.875rem; color:#374151 }
+  .age-groups-table td { padding:0.5rem; border-bottom:1px solid #eee; }
+  .age-groups-table tr:hover { background:#fbfdff; }
+  .age-groups-table tbody tr:nth-child(even) { background:#ffffff; }
+
+  /* Button variants */
+  .btn-ghost { background: transparent; border: 1px solid #e5e7eb; color: var(--blue, #003DA5); }
+  .btn-outline { background: transparent; border: 1px solid #e5e7eb; color: #374151; }
+  .btn-sm { padding: 0.375rem 0.75rem; font-size: 0.85rem; }
+
+  .template-result .status-success, .template-result .status-error { margin-top: 0.5rem; display:block; }
 </style>
 
 <script>
@@ -288,10 +344,16 @@ import '../../styles/forms.css';
   // Check for token in URL query params
   const urlParams = new URLSearchParams(window.location.search);
   const urlToken = urlParams.get('token');
+  const storedToken = sessionStorage.getItem('adminToken');
   
+  // Prefer URL token, then sessionStorage
   if (urlToken) {
     document.getElementById('admintoken').value = urlToken;
     // Auto-login if token is present
+    setTimeout(() => document.getElementById('login-btn').click(), 100);
+  } else if (storedToken) {
+    document.getElementById('admintoken').value = storedToken;
+    // Auto-login using stored token
     setTimeout(() => document.getElementById('login-btn').click(), 100);
   }
 
@@ -318,42 +380,70 @@ import '../../styles/forms.css';
       }
 
       // Login successful
+      sessionStorage.setItem('adminToken', token);
       document.getElementById('login-section').style.display = 'none';
       document.getElementById('admin-portal').style.display = 'block';
+
+      // Update debug banner with branch and token state
+      const dbg = document.getElementById('admin-debug-info');
+      const preview = token ? (token.length > 6 ? token.substring(0,4)+'...' : token) : 'none';
+      dbg.textContent = `Admin UI - feat/admin-ui-polish (token: ${preview})`;
+      document.getElementById('admin-open-config').addEventListener('click', () => setActiveTab('config', true));
+
+      // Add a logout button for convenience
+      if (!document.getElementById('admin-logout')) {
+        const logoutBtn = document.createElement('button');
+        logoutBtn.id = 'admin-logout';
+        logoutBtn.className = 'btn btn-secondary btn-sm';
+        logoutBtn.style.marginLeft = '1rem';
+        logoutBtn.textContent = 'Logout';
+        logoutBtn.addEventListener('click', () => {
+          sessionStorage.removeItem('adminToken');
+          location.reload();
+        });
+        document.querySelector('.admin-tabs').appendChild(logoutBtn);
+      }
       loadEnquiries();
     } catch (err) {
       showStatus('login-status', 'Connection error', 'error');
     }
   });
 
-  // Tab switching
-  document.querySelectorAll('.tab-btn').forEach(btn => {
+  // Tab switching with keyboard accessibility (delegated to shared helpers)
+  import { setActiveTabByElements } from '../../lib/admin-ui.js';
+
+  const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
+  const tabContents = Array.from(document.querySelectorAll('.tab-content'));
+
+  tabButtons.forEach((btn, idx) => {
     btn.addEventListener('click', () => {
-      const tabName = btn.dataset.tab;
-      
-      // Update tab buttons
-      document.querySelectorAll('.tab-btn').forEach(b => {
-        b.classList.remove('active');
-        b.setAttribute('aria-selected', 'false');
-      });
-      btn.classList.add('active');
-      btn.setAttribute('aria-selected', 'true');
-
-      // Update tab content
-      document.querySelectorAll('.tab-content').forEach(content => {
-        content.style.display = 'none';
-        content.classList.remove('active');
-      });
-      const activeTab = document.getElementById(`tab-${tabName}`);
-      activeTab.style.display = 'block';
-      activeTab.classList.add('active');
-
-      // Load tab data
-      if (tabName === 'academy') loadAcademy();
-      else if (tabName === 'reports') loadReports();
-      else if (tabName === 'config') loadConfiguration();
+      setActiveTabByElements(tabButtons, tabContents, btn.dataset.tab, true);
+      // Load data lazily
+      if (btn.dataset.tab === 'academy') loadAcademy();
+      else if (btn.dataset.tab === 'reports') loadReports();
+      else if (btn.dataset.tab === 'config') loadConfiguration();
+    });
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') {
+        const next = tabButtons[(idx + 1) % tabButtons.length];
+        setActiveTabByElements(tabButtons, tabContents, next.dataset.tab, true);
+        e.preventDefault();
+      } else if (e.key === 'ArrowLeft') {
+        const prev = tabButtons[(idx - 1 + tabButtons.length) % tabButtons.length];
+        setActiveTabByElements(tabButtons, tabContents, prev.dataset.tab, true);
+        e.preventDefault();
+      } else if (e.key === 'Home') {
+        setActiveTabByElements(tabButtons, tabContents, tabButtons[0].dataset.tab, true);
+        e.preventDefault();
+      } else if (e.key === 'End') {
+        setActiveTabByElements(tabButtons, tabContents, tabButtons[tabButtons.length - 1].dataset.tab, true);
+        e.preventDefault();
+      }
     });
   });
+
+  // Ensure initial tab state is correct
+  setActiveTabByElements(tabButtons, tabContents, document.querySelector('.tab-btn.active')?.dataset.tab || 'enquiries');
 
   // Helper to show status messages
   function showStatus(containerId, message, type = 'info') {
@@ -362,6 +452,9 @@ import '../../styles/forms.css';
   }
 
   // Load enquiries and bookings
+  let enquiriesData = [];
+  let currentFilter = 'all';
+  
   async function loadEnquiries() {
     const container = document.getElementById('enquiries-list');
     container.innerHTML = '<p>Loading...</p>';
@@ -377,45 +470,180 @@ import '../../styles/forms.css';
         return;
       }
 
-      container.innerHTML = '';
-      data.enquiries.forEach(enquiry => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <h3>${enquiry.name || enquiry.email || 'No name'}</h3>
-          <p><strong>Email:</strong> ${enquiry.email || 'N/A'}</p>
-          <p><strong>DOB:</strong> ${enquiry.dob || 'Not provided'}</p>
-          <p><strong>Note:</strong> ${enquiry.note || 'None'}</p>
-          <p><strong>Events:</strong> ${(enquiry.events || []).join(', ') || 'None'}</p>
-          <p><strong>Created:</strong> ${new Date(enquiry.created_at).toLocaleString()}</p>
-          ${renderBookings(enquiry)}
-        `;
-        container.appendChild(card);
-      });
+      enquiriesData = data.enquiries || [];
+      renderEnquiries();
     } catch (err) {
       container.innerHTML = '<p class="status-error">Connection error</p>';
     }
   }
 
-  function renderBookings(enquiry) {
-    if (!enquiry.bookings || enquiry.bookings.length === 0) {
-      return '<p><strong>Bookings:</strong> None</p>';
+  function renderEnquiries() {
+    const container = document.getElementById('enquiries-list');
+    
+    // Filter controls
+    let html = `
+      <div class="card" style="padding:1rem;margin-bottom:1.5rem;border-left:4px solid #003DA5">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem">
+          <div>
+            <h4 style="margin:0 0 0.5rem 0">Filter Enquiries</h4>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+              <button class="btn btn-sm ${currentFilter === 'all' ? 'btn-primary' : 'btn-outline'}" onclick="filterEnquiries('all')">All (${enquiriesData.length})</button>
+              <button class="btn btn-sm ${currentFilter === 'pending' ? 'btn-primary' : 'btn-outline'}" onclick="filterEnquiries('pending')">Pending (${enquiriesData.filter(e => (e.status || 'pending') === 'pending').length})</button>
+              <button class="btn btn-sm ${currentFilter === 'joined' ? 'btn-primary' : 'btn-outline'}" onclick="filterEnquiries('joined')">Joined (${enquiriesData.filter(e => e.status === 'joined').length})</button>
+              <button class="btn btn-sm ${currentFilter === 'not_joined' ? 'btn-primary' : 'btn-outline'}" onclick="filterEnquiries('not_joined')">Not Joined (${enquiriesData.filter(e => e.status === 'not_joined').length})</button>
+            </div>
+          </div>
+          <div style="color:#6b7280;font-size:0.875rem">
+            <strong>${enquiriesData.length}</strong> total enquiries
+          </div>
+        </div>
+      </div>
+    `;
+
+    const filtered = currentFilter === 'all' 
+      ? enquiriesData 
+      : enquiriesData.filter(e => (e.status || 'pending') === currentFilter);
+
+    if (filtered.length === 0) {
+      html += '<p class="status-info">No enquiries match this filter</p>';
+    } else {
+      html += '<div style="display:grid;gap:1.5rem">';
+      filtered.forEach(enquiry => {
+        const statusBadge = getStatusBadge(enquiry.status || 'pending');
+        const age = enquiry.dob ? calculateAge(enquiry.dob) : 'Unknown';
+        html += `
+          <div class="card" style="padding:1.5rem;border-left:4px solid ${getStatusColor(enquiry.status || 'pending')}">
+            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:1rem">
+              <div>
+                <h3 style="margin:0 0 0.25rem 0;font-size:1.25rem">${enquiry.name || 'No name provided'}</h3>
+                <div style="color:#6b7280;font-size:0.875rem">${enquiry.email || 'No email'}</div>
+              </div>
+              ${statusBadge}
+            </div>
+            
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1rem;padding:1rem;background:#f9fafb;border-radius:6px">
+              <div>
+                <div style="font-size:0.75rem;color:#6b7280;text-transform:uppercase;font-weight:600;margin-bottom:0.25rem">Age</div>
+                <div style="font-weight:600">${age} years ${enquiry.dob ? '(DOB: ' + enquiry.dob + ')' : ''}</div>
+              </div>
+              <div>
+                <div style="font-size:0.75rem;color:#6b7280;text-transform:uppercase;font-weight:600;margin-bottom:0.25rem">Events</div>
+                <div style="font-weight:600">${(enquiry.events || []).join(', ') || 'Not specified'}</div>
+              </div>
+              <div>
+                <div style="font-size:0.75rem;color:#6b7280;text-transform:uppercase;font-weight:600;margin-bottom:0.25rem">Submitted</div>
+                <div style="font-weight:600">${new Date(enquiry.created_at).toLocaleDateString()}</div>
+              </div>
+            </div>
+
+            ${enquiry.note ? `<div style="padding:0.75rem;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:4px;margin-bottom:1rem"><strong>Note:</strong> ${enquiry.note}</div>` : ''}
+            
+            ${renderBookings(enquiry)}
+            
+            <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid #e5e7eb;display:flex;gap:0.5rem;flex-wrap:wrap">
+              <button class="btn btn-primary btn-sm" onclick="updateEnquiryStatus('${enquiry.id}', 'joined')">Mark as Joined</button>
+              <button class="btn btn-outline btn-sm" onclick="updateEnquiryStatus('${enquiry.id}', 'not_joined')">Mark as Not Joined</button>
+              <button class="btn btn-outline btn-sm" onclick="updateEnquiryStatus('${enquiry.id}', 'pending')">Reset to Pending</button>
+              <div id="enquiry-status-${enquiry.id}" style="flex:1;text-align:right"></div>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
     }
 
-    let html = '<div style="margin-top: 1.5rem;"><strong>Bookings:</strong></div>';
+    container.innerHTML = html;
+  }
+
+  window.filterEnquiries = function(filter) {
+    currentFilter = filter;
+    renderEnquiries();
+  };
+
+  function getStatusColor(status) {
+    const colors = {
+      'pending': '#f59e0b',
+      'joined': '#10b981',
+      'not_joined': '#ef4444',
+      'contacted': '#3b82f6',
+      'no_response': '#6b7280'
+    };
+    return colors[status] || '#6b7280';
+  }
+
+  function getStatusBadge(status) {
+    const labels = {
+      'pending': 'Pending',
+      'joined': 'Joined',
+      'not_joined': 'Not Joined',
+      'contacted': 'Contacted',
+      'no_response': 'No Response'
+    };
+    const color = getStatusColor(status);
+    return `<span style="padding:0.25rem 0.75rem;background:${color}15;color:${color};border-radius:12px;font-size:0.75rem;font-weight:600;border:1px solid ${color}30">${labels[status] || status}</span>`;
+  }
+
+  window.updateEnquiryStatus = async function(enquiryId, status) {
+    const resultDiv = document.getElementById(`enquiry-status-${enquiryId}`);
+    resultDiv.innerHTML = '<span class="status-info">Updating...</span>';
+
+    try {
+      const res = await fetch('/api/admin/enquiries.json', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': adminToken
+        },
+        body: JSON.stringify({
+          action: 'update_status',
+          enquiry_id: enquiryId,
+          status
+        })
+      });
+
+      const data = await res.json();
+      if (data.ok) {
+        resultDiv.innerHTML = '<span class="status-success">Updated!</span>';
+        // Update local data and re-render
+        const enquiry = enquiriesData.find(e => e.id === enquiryId);
+        if (enquiry) enquiry.status = status;
+        setTimeout(() => renderEnquiries(), 500);
+      } else {
+        resultDiv.innerHTML = `<span class="status-error">${data.error || 'Failed'}</span>`;
+      }
+    } catch (err) {
+      resultDiv.innerHTML = `<span class="status-error">Error: ${err.message}</span>`;
+    }
+  };
+
+  function renderBookings(enquiry) {
+    if (!enquiry.bookings || enquiry.bookings.length === 0) {
+      return '<div style="padding:0.75rem;background:#f3f4f6;border-radius:6px;color:#6b7280;text-align:center;font-size:0.875rem">No bookings yet</div>';
+    }
+
+    let html = '<div style="margin-top:1rem"><h4 style="margin:0 0 0.75rem 0;font-size:0.875rem;color:#374151;text-transform:uppercase;font-weight:700">Taster Session Bookings</h4>';
     enquiry.bookings.forEach(booking => {
+      const statusColor = booking.status === 'attended' ? '#10b981' : booking.status === 'no_show' ? '#ef4444' : '#6b7280';
       html += `
-        <div class="booking-item" data-booking-id="${booking.id}">
-          <div><strong>${booking.session_date}</strong> - ${booking.slot} (${booking.status || 'scheduled'})</div>
-          <div class="booking-actions">
-            <button class="btn btn-success btn-sm" onclick="markAttendance('${booking.id}', 'attended')">Mark Attended</button>
-            <button class="btn btn-danger btn-sm" onclick="markAttendance('${booking.id}', 'no_show')">Mark No-Show</button>
-            <label><input type="checkbox" data-booking="${booking.id}"> Send membership link</label>
+        <div class="card" style="padding:1rem;margin-bottom:0.75rem;border-left:3px solid ${statusColor};background:#fafbfc" data-booking-id="${booking.id}">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+            <div>
+              <div style="font-weight:700;color:#1f2937">${booking.session_date}</div>
+              <div style="font-size:0.875rem;color:#6b7280">${booking.slot} · <span style="color:${statusColor};font-weight:600">${booking.status || 'scheduled'}</span></div>
+            </div>
           </div>
-          <div id="booking-result-${booking.id}"></div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
+            <button class="btn btn-success btn-sm" onclick="markAttendance('${booking.id}', 'attended')">✓ Attended</button>
+            <button class="btn btn-danger btn-sm" onclick="markAttendance('${booking.id}', 'no_show')">✗ No-Show</button>
+            <label style="display:flex;align-items:center;gap:0.375rem;padding:0.375rem 0.75rem;background:white;border-radius:4px;border:1px solid #d1d5db;font-size:0.875rem">
+              <input type="checkbox" data-booking="${booking.id}"> Send membership link
+            </label>
+          </div>
+          <div id="booking-result-${booking.id}" style="margin-top:0.5rem"></div>
         </div>
       `;
     });
+    html += '</div>';
     return html;
   }
 
@@ -450,6 +678,10 @@ import '../../styles/forms.css';
       resultDiv.innerHTML = '<p class="status-error">Connection error</p>';
     }
   };
+
+  // Academy data cache
+  let academyData = [];
+  let academyCurrentFilter = 'all';
 
   // Load Academy invitations
   async function loadAcademy() {
@@ -491,31 +723,171 @@ import '../../styles/forms.css';
       const enquiriesData = await enquiriesRes.json();
 
       if (enquiriesData.ok) {
-        const academyEnquiries = enquiriesData.enquiries.filter(e => 
+        academyData = enquiriesData.enquiries.filter(e => 
           e.dob && calculateAge(e.dob) <= 10
         );
-
-        if (academyEnquiries.length === 0) {
-          listContainer.innerHTML = '<p>No Academy-eligible enquiries (age ≤ 10)</p>';
-        } else {
-          listContainer.innerHTML = '';
-          academyEnquiries.forEach(enquiry => {
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `
-              <h3>${enquiry.name || enquiry.email}</h3>
-              <p><strong>Age:</strong> ${calculateAge(enquiry.dob)} (DOB: ${enquiry.dob})</p>
-              <p><strong>Email:</strong> ${enquiry.email}</p>
-              <p><strong>Status:</strong> ${enquiry.academy_invited ? 'Invited' : 'Not invited'}</p>
-            `;
-            listContainer.appendChild(card);
-          });
-        }
+        renderAcademy();
       }
     } catch (err) {
       statsContainer.innerHTML = '<p class="status-error">Connection error</p>';
     }
   }
+
+  function renderAcademy() {
+    const listContainer = document.getElementById('academy-list');
+    
+    if (academyData.length === 0) {
+      listContainer.innerHTML = '<p>No Academy-eligible enquiries (age ≤ 10)</p>';
+      return;
+    }
+
+    // Filter buttons
+    const allCount = academyData.length;
+    const invitedCount = academyData.filter(e => e.invites && e.invites.length > 0).length;
+    const notInvitedCount = allCount - invitedCount;
+    const joinedCount = academyData.filter(e => e.status === 'joined').length;
+
+    const filtered = filterAcademy(academyData, academyCurrentFilter);
+
+    listContainer.innerHTML = `
+      <div style="margin-bottom:1.5rem;display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-sm ${academyCurrentFilter === 'all' ? 'btn-primary' : 'btn-ghost'}" onclick="filterAcademyByStatus('all')">
+          All (${allCount})
+        </button>
+        <button class="btn btn-sm ${academyCurrentFilter === 'invited' ? 'btn-primary' : 'btn-ghost'}" onclick="filterAcademyByStatus('invited')">
+          Invited (${invitedCount})
+        </button>
+        <button class="btn btn-sm ${academyCurrentFilter === 'not_invited' ? 'btn-primary' : 'btn-ghost'}" onclick="filterAcademyByStatus('not_invited')">
+          Not Invited (${notInvitedCount})
+        </button>
+        <button class="btn btn-sm ${academyCurrentFilter === 'joined' ? 'btn-primary' : 'btn-ghost'}" onclick="filterAcademyByStatus('joined')">
+          Joined (${joinedCount})
+        </button>
+      </div>
+      
+      <div style="display:grid;gap:1rem">
+        ${filtered.map(enquiry => {
+          const age = calculateAge(enquiry.dob);
+          const hasInvite = enquiry.invites && enquiry.invites.length > 0;
+          const status = enquiry.status || 'pending';
+          const borderColor = getStatusColor(status);
+          const statusBadge = getStatusBadge(status);
+          
+          return `
+            <div class="card" style="border-left:4px solid ${borderColor};display:grid;gap:1rem">
+              <div style="display:flex;justify-content:space-between;align-items:start;gap:1rem">
+                <div>
+                  <h3 style="margin:0 0 0.5rem 0;font-size:1.1rem;color:#111827">${enquiry.name || enquiry.email}</h3>
+                  <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.75rem">
+                    ${statusBadge}
+                    ${hasInvite ? '<span style="display:inline-block;padding:0.25rem 0.75rem;background:#10b981;color:white;border-radius:12px;font-size:0.75rem;font-weight:500">Invited</span>' : ''}
+                  </div>
+                </div>
+              </div>
+              
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;padding:1rem;background:#f9fafb;border-radius:6px">
+                <div>
+                  <div style="font-size:0.75rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem">Age</div>
+                  <div style="font-weight:600;color:#111827">${age} years old</div>
+                  <div style="font-size:0.85rem;color:#6b7280;margin-top:0.25rem">DOB: ${enquiry.dob}</div>
+                </div>
+                <div>
+                  <div style="font-size:0.75rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem">Contact</div>
+                  <div style="font-weight:500;color:#111827;font-size:0.9rem">${enquiry.email}</div>
+                </div>
+                <div>
+                  <div style="font-size:0.75rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem">Enquiry Date</div>
+                  <div style="font-weight:500;color:#111827">${new Date(enquiry.created_at).toLocaleDateString()}</div>
+                </div>
+              </div>
+
+              ${enquiry.note ? `
+                <div style="padding:0.75rem;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:4px">
+                  <div style="font-size:0.75rem;color:#92400e;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem">Note</div>
+                  <div style="color:#78350f;font-size:0.9rem">${enquiry.note}</div>
+                </div>
+              ` : ''}
+
+              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;padding-top:0.5rem;border-top:1px solid #e5e7eb">
+                ${status !== 'joined' ? `<button class="btn btn-sm" style="background:#10b981;color:white;border:none" onclick="updateAcademyStatus(${enquiry.id}, 'joined')">✓ Mark as Joined</button>` : ''}
+                ${status !== 'not_joined' ? `<button class="btn btn-sm" style="background:#ef4444;color:white;border:none" onclick="updateAcademyStatus(${enquiry.id}, 'not_joined')">✗ Mark as Not Joined</button>` : ''}
+                ${status !== 'pending' ? `<button class="btn btn-sm btn-outline" onclick="updateAcademyStatus(${enquiry.id}, 'pending')">Reset to Pending</button>` : ''}
+                ${!hasInvite ? `<button class="btn btn-sm btn-ghost" onclick="sendAcademyInvite(${enquiry.id})">📧 Send Invitation</button>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  function filterAcademy(data, filter) {
+    if (filter === 'all') return data;
+    if (filter === 'invited') return data.filter(e => e.invites && e.invites.length > 0);
+    if (filter === 'not_invited') return data.filter(e => !e.invites || e.invites.length === 0);
+    if (filter === 'joined') return data.filter(e => e.status === 'joined');
+    return data;
+  }
+
+  window.filterAcademyByStatus = function(filter) {
+    academyCurrentFilter = filter;
+    renderAcademy();
+  };
+
+  window.updateAcademyStatus = async function(enquiryId, status) {
+    try {
+      const res = await fetch('/api/admin/enquiries.json', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': adminToken
+        },
+        body: JSON.stringify({ action: 'update_status', enquiry_id: enquiryId, status })
+      });
+
+      const data = await res.json();
+      if (data.ok) {
+        // Update local data
+        const idx = academyData.findIndex(e => e.id === enquiryId);
+        if (idx !== -1) {
+          academyData[idx].status = status;
+          renderAcademy();
+        }
+        showStatus('academy-stats', `Status updated to "${status}"`, 'success');
+      } else {
+        showStatus('academy-stats', 'Failed to update status', 'error');
+      }
+    } catch (err) {
+      console.error('Update academy status error:', err);
+      showStatus('academy-stats', 'Connection error', 'error');
+    }
+  };
+
+  window.sendAcademyInvite = async function(enquiryId) {
+    if (!confirm('Send academy invitation email to this enquiry?')) return;
+    
+    try {
+      const res = await fetch('/api/admin/send-invite.json', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': adminToken
+        },
+        body: JSON.stringify({ enquiry_id: enquiryId })
+      });
+
+      const data = await res.json();
+      if (data.ok) {
+        showStatus('academy-stats', 'Invitation sent successfully', 'success');
+        loadAcademy(); // Reload to show updated invite status
+      } else {
+        showStatus('academy-stats', data.error || 'Failed to send invitation', 'error');
+      }
+    } catch (err) {
+      console.error('Send academy invite error:', err);
+      showStatus('academy-stats', 'Connection error', 'error');
+    }
+  };
 
   function calculateAge(dob) {
     const birthDate = new Date(dob);
@@ -559,30 +931,108 @@ import '../../styles/forms.css';
       );
 
       container.innerHTML = `
-        <div class="stats-grid">
-          <div class="stat-card">
+        <div class="hero-section" style="background:linear-gradient(135deg,#003DA5,#0052CC);color:white;padding:2rem;border-radius:8px;margin-bottom:2rem">
+          <h2 style="margin:0 0 0.5rem 0;font-size:1.75rem">Summary Dashboard</h2>
+          <p style="margin:0;opacity:0.9">Overview of enquiries, bookings, attendance, and academy invitations</p>
+        </div>
+        
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-bottom:2rem">
+          <div class="stat-card" style="padding:1.5rem">
             <div class="value">${totalEnquiries}</div>
             <div class="label">Total Enquiries</div>
+            <div style="font-size:0.75rem;color:#6b7280;margin-top:0.5rem">All contact form submissions</div>
+            <div style="margin-top:1rem;background:#f3f4f6;border-radius:4px;height:8px;overflow:hidden">
+              <div style="background:#003DA5;height:100%;width:100%"></div>
+            </div>
           </div>
-          <div class="stat-card">
+          
+          <div class="stat-card" style="padding:1.5rem">
             <div class="value">${totalBookings}</div>
             <div class="label">Total Bookings</div>
+            <div style="font-size:0.75rem;color:#6b7280;margin-top:0.5rem">Taster session reservations</div>
+            <div style="margin-top:1rem;background:#f3f4f6;border-radius:4px;height:8px;overflow:hidden">
+              <div style="background:#0052CC;height:100%;width:${totalBookings > 0 ? Math.min(100, (totalBookings / totalEnquiries) * 100) : 0}%"></div>
+            </div>
           </div>
-          <div class="stat-card">
-            <div class="value">${attendedBookings}</div>
+          
+          <div class="stat-card" style="padding:1.5rem;border-left-color:#10b981">
+            <div class="value" style="color:#10b981">${attendedBookings}</div>
             <div class="label">Attended Sessions</div>
+            <div style="font-size:0.75rem;color:#6b7280;margin-top:0.5rem">Completed taster sessions</div>
+            <div style="margin-top:1rem;background:#f3f4f6;border-radius:4px;height:8px;overflow:hidden">
+              <div style="background:#10b981;height:100%;width:${totalBookings > 0 ? (attendedBookings / totalBookings) * 100 : 0}%"></div>
+            </div>
           </div>
-          <div class="stat-card">
-            <div class="value">${noShows}</div>
+          
+          <div class="stat-card" style="padding:1.5rem;border-left-color:#ef4444">
+            <div class="value" style="color:#ef4444">${noShows}</div>
             <div class="label">No-Shows</div>
+            <div style="font-size:0.75rem;color:#6b7280;margin-top:0.5rem">Missed appointments</div>
+            <div style="margin-top:1rem;background:#f3f4f6;border-radius:4px;height:8px;overflow:hidden">
+              <div style="background:#ef4444;height:100%;width:${totalBookings > 0 ? (noShows / totalBookings) * 100 : 0}%"></div>
+            </div>
           </div>
-          <div class="stat-card">
-            <div class="value">${statsData.sent || 0}</div>
+          
+          <div class="stat-card" style="padding:1.5rem;border-left-color:#8b5cf6">
+            <div class="value" style="color:#8b5cf6">${statsData.sent || 0}</div>
             <div class="label">Academy Invites Sent</div>
+            <div style="font-size:0.75rem;color:#6b7280;margin-top:0.5rem">U11 invitation emails</div>
+            <div style="margin-top:1rem;background:#f3f4f6;border-radius:4px;height:8px;overflow:hidden">
+              <div style="background:#8b5cf6;height:100%;width:${(statsData.sent || 0) > 0 ? 100 : 0}%"></div>
+            </div>
           </div>
-          <div class="stat-card">
-            <div class="value">${Math.round((attendedBookings / totalBookings) * 100) || 0}%</div>
+          
+          <div class="stat-card" style="padding:1.5rem;border-left-color:#f59e0b">
+            <div class="value" style="color:#f59e0b">${Math.round((attendedBookings / totalBookings) * 100) || 0}%</div>
             <div class="label">Attendance Rate</div>
+            <div style="font-size:0.75rem;color:#6b7280;margin-top:0.5rem">Attended / Total bookings</div>
+            <div style="margin-top:1rem;background:#f3f4f6;border-radius:4px;height:8px;overflow:hidden">
+              <div style="background:#f59e0b;height:100%;width:${Math.round((attendedBookings / totalBookings) * 100) || 0}%"></div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:2rem">
+          <div class="card" style="padding:1.5rem;border-left:4px solid #003DA5">
+            <h4 style="margin:0 0 1rem 0;color:#003DA5">Conversion Funnel</h4>
+            <div style="display:flex;flex-direction:column;gap:0.75rem">
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:0.25rem">
+                  <span style="font-size:0.875rem;color:#374151">Enquiries</span>
+                  <span style="font-size:0.875rem;font-weight:600">${totalEnquiries}</span>
+                </div>
+                <div style="background:#e5e7eb;border-radius:4px;height:6px;overflow:hidden">
+                  <div style="background:#003DA5;height:100%;width:100%"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:0.25rem">
+                  <span style="font-size:0.875rem;color:#374151">Bookings Made</span>
+                  <span style="font-size:0.875rem;font-weight:600">${totalBookings} (${totalEnquiries > 0 ? Math.round((totalBookings/totalEnquiries)*100) : 0}%)</span>
+                </div>
+                <div style="background:#e5e7eb;border-radius:4px;height:6px;overflow:hidden">
+                  <div style="background:#0052CC;height:100%;width:${totalEnquiries > 0 ? (totalBookings/totalEnquiries)*100 : 0}%"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:0.25rem">
+                  <span style="font-size:0.875rem;color:#374151">Attended</span>
+                  <span style="font-size:0.875rem;font-weight:600">${attendedBookings} (${totalBookings > 0 ? Math.round((attendedBookings/totalBookings)*100) : 0}%)</span>
+                </div>
+                <div style="background:#e5e7eb;border-radius:4px;height:6px;overflow:hidden">
+                  <div style="background:#10b981;height:100%;width:${totalBookings > 0 ? (attendedBookings/totalBookings)*100 : 0}%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card" style="padding:1.5rem;border-left:4px solid #8b5cf6">
+            <h4 style="margin:0 0 1rem 0;color:#8b5cf6">Recent Activity</h4>
+            <div style="font-size:0.875rem;color:#6b7280">
+              <p style="margin:0 0 0.5rem 0">📊 This dashboard updates in real-time</p>
+              <p style="margin:0 0 0.5rem 0">🎯 Track conversion from enquiry to attendance</p>
+              <p style="margin:0">✨ Filter and manage enquiries in the Enquiries tab</p>
+            </div>
           </div>
         </div>
       `;
@@ -593,49 +1043,24 @@ import '../../styles/forms.css';
 
   // Load configuration
   async function loadConfiguration() {
-    loadSystemConfig();
     loadAgeGroups();
     loadTemplates();
   }
 
-  async function loadSystemConfig() {
-    const container = document.getElementById('system-config');
-    container.innerHTML = '<p>Loading...</p>';
-
-    try {
-      const res = await fetch('/api/admin/config.json', {
-        headers: { 'x-admin-token': adminToken }
-      });
-      const data = await res.json();
-
-      if (!data.ok) {
-        container.innerHTML = '<p class="status-error">Failed to load config</p>';
-        return;
-      }
-
-      const config = data.config || {};
-      container.innerHTML = `
-        <div class="age-group-form">
-          <div>
-            <label>Academy Max Age</label>
-            <input type="number" id="academy_max_age" value="${config.academy_max_age || 10}" />
-          </div>
-          <div>
-            <label>Weeks Ahead Booking</label>
-            <input type="number" id="weeks_ahead_booking" value="${config.weeks_ahead_booking || 6}" />
-          </div>
-        </div>
-        <button class="btn btn-primary" onclick="saveSystemConfig()">Save System Settings</button>
-        <div id="system-config-result"></div>
-      `;
-    } catch (err) {
-      container.innerHTML = '<p class="status-error">Connection error</p>';
-    }
-  }
-
-  window.saveSystemConfig = async function() {
-    const resultDiv = document.getElementById('system-config-result');
+  window.saveBookingSettings = async function() {
+    const resultDiv = document.getElementById('booking-settings-result');
     resultDiv.innerHTML = '<p class="status-info">Saving...</p>';
+
+    const academyMax = parseInt(document.getElementById('academy_max_age').value, 10);
+    const weeksAhead = parseInt(document.getElementById('weeks_ahead_booking').value, 10);
+    if (Number.isNaN(academyMax) || academyMax < 0) {
+      resultDiv.innerHTML = '<p class="status-error">Academy Max Age must be a non-negative number</p>';
+      return;
+    }
+    if (Number.isNaN(weeksAhead) || weeksAhead <= 0) {
+      resultDiv.innerHTML = '<p class="status-error">Weeks Ahead Booking must be a positive number</p>';
+      return;
+    }
 
     try {
       const res = await fetch('/api/admin/config.json', {
@@ -646,8 +1071,8 @@ import '../../styles/forms.css';
         },
         body: JSON.stringify({
           action: 'update_system',
-          academy_max_age: parseInt(document.getElementById('academy_max_age').value),
-          weeks_ahead_booking: parseInt(document.getElementById('weeks_ahead_booking').value)
+          academy_max_age: academyMax,
+          weeks_ahead_booking: weeksAhead
         })
       });
 
@@ -677,25 +1102,237 @@ import '../../styles/forms.css';
         return;
       }
 
-      let html = '<table style="width:100%; border-collapse: collapse;"><thead><tr><th>Name</th><th>Min Age</th><th>Max Age</th><th>Slot Code</th></tr></thead><tbody>';
-      (data.age_groups || []).forEach(group => {
+      const weeksAhead = data.systemConfig?.weeks_ahead_booking || 8;
+      const academyMax = data.systemConfig?.academy_max_age || 10;
+
+      let html = `
+        <div class="card" style="margin-bottom:1.5rem;padding:1.25rem;border-left:4px solid #059669">
+          <h4 style="margin:0 0 1rem 0;color:#059669">Booking Settings</h4>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem">
+            <div>
+              <label style="font-weight:600;display:block;margin-bottom:0.25rem">Weeks Ahead Booking</label>
+              <input type="number" id="weeks_ahead_booking" value="${weeksAhead}" style="width:100%;padding:0.5rem;border:1px solid #d1d5db;border-radius:4px" />
+              <small style="color:#6b7280;font-size:0.75rem;display:block;margin-top:0.25rem">How many weeks ahead can users book taster sessions</small>
+            </div>
+            <div>
+              <label style="font-weight:600;display:block;margin-bottom:0.25rem">Academy Max Age (U11)</label>
+              <input type="number" id="academy_max_age" value="${academyMax}" style="width:100%;padding:0.5rem;border:1px solid #d1d5db;border-radius:4px" />
+              <small style="color:#6b7280;font-size:0.75rem;display:block;margin-top:0.25rem">Athletes this age or younger are invited to Academy</small>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="saveBookingSettings()" style="margin-top:1rem">Save Booking Settings</button>
+          <div id="booking-settings-result" style="margin-top:0.5rem"></div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+          <h4 style="margin:0">Training Groups</h4>
+          <button class="btn btn-sm btn-primary" onclick="showAddAgeGroupForm()">Add Age Group</button>
+        </div>
+      `;
+
+      html += '<table class="age-groups-table"><thead><tr><th>Name</th><th>Min Age</th><th>Max Age</th><th>Slot Code</th><th>Actions</th></tr></thead><tbody>';
+      (data.age_groups || data.ageGroups || []).forEach(group => {
         html += `
-          <tr>
+          <tr id="group-row-${group.id}">
             <td>${group.name}</td>
             <td>${group.min_age}</td>
-            <td>${group.max_age}</td>
-            <td>${group.slot_code}</td>
+            <td>${group.max_age || ''}</td>
+            <td>${group.code || group.slot_code || ''}</td>
+            <td><button class="btn btn-sm" onclick="showEditAgeGroupForm('${group.id}')">Edit</button></td>
           </tr>
         `;
       });
       html += '</tbody></table>';
-      html += '<p style="margin-top:1rem"><em>Age groups configuration available via API. UI for editing coming soon.</em></p>';
+      html += '<div id="age-group-form-placeholder" style="margin-top:1rem"></div>';
       
       container.innerHTML = html;
     } catch (err) {
       container.innerHTML = '<p class="status-error">Connection error</p>';
     }
   }
+
+  // Age group create/edit helpers
+  window.showAddAgeGroupForm = function() {
+    const placeholder = document.getElementById('age-group-form-placeholder');
+    placeholder.innerHTML = `
+      <div class="card">
+        <h4 style="margin-top:0">Add Age Group</h4>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.5rem;">
+          <div>
+            <label>Code</label>
+            <input id="create-code" />
+          </div>
+          <div>
+            <label>Label</label>
+            <input id="create-label" />
+          </div>
+          <div>
+            <label>Min Age</label>
+            <input id="create-min_age" type="number" />
+          </div>
+          <div>
+            <label>Max Age</label>
+            <input id="create-max_age" type="number" />
+          </div>
+          <div>
+            <label>Session Day</label>
+            <input id="create-session_day" placeholder="Tuesday" />
+            <small style="color:#6b7280;font-size:0.75rem">Day of the week this group trains</small>
+          </div>
+          <div>
+            <label>Session Time</label>
+            <input id="create-session_time" placeholder="18:30" />
+            <small style="color:#6b7280;font-size:0.75rem">Start time (e.g., 18:30)</small>
+          </div>
+          <div>
+            <label>Capacity</label>
+            <input id="create-capacity" type="number" value="8" />
+          </div>
+        </div>
+        <div style="margin-top:0.75rem;display:flex;gap:0.5rem">
+          <button class="btn btn-primary" onclick="createAgeGroup()">Create</button>
+          <button class="btn btn-secondary" onclick="document.getElementById('age-group-form-placeholder').innerHTML=''">Cancel</button>
+          <div id="age-group-create-result" style="margin-left:0.5rem"></div>
+        </div>
+      </div>
+    `;
+  };
+
+  window.createAgeGroup = async function() {
+    const resultDiv = document.getElementById('age-group-create-result');
+    resultDiv.innerHTML = '<span class="status-info">Creating...</span>';
+    const code = (document.getElementById('create-code').value || '').trim();
+    const label = (document.getElementById('create-label').value || '').trim();
+    const min_age = parseInt(document.getElementById('create-min_age').value || '', 10);
+    const max_age_raw = document.getElementById('create-max_age').value;
+    const max_age = max_age_raw === '' ? null : parseInt(max_age_raw, 10);
+    const session_day = (document.getElementById('create-session_day').value || '').trim();
+    const session_time = (document.getElementById('create-session_time').value || '').trim();
+    const capacity = parseInt(document.getElementById('create-capacity').value || '8', 10);
+
+    if (!code || !label || Number.isNaN(min_age) || !session_day || !session_time) {
+      resultDiv.innerHTML = '<span class="status-error">Missing required fields</span>';
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/admin/config.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+        body: JSON.stringify({ action: 'create_age_group', code, label, min_age, max_age, session_day, session_time, capacity })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        resultDiv.innerHTML = '<span class="status-success">Created</span>';
+        document.getElementById('age-group-form-placeholder').innerHTML = '';
+        loadAgeGroups();
+      } else {
+        resultDiv.innerHTML = `<span class="status-error">${data.error || 'Failed'}</span>`;
+      }
+    } catch (err) {
+      resultDiv.innerHTML = `<span class="status-error">${err.message}</span>`;
+    }
+  };
+
+  window.showEditAgeGroupForm = async function(id) {
+    const placeholder = document.getElementById('age-group-form-placeholder');
+    placeholder.innerHTML = '<p>Loading...</p>';
+    try {
+      const res = await fetch('/api/admin/config.json', { headers: { 'x-admin-token': adminToken } });
+      const data = await res.json();
+      const group = (data.ageGroups || []).find(g => String(g.id) === String(id));
+      if (!group) {
+        placeholder.innerHTML = '<p class="status-error">Age group not found</p>';
+        return;
+      }
+
+      placeholder.innerHTML = `
+        <div class="card">
+          <h4 style="margin-top:0">Edit Age Group</h4>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.5rem;">
+            <div>
+              <label>Code</label>
+              <input id="edit-code" value="${group.code || group.slot_code || ''}" />
+            </div>
+            <div>
+              <label>Label</label>
+              <input id="edit-label" value="${group.name || ''}" />
+            </div>
+            <div>
+              <label>Min Age</label>
+              <input id="edit-min_age" type="number" value="${group.min_age || ''}" />
+            </div>
+            <div>
+              <label>Max Age</label>
+              <input id="edit-max_age" type="number" value="${group.max_age || ''}" />
+            </div>
+            <div>
+              <label>Session Day</label>
+              <input id="edit-session_day" value="${group.session_day || ''}" />
+              <small style="color:#6b7280;font-size:0.75rem">Day of the week</small>
+            </div>
+            <div>
+              <label>Session Time</label>
+              <input id="edit-session_time" value="${group.session_time || ''}" />
+              <small style="color:#6b7280;font-size:0.75rem">Start time (e.g., 18:30)</small>
+            </div>
+            <div>
+              <label>Capacity</label>
+              <input id="edit-capacity" type="number" value="${group.capacity || 8}" />
+            </div>
+            <div>
+              <label>Active</label>
+              <input id="edit-active" type="checkbox" ${group.active ? 'checked' : ''} />
+            </div>
+          </div>
+          <div style="margin-top:0.75rem;display:flex;gap:0.5rem">
+            <button class="btn btn-primary" onclick="saveAgeGroup('${group.id}')">Save</button>
+            <button class="btn btn-secondary" onclick="document.getElementById('age-group-form-placeholder').innerHTML=''">Cancel</button>
+            <div id="age-group-edit-result" style="margin-left:0.5rem"></div>
+          </div>
+        </div>
+      `;
+    } catch (err) {
+      placeholder.innerHTML = `<p class="status-error">${err && err.message}</p>`;
+    }
+  };
+
+  window.saveAgeGroup = async function(id) {
+    const resultDiv = document.getElementById('age-group-edit-result');
+    resultDiv.innerHTML = '<span class="status-info">Saving...</span>';
+    const code = (document.getElementById('edit-code').value || '').trim();
+    const label = (document.getElementById('edit-label').value || '').trim();
+    const min_age = parseInt(document.getElementById('edit-min_age').value || '', 10);
+    const max_age_raw = document.getElementById('edit-max_age').value;
+    const max_age = max_age_raw === '' ? null : parseInt(max_age_raw, 10);
+    const session_day = (document.getElementById('edit-session_day').value || '').trim();
+    const session_time = (document.getElementById('edit-session_time').value || '').trim();
+    const capacity = parseInt(document.getElementById('edit-capacity').value || '8', 10);
+    const active = !!document.getElementById('edit-active').checked;
+
+    if (!code || !label || Number.isNaN(min_age) || !session_day || !session_time) {
+      resultDiv.innerHTML = '<span class="status-error">Missing required fields</span>';
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/admin/config.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+        body: JSON.stringify({ action: 'update_age_group', id, code, label, min_age, max_age, session_day, session_time, capacity, active })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        resultDiv.innerHTML = '<span class="status-success">Saved</span>';
+        document.getElementById('age-group-form-placeholder').innerHTML = '';
+        loadAgeGroups();
+      } else {
+        resultDiv.innerHTML = `<span class="status-error">${data.error || 'Failed'}</span>`;
+      }
+    } catch (err) {
+      resultDiv.innerHTML = `<span class="status-error">${err.message}</span>`;
+    }
+  };
 
   async function loadTemplates() {
     const container = document.getElementById('templates-config');
@@ -716,35 +1353,398 @@ import '../../styles/forms.css';
       (data.templates || []).forEach(template => {
         const card = document.createElement('div');
         card.className = 'card';
+        card.style.borderLeft = '4px solid #003DA5';
+        card.style.background = 'linear-gradient(180deg, #ffffff, #f9fafb)';
+        card.style.marginBottom = '1.5rem';
         card.innerHTML = `
-          <h3>${template.name}</h3>
-          <div class="template-editor">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <h3 style="margin:0">${template.key} <small style="color:#6b7280;font-weight:600">(${template.language || 'en'})</small></h3>
+              <div style="color:#374151;margin-top:6px">${template.subject || ''}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.5rem">
+              <label style="display:flex;align-items:center;gap:0.375rem"><input type="checkbox" id="active-${template.id}" ${template.active ? 'checked' : ''}/> Active</label>
+            </div>
+          </div>
+          <div class="template-editor" style="margin-top:1rem">
             <label>Subject:</label>
-            <input type="text" value="${template.subject}" id="subject-${template.id}" />
+            <input type="text" value="${template.subject || ''}" id="subject-${template.id}" style="width:100%" />
             
-            <label style="margin-top:1rem">Body:</label>
-            <textarea id="body-${template.id}">${template.body}</textarea>
-            
-            <button class="btn btn-primary btn-sm" style="margin-top:0.5rem" onclick="saveTemplate('${template.id}')">Save</button>
-            <button class="btn btn-secondary btn-sm" style="margin-top:0.5rem" onclick="previewTemplate('${template.id}')">Preview</button>
-            <div id="template-result-${template.id}"></div>
+            <div style="margin-top:1rem; display:flex; justify-content:space-between; align-items:center; gap:0.5rem">
+              <label style="font-weight:600">Email Body</label>
+              <div style="display:flex;gap:0.75rem;align-items:center">
+                <label style="font-size:0.9rem;color:#6b7280;cursor:pointer;display:flex;align-items:center;gap:0.25rem">
+                  <input type="radio" name="mode-${template.id}" value="simple" checked /> Simple Editor
+                </label>
+                <label style="font-size:0.9rem;color:#6b7280;cursor:pointer;display:flex;align-items:center;gap:0.25rem">
+                  <input type="radio" name="mode-${template.id}" value="advanced" /> HTML Code
+                </label>
+              </div>
+            </div>
+
+            <!-- Simple HTML-enabled editor (contenteditable) -->
+            <div id="simple-editor-${template.id}" class="simple-editor" contenteditable="true" style="
+              width:100%;
+              min-height:200px;
+              border:1px solid #d1d5db;
+              border-radius:6px;
+              padding:0.75rem;
+              font-size:0.95rem;
+              line-height:1.6;
+              background:white;
+              overflow:auto;
+              max-height:400px;
+            "></div>
+
+            <!-- Formatting toolbar for simple editor -->
+            <div id="toolbar-${template.id}" style="display:flex;gap:0.5rem;margin-top:0.5rem;flex-wrap:wrap">
+              <button type="button" class="btn btn-sm btn-ghost" onclick="formatText('${template.id}', 'bold')" title="Bold"><strong>B</strong></button>
+              <button type="button" class="btn btn-sm btn-ghost" onclick="formatText('${template.id}', 'italic')" title="Italic"><em>I</em></button>
+              <button type="button" class="btn btn-sm btn-ghost" onclick="formatText('${template.id}', 'underline')" title="Underline"><u>U</u></button>
+              <span style="border-left:1px solid #e5e7eb;margin:0 0.25rem"></span>
+              <button type="button" class="btn btn-sm btn-ghost" onclick="formatText('${template.id}', 'insertUnorderedList')" title="Bullet List">• List</button>
+              <button type="button" class="btn btn-sm btn-ghost" onclick="formatText('${template.id}', 'insertOrderedList')" title="Numbered List">1. List</button>
+              <span style="border-left:1px solid #e5e7eb;margin:0 0.25rem"></span>
+              <button type="button" class="btn btn-sm btn-ghost" onclick="insertLink('${template.id}')" title="Insert Link">🔗 Link</button>
+              <button type="button" class="btn btn-sm btn-ghost" onclick="insertVariable('${template.id}')" title="Insert Variable">{{ Var }}</button>
+            </div>
+
+            <!-- Advanced HTML editor (hidden by default) -->
+            <textarea id="html-editor-${template.id}" style="
+              width:100%;
+              min-height:200px;
+              display:none;
+              font-family:monospace;
+              border:1px solid #d1d5db;
+              border-radius:6px;
+              padding:0.75rem;
+              font-size:0.9rem;
+              line-height:1.4;
+              background:#f8fafc;
+            ">${template.html || ''}</textarea>
+
+            <div style="display:flex;gap:0.5rem;margin-top:0.5rem;align-items:flex-start">
+              <div style="flex:1">
+                <label style="font-weight:600; color:#374151">Preview variables (JSON):</label>
+                <textarea id="vars-${template.id}" style="width:100%;min-height:100px; font-family:monospace; background:#f8fafc; border:1px solid #e5e7eb; border-radius:6px; padding:0.5rem; font-size:0.875rem; color:#1f2937">{
+  "siteName": "East Grinstead AC",
+  "childName": "Junior",
+  "responseYesUrl": "https://example.com/yes",
+  "responseNoUrl": "https://example.com/no",
+  "inviteUrl": "https://example.com/invite/abc123",
+  "date": "2026-03-15"
+}</textarea>
+                <div style="margin-top:0.5rem;display:flex;gap:0.5rem;align-items:center">
+                  <button class="btn btn-sm btn-secondary" onclick="document.getElementById('vars-${template.id}').value = '{\\n  \"siteName\": \"East Grinstead AC\",\\n  \"childName\": \"Junior\",\\n  \"responseYesUrl\": \"https://example.com/yes\",\\n  \"responseNoUrl\": \"https://example.com/no\"\\n}';">Load sample</button>
+                  <button class="btn btn-sm" onclick="copySampleVars('${template.id}')">Copy sample</button>
+                  <label style="margin-left:0.5rem;display:flex;align-items:center;gap:0.375rem"><input id="live-${template.id}" type="checkbox" /> Live preview</label>
+                </div>
+                <div id="vars-error-${template.id}" style="margin-top:0.5rem;color:#ef4444;display:none"></div>
+              </div>
+
+              <div style="width:360px;flex-shrink:0;">
+                <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem">
+                  <button class="btn btn-primary btn-sm" onclick="saveTemplate('${template.id}')">Save</button>
+                  <button class="btn btn-secondary btn-sm" onclick="previewTemplate('${template.id}')">Preview</button>
+                  <button class="btn btn-secondary btn-sm" onclick="sendTestEmail('${template.id}')">Send test</button>
+                </div>
+                <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem">
+                  <button class="btn btn-ghost btn-sm" onclick="revertTemplate('${template.id}')">Revert</button>
+                </div>
+                <div id="template-result-${template.id}"></div>
+                <div id="template-preview-html-${template.id}" style="margin-top:0.5rem; border:1px solid #e5e7eb; padding:8px; background:#fff; min-height:120px; overflow:auto"></div>
+              </div>
+            </div>
           </div>
         `;
         container.appendChild(card);
+
+        // Insert a React mount point and dynamically mount the TemplateEditor component (client-only)
+        try {
+          const reactRoot = document.createElement('div');
+          reactRoot.id = `template-react-root-${template.id}`;
+          // insert after the template editor block
+          card.appendChild(reactRoot);
+          (async function mountEditor() {
+            try {
+              const [{ default: TemplateEditor }, ReactDOM, React] = await Promise.all([
+                import('/src/components/TemplateEditor.jsx'),
+                import('react-dom/client'),
+                import('react')
+              ]);
+              const rootEl = document.getElementById(`template-react-root-${template.id}`);
+              if (!rootEl) return;
+              const root = ReactDOM.createRoot(rootEl);
+              root.render(
+                React.createElement(TemplateEditor, {
+                  initialHtml: template.html || template.text || '',
+                  initialSubject: template.subject || '',
+                  initialVars: {},
+                  onSave: async ({ subject, html, text, vars }) => {
+                    const res = await fetch('/api/admin/templates.json', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+                      body: JSON.stringify({ action: 'update_template', id: template.id, subject, html, text, active: !!document.getElementById(`active-${template.id}`)?.checked })
+                    });
+                    const data = await res.json();
+                    if (!data.ok) alert('Save failed: ' + (data.error || 'Unknown'));
+                  },
+                  onPreview: async ({ html, vars }) => {
+                    const res = await fetch('/api/admin/templates/preview.json', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+                      body: JSON.stringify({ html, vars, subject: document.getElementById(`subject-${template.id}`)?.value || template.subject })
+                    });
+                    const data = await res.json();
+                    if (!data.ok) alert('Preview failed: ' + (data.error || 'Unknown'));
+                  },
+                  onSendTest: async ({ to, html, subject, vars }) => {
+                    const res = await fetch('/api/admin/templates/send.json', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+                      body: JSON.stringify({ id: template.id, to, vars })
+                    });
+                    const data = await res.json();
+                    if (!data.ok) alert('Send failed: ' + (data.error || 'Unknown'));
+                    else alert('Test sent');
+                  }
+                })
+              );
+            } catch (err) {
+              console.warn('Failed to mount TemplateEditor', err && err.message);
+            }
+          })();
+        } catch (err) { console.warn('React mount insertion failed', err); }
+
+        // Set up editor content and mode switching
+        try {
+          const simpleEditor = document.getElementById(`simple-editor-${template.id}`);
+          const htmlEditor = document.getElementById(`html-editor-${template.id}`);
+          const toolbar = document.getElementById(`toolbar-${template.id}`);
+          const modeRadios = document.querySelectorAll(`input[name="mode-${template.id}"]`);
+
+          // Initialize simple editor with HTML content
+          if (simpleEditor) {
+            simpleEditor.innerHTML = template.html || template.text || '';
+            // Live preview on edit
+            simpleEditor.addEventListener('input', () => livePreviewDebounce(template.id));
+          }
+
+          // Vars live preview
+          const varsArea = document.getElementById(`vars-${template.id}`);
+          if (varsArea) {
+            varsArea.addEventListener('input', () => livePreviewDebounce(template.id));
+          }
+
+          // HTML editor live preview
+          if (htmlEditor) {
+            htmlEditor.addEventListener('input', () => livePreviewDebounce(template.id));
+          }
+
+          // Mode switching
+          modeRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+              if (radio.value === 'simple') {
+                // Switch to simple editor
+                if (htmlEditor.value.trim()) {
+                  simpleEditor.innerHTML = htmlEditor.value;
+                }
+                simpleEditor.style.display = 'block';
+                toolbar.style.display = 'flex';
+                htmlEditor.style.display = 'none';
+              } else {
+                // Switch to HTML editor
+                htmlEditor.value = simpleEditor.innerHTML;
+                simpleEditor.style.display = 'none';
+                toolbar.style.display = 'none';
+                htmlEditor.style.display = 'block';
+              }
+              // Update preview when switching mode
+              livePreviewDebounce(template.id);
+            });
+          });
+
+          // Live preview toggle
+          const liveCheckbox = document.getElementById(`live-${template.id}`);
+          if (liveCheckbox) {
+            liveCheckbox.addEventListener('change', () => {
+              if (liveCheckbox.checked) updatePreviewLocal(template.id); else document.getElementById(`template-preview-html-${template.id}`).innerHTML = '';
+            });
+          }
+
+          // Initialize preview to current content
+          updatePreviewLocal(template.id);
+        } catch (e) {
+          console.warn('Template UI wiring failed for', template.id, e && e.message);
+        }
       });
     } catch (err) {
       container.innerHTML = '<p class="status-error">Connection error</p>';
     }
   }
 
+  // Formatting functions for simple editor
+  window.formatText = function(templateId, command) {
+    const editor = document.getElementById(`simple-editor-${templateId}`);
+    editor.focus();
+    document.execCommand(command, false, null);
+  };
+
+  window.insertLink = function(templateId) {
+    const url = prompt('Enter URL:');
+    if (url) {
+      const editor = document.getElementById(`simple-editor-${templateId}`);
+      editor.focus();
+      document.execCommand('createLink', false, url);
+    }
+  };
+
+  window.insertVariable = function(templateId) {
+    const varName = prompt('Enter variable name (e.g., childName, siteName):');
+    if (varName) {
+      const editor = document.getElementById(`simple-editor-${templateId}`);
+      editor.focus();
+      const varText = `{{${varName}}}`;
+      document.execCommand('insertHTML', false, varText);
+    }
+  };
+
+  import { stripHtmlToText, parsePreviewVars } from '../../lib/admin-ui.js';
+
+  // Convert plain text into simple HTML paragraphs
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+  function textToHtml(str) {
+    const escaped = escapeHtml(str || '');
+    return escaped
+      .split(/\n{2,}/)
+      .map(p => '<p>' + p.replace(/\n/g, '<br/>') + '</p>')
+      .join('\n');
+  }
+
+  // Templates editor helpers
+  const templatesCache = {};
+  function debounce(fn, wait = 300) {
+    let t = null;
+    return (...args) => {
+      clearTimeout(t);
+      t = setTimeout(() => fn(...args), wait);
+    };
+  }
+
+  function renderTemplateClient(str, vars = {}) {
+    if (!str) return '';
+    let s = String(str);
+    // handle simple {{#if logoUrl}} blocks
+    if (!vars.logoUrl) {
+      s = s.replace(/\{\{#if logoUrl\}\}[\s\S]*?\{\{\/if\}\}/g, '');
+    } else {
+      s = s.replace(/\{\{#if logoUrl\}\}/g, '');
+      s = s.replace(/\{\{\/if\}\}/g, '');
+    }
+    Object.keys(vars).forEach(k => {
+      const v = vars[k] == null ? '' : String(vars[k]);
+      s = s.split(`{{${k}}}`).join(v);
+    });
+    return s;
+  }
+
+  function sanitizeHtml(html) {
+    // Very small sanitizer: remove <script> blocks and on* attributes and javascript: hrefs
+    let s = String(html || '');
+    s = s.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '');
+    s = s.replace(/on[a-z]+\s*=\s*"[^"]*"/gi, '');
+    s = s.replace(/on[a-z]+\s*=\s*'[^']*'/gi, '');
+    s = s.replace(/href\s*=\s*"javascript:[^\"]*"/gi, 'href="#"');
+    s = s.replace(/href\s*=\s*'javascript:[^']*'/gi, "href='#'");
+    return s;
+  }
+
+  const livePreviewDebounce = debounce(function(templateId) {
+    try {
+      const live = document.getElementById(`live-${templateId}`)?.checked;
+      if (!live) return;
+      updatePreviewLocal(templateId);
+    } catch (e) { /* silent */ }
+  }, 250);
+
+  function updatePreviewLocal(templateId) {
+    const previewDiv = document.getElementById(`template-preview-html-${templateId}`);
+    const varsText = document.getElementById(`vars-${templateId}`).value;
+    const modeRadios = document.querySelectorAll(`input[name="mode-${templateId}"]`);
+    let isAdvancedMode = false;
+    modeRadios.forEach(r => { if (r.checked && r.value === 'advanced') isAdvancedMode = true; });
+    const body = isAdvancedMode ? (document.getElementById(`html-editor-${templateId}`).value || '') : (document.getElementById(`simple-editor-${templateId}`).innerHTML || '');
+    const parsed = parsePreviewVars(varsText);
+    const varsErrDiv = document.getElementById(`vars-error-${templateId}`);
+    if (!parsed.ok) {
+      if (varsErrDiv) { varsErrDiv.style.display = 'block'; varsErrDiv.textContent = `Invalid JSON: ${parsed.error}`; }
+      return;
+    } else {
+      if (varsErrDiv) { varsErrDiv.style.display = 'none'; varsErrDiv.textContent = ''; }
+    }
+    const rendered = renderTemplateClient(body, Object.assign({}, parsed.vars, { siteName: window.SITE_NAME || 'EGAC', logoUrl: window.SITE_LOGO_URL || '' }));
+    previewDiv.innerHTML = rendered || '<em>No preview</em>';
+  }
+
+  function revertTemplate(templateId) {
+    const original = templatesCache[templateId];
+    if (!original) return;
+    document.getElementById(`subject-${templateId}`).value = original.subject || '';
+    const simple = document.getElementById(`simple-editor-${templateId}`);
+    const htmlEd = document.getElementById(`html-editor-${templateId}`);
+    if (simple) simple.innerHTML = original.html || original.text || '';
+    if (htmlEd) htmlEd.value = original.html || original.text || '';
+    document.getElementById(`vars-${templateId}`).value = JSON.stringify({ siteName: 'East Grinstead AC' }, null, 2);
+    document.getElementById(`active-${templateId}`).checked = !!original.active;
+    const resultDiv = document.getElementById(`template-result-${templateId}`);
+    if (resultDiv) resultDiv.innerHTML = '<p class="status-info">Reverted to saved version</p>';
+    updatePreviewLocal(templateId);
+  }
+
   window.saveTemplate = async function(templateId) {
     const resultDiv = document.getElementById(`template-result-${templateId}`);
     resultDiv.innerHTML = '<p class="status-info">Saving...</p>';
 
-    const subject = document.getElementById(`subject-${templateId}`).value;
-    const body = document.getElementById(`body-${templateId}`).value;
+    const subject = (document.getElementById(`subject-${templateId}`).value || '').trim();
+    
+    // Check which mode is active
+    const modeRadios = document.querySelectorAll(`input[name="mode-${templateId}"]`);
+    let isAdvancedMode = false;
+    modeRadios.forEach(radio => {
+      if (radio.checked && radio.value === 'advanced') isAdvancedMode = true;
+    });
+
+    let htmlValue = '';
+    if (isAdvancedMode) {
+      // Get HTML from the HTML editor
+      htmlValue = (document.getElementById(`html-editor-${templateId}`).value || '').trim();
+    } else {
+      // Get HTML from the simple contenteditable editor
+      htmlValue = (document.getElementById(`simple-editor-${templateId}`).innerHTML || '').trim();
+    }
+
+    // Sanitize before saving
+    htmlValue = sanitizeHtml(htmlValue);
+
+    const textValue = stripHtmlToText(htmlValue);
+
+    if (!subject) {
+      resultDiv.innerHTML = '<p class="status-error">Subject is required</p>';
+      return;
+    }
+
+    if (!htmlValue) {
+      resultDiv.innerHTML = '<p class="status-error">Body is required</p>';
+      return;
+    }
 
     try {
+      const active = !!document.getElementById(`active-${templateId}`)?.checked;
       const res = await fetch('/api/admin/templates.json', {
         method: 'POST',
         headers: {
@@ -752,30 +1752,138 @@ import '../../styles/forms.css';
           'x-admin-token': adminToken
         },
         body: JSON.stringify({
-          action: 'update',
+          action: 'update_template',
           id: templateId,
           subject,
-          body
+          html: htmlValue,
+          text: textValue,
+          active
         })
       });
 
       const data = await res.json();
       if (data.ok) {
+        // update cache
+        if (templatesCache[templateId]) {
+          templatesCache[templateId].subject = subject;
+          templatesCache[templateId].html = htmlValue;
+          templatesCache[templateId].text = textValue;
+          templatesCache[templateId].active = active;
+        }
         resultDiv.innerHTML = '<p class="status-success">Template saved</p>';
       } else {
         resultDiv.innerHTML = `<p class="status-error">${data.error || 'Failed'}</p>`;
       }
     } catch (err) {
-      resultDiv.innerHTML = '<p class="status-error">Connection error</p>';
+      resultDiv.innerHTML = `<p class="status-error">Connection error: ${err.message}</p>`;
+    }
+  };
+
+  window.copySampleVars = function(templateId) {
+    const varsText = document.getElementById(`vars-${templateId}`).value;
+    if (!navigator.clipboard) {
+      alert('Clipboard API not available');
+      return;
+    }
+    navigator.clipboard.writeText(varsText).then(() => {
+      const resultDiv = document.getElementById(`template-result-${templateId}`);
+      resultDiv.innerHTML = '<p class="status-success">Sample vars copied to clipboard</p>';
+    }).catch((err) => {
+      const resultDiv = document.getElementById(`template-result-${templateId}`);
+      resultDiv.innerHTML = `<p class="status-error">Could not copy: ${err.message}</p>`;
+    });
+  };
+
+  window.sendTestEmail = async function(templateId) {
+    const resultDiv = document.getElementById(`template-result-${templateId}`);
+    resultDiv.innerHTML = '<p class="status-info">Sending test email...</p>';
+
+    const to = prompt('Enter recipient email for test send:');
+    if (!to) {
+      resultDiv.innerHTML = '<p class="status-error">Recipient email required</p>';
+      return;
+    }
+
+    const varsText = document.getElementById(`vars-${templateId}`).value;
+    let variables = {};
+    try {
+      variables = JSON.parse(varsText);
+    } catch (e) {
+      resultDiv.innerHTML = `<p class="status-error">Invalid JSON variables: ${e.message}</p>`;
+      return;
+    }
+
+    try {
+      const subject = (document.getElementById(`subject-${templateId}`).value || '').trim();
+      
+      // Check which mode is active
+      const modeRadios = document.querySelectorAll(`input[name="mode-${templateId}"]`);
+      let isAdvancedMode = false;
+      modeRadios.forEach(radio => {
+        if (radio.checked && radio.value === 'advanced') isAdvancedMode = true;
+      });
+
+      let html = '';
+      if (isAdvancedMode) {
+        html = (document.getElementById(`html-editor-${templateId}`).value || '').trim();
+      } else {
+        html = (document.getElementById(`simple-editor-${templateId}`).innerHTML || '').trim();
+      }
+      // Sanitize html for test send
+      html = sanitizeHtml(html);
+
+      const res = await fetch('/api/admin/templates/send.json', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': adminToken
+        },
+        body: JSON.stringify({ id: templateId, to, vars: variables, subject, html })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        resultDiv.innerHTML = '<p class="status-success">Test email sent</p>';
+      } else {
+        resultDiv.innerHTML = `<p class="status-error">${data.error || 'Failed to send'}</p>`;
+      }
+    } catch (err) {
+      resultDiv.innerHTML = `<p class="status-error">Connection error: ${err.message}</p>`;
     }
   };
 
   window.previewTemplate = async function(templateId) {
     const resultDiv = document.getElementById(`template-result-${templateId}`);
+    const previewHtmlDiv = document.getElementById(`template-preview-html-${templateId}`);
     resultDiv.innerHTML = '<p class="status-info">Loading preview...</p>';
+    previewHtmlDiv.innerHTML = '';
 
     const subject = document.getElementById(`subject-${templateId}`).value;
-    const body = document.getElementById(`body-${templateId}`).value;
+    
+    // Check which mode is active
+    const modeRadios = document.querySelectorAll(`input[name="mode-${templateId}"]`);
+    let isAdvancedMode = false;
+    modeRadios.forEach(radio => {
+      if (radio.checked && radio.value === 'advanced') isAdvancedMode = true;
+    });
+
+    let body = '';
+    if (isAdvancedMode) {
+      body = (document.getElementById(`html-editor-${templateId}`).value || '').trim();
+    } else {
+      body = (document.getElementById(`simple-editor-${templateId}`).innerHTML || '').trim();
+    }
+    // Sanitize preview body
+    body = sanitizeHtml(body);
+
+    const varsText = document.getElementById(`vars-${templateId}`).value;
+
+    let variables = {};
+    try {
+      variables = JSON.parse(varsText);
+    } catch (parseErr) {
+      resultDiv.innerHTML = `<p class="status-error">Invalid JSON in preview variables: ${parseErr.message}</p>`;
+      return;
+    }
 
     try {
       const res = await fetch('/api/admin/templates/preview.json', {
@@ -785,29 +1893,24 @@ import '../../styles/forms.css';
           'x-admin-token': adminToken
         },
         body: JSON.stringify({
-          template_id: templateId,
-          variables: {
-            name: 'John Doe',
-            email: 'john@example.com',
-            date: '2026-01-15',
-            token: 'sample-token-123'
-          }
+          id: templateId,
+          key: null,
+          vars: variables,
+          html: body,
+          subject
         })
       });
 
       const data = await res.json();
       if (data.ok) {
-        resultDiv.innerHTML = `
-          <div class="status-info" style="margin-top:1rem">
-            <strong>Preview:</strong>
-            <pre style="white-space: pre-wrap; margin-top:0.5rem">${data.rendered}</pre>
-          </div>
-        `;
+        resultDiv.innerHTML = `<p class="status-success">Preview rendered</p>`;
+        // Show HTML preview
+        previewHtmlDiv.innerHTML = data.rendered || data.html || '<em>No HTML returned</em>';
       } else {
         resultDiv.innerHTML = `<p class="status-error">${data.error || 'Failed'}</p>`;
       }
     } catch (err) {
-      resultDiv.innerHTML = '<p class="status-error">Connection error</p>';
+      resultDiv.innerHTML = `<p class="status-error">Connection error: ${err.message}</p>`;
     }
   };
 </script>

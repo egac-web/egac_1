@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from '../../../../lib/supabase';
+import sanitizeHtml from 'sanitize-html';
 
 export const prerender = false;
 
@@ -26,25 +27,37 @@ export async function POST({ request, locals }) {
       });
 
     const body = await request.json();
-    const { id, key, vars } = body;
+    const { id, key, vars, html: overrideHtml, subject: overrideSubject, text: overrideText } = body;
 
     const client = getSupabaseAdmin(env);
-    let q = client.from('email_templates').select('*');
-    if (id) q = q.eq('id', id).maybeSingle();
-    else if (key) q = q.eq('key', key).maybeSingle();
-    else
-      return new Response(JSON.stringify({ ok: false, error: 'id or key required' }), {
+    let tpl = null;
+
+    if (id || key) {
+      let q = client.from('email_templates').select('*');
+      if (id) q = q.eq('id', id).maybeSingle();
+      else q = q.eq('key', key).maybeSingle();
+
+      const { data, error } = await q;
+      if (error) throw error;
+      if (!data)
+        return new Response(JSON.stringify({ ok: false, error: 'Template not found' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      tpl = data;
+      // allow overriding fetched template with provided html/subject/text
+      if (overrideHtml) tpl.html = overrideHtml;
+      if (overrideSubject) tpl.subject = overrideSubject;
+      if (overrideText) tpl.text = overrideText;
+    } else if (overrideHtml || overrideSubject || overrideText) {
+      // Allow previewing ad-hoc template without saving
+      tpl = { html: overrideHtml || '', subject: overrideSubject || '', text: overrideText || '' };
+    } else {
+      return new Response(JSON.stringify({ ok: false, error: 'id/key or html/subject required' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
-
-    const { data: tpl, error } = await q;
-    if (error) throw error;
-    if (!tpl)
-      return new Response(JSON.stringify({ ok: false, error: 'Template not found' }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    }
 
     const renderVars = Object.assign({}, vars || {}, {
       siteName: env.SITE_NAME || 'EGAC',
@@ -52,8 +65,10 @@ export async function POST({ request, locals }) {
       logoUrl: env.SITE_LOGO_URL || '',
     });
     const subject = renderTemplate(tpl.subject, renderVars);
-    const html = renderTemplate(tpl.html, renderVars);
+    const rawHtml = renderTemplate(tpl.html, renderVars);
     const text = renderTemplate(tpl.text, renderVars);
+    // Sanitize preview html to prevent scripts and unsafe attributes
+    const html = sanitizeHtml(rawHtml, { allowedSchemes: ['http','https','mailto','tel','data'] });
 
     return new Response(JSON.stringify({ ok: true, subject, html, text }), {
       status: 200,

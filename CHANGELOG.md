@@ -1,7 +1,58 @@
 # Changelog - January 11, 2026 Conversation Thread
 
 ## Summary
-This conversation thread focused on adding code quality tools (ESLint, Prettier, testing) and admin portal features to the EGAC website. Initial work was done on the wrong base branch, causing styling issues, which were then corrected.
+This conversation thread focused on adding code quality tools (ESLint, Prettier, testing) and building a comprehensive admin portal for the EGAC website. Major features include: admin authentication, enquiry/booking management, Academy invitations (U11), configuration management (age groups & booking settings), email template editing with plain text and HTML modes, and a visual dashboard with reports.
+
+---
+
+## Latest Updates - Admin Portal UI Polish (January 11, 2026 Evening)
+
+- **WIP**: Add `TemplateEditor` React component (TipTap + CodeMirror) and integrate into admin UI (client-side mounting). Added server-side sanitization (`sanitize-html`) for templates (create/update/preview/send), basic unit tests for template utilities, and removed debug logs from admin endpoints. Tests mostly pass locally (2 new tests added); note: Vitest requested `jsdom` in environment causing an unrelated error during test run — follow-up: add `jsdom` or configure Vitest environment if needed.
+
+### Template Editor Improvements
+- **Plain Text Editor**: Default editor now shows stripped plain text (not raw HTML)
+  - Improved `stripHtmlToText()` function in `src/lib/admin-ui.js` to properly decode HTML entities and preserve structure
+  - Text editor converts to HTML automatically on save using `textToHtml()` helper
+  - Advanced mode (toggle checkbox) reveals raw HTML editor for power users
+- **Visual Polish**: Added inline styles for better card appearance, rounded textareas, and preview vars styling
+
+### Age Groups Configuration
+- **Session Day/Time Clarity**: Added helper text explaining that these fields define when the age group trains (e.g., "Tuesday 18:30")
+- **Booking Settings Integration**: Moved "Weeks Ahead Booking" and "Academy Max Age" settings into the Age Groups section for better context
+- **Simplified Structure**: Removed redundant System Settings section, consolidated into Age Groups & Booking Settings
+
+### Reports Dashboard
+- **Hero Section**: Added gradient hero banner with context: "Overview of enquiries, bookings, attendance, and academy invitations"
+- **Enhanced Stat Cards**: Each metric now includes:
+  - Color-coded borders (green for attended, red for no-shows, purple for academy, orange for attendance %)
+  - Descriptive labels explaining what each metric represents
+  - Better visual hierarchy and spacing
+- **Contextual Descriptions**: Added sub-labels like "All contact form submissions", "Taster session reservations", etc.
+
+### Enquiries & Academy Sections
+- **Hero Sections**: Added gradient hero banners to Enquiries (blue) and Academy (purple) tabs
+- **Consistent Branding**: Applied card-based layouts and CTAs matching the main site design
+- **Better Context**: Clear descriptions for each section's purpose
+
+### Configuration Tab
+- **Hero Section**: Added green gradient hero banner explaining "Manage age groups, booking settings, and email templates"
+- **Unified Structure**: Consolidated Age Groups & Booking Settings into one section with clear visual hierarchy
+
+### Files Modified
+- `src/lib/admin-ui.js` - Enhanced `stripHtmlToText()` to properly decode HTML entities and preserve line breaks
+- `src/pages/admin/members.astro`:
+  - Added hero sections to all tabs (Enquiries, Academy, Reports, Configuration)
+  - Improved template editor with plain text default and HTML toggle
+  - Moved booking settings to Age Groups section
+  - Enhanced Reports dashboard with color-coded metrics and descriptions
+  - Added helper text for session_day and session_time fields
+  - Improved card styling and visual polish throughout
+- `src/pages/api/admin/config.json.js` - Fixed missing `supabase.` namespace for `updateSystemConfig`, `createAgeGroup`, and `updateAgeGroup` calls
+
+### Bug Fixes
+- Fixed `updateSystemConfig is not defined` error in config API endpoint (was calling bare function instead of `supabase.updateSystemConfig`)
+- Fixed template plain text editor showing raw HTML instead of decoded text
+- Fixed Age Groups table showing `data.age_groups` when API returns `data.ageGroups` (added fallback)
 
 ---
 
@@ -325,6 +376,54 @@ npm run format
 - `curl -i "http://localhost:3000/api/admin/templates.json?token=dev"` → **200 OK** with `templates` payload
 
 **Note**: If anything else fails, server logs now provide detailed debug output and dev-only error messages when using `?token=dev` to aid diagnosis.
+
+---
+
+### 6. Admin UI polish (Commit: Pending)
+
+**Goal**: Improve admin UX and accessibility, add template preview UX, and persist admin token for local dev convenience.
+
+**Planned changes implemented so far**:
+- **Accessibility**: Added ARIA attributes (`aria-selected`, `aria-controls`, `aria-hidden`) and keyboard navigation (ArrowLeft/Right/Home/End) for admin tabs in `src/pages/admin/members.astro`.
+- **Token persistence**: Admin token is persisted to `sessionStorage` on successful login and autofills on page reload; logout button added to clear token.
+- **Template editor**: Added a JSON `Preview variables` textarea per template and improved preview rendering to show HTML preview returned by the server.
+
+**Files Modified**:
+- `src/pages/admin/members.astro` (tab ARIA/keyboard, token persistence, template preview vars UI, improved template cards)
+
+**Recent UI updates**:
+- Template cards now show `key (language)` and subject as a friendly heading, and include an Active toggle for each template.
+- Template editor now uses a widened HTML textarea, a styled HTML preview panel, a Load sample button for preview variables, and a Send Test button for quick validation.
+- JSON variables are validated client-side with helpful error messages for non-technical users.
+
+**Next steps**:
+- Improve template editor save UX and add more accessible form controls.
+- Add unit tests for tab keyboard behavior and template preview rendering.
+- Iterate on styling and responsiveness in `feat/admin-ui-polish` branch.
+
+**Result**: Admin UI polish work is in progress; basic accessibility and preview features are in place and verified manually.
+
+**Recent UI updates (committed)**:
+- **Debug banner**: Added a visible admin banner showing branch (`feat/admin-ui-polish`) and token state (present/hidden) for quick verification in the browser.
+- **Token persistence**: Admin token stored in `sessionStorage` on login with a **Logout** button to clear it.
+- **Template editor**: Added `Preview variables` JSON textarea and improved preview rendering to display server-rendered HTML output.
+
+**Commits & PRs**:
+- Commits: `f47fbd5` — feat(admin-ui): add tab accessibility, token persistence, and template preview vars UI
+- Branch: `feat/admin-ui-polish` (PR: #16)
+
+**How to verify (quick)**:
+1. Start dev server and open: `http://localhost:<PORT>/admin/members?token=dev` ✅
+2. Look for top-left **Admin UI** banner showing the branch and token state ✅
+3. Verify **Logout** button appears beside the tabs and clears session token ✅
+4. Open **Configuration** tab, check **Preview variables (JSON)** textarea and **Preview** renders HTML from the server ✅
+
+**Next UI steps**:
+- Finish template save UX and validation
+- Add unit tests for tab keyboard navigation and template preview rendering
+- Polish styling and responsiveness
+
+
 ---
 
 ## Conversation Context
