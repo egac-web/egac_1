@@ -1,4 +1,4 @@
-import { appendEnquiryEvent, markInviteSent } from './supabase';
+import { appendEnquiryEvent, markInviteSent, getEmailTemplate } from './supabase';
 import { sendInviteEmail, sendBookingConfirmation } from './resend';
 
 export type NotifyResult = {
@@ -133,5 +133,66 @@ export async function sendBookingConfirmationNotification({ enquiryId, bookingId
     console.error('sendBookingConfirmation failed', err);
     try { await appendEnquiryEvent(enquiryId, { type: 'booking_confirm_email_failed', booking_id: bookingId, error: (err && err.response) ? err.response : String(err), at: nowISO() }, env); } catch (e) { console.error('Failed to append booking_confirm_email_failed event', e); }
     return { ok: false, error: err };
+  }
+}
+
+export async function sendAcademyInvitation(invitation: any, enquiry: any, env?: any): Promise<{ success: boolean; resendId?: string | null; error?: any }> {
+  const dry = !!env?.RESEND_DRY_RUN;
+  if (!env?.RESEND_API_KEY || !env?.RESEND_FROM) {
+    try { await appendEnquiryEvent(enquiry.id || invitation.enquiry_id, { type: 'academy_invite_failed', invite_id: invitation.id, error: 'Resend not configured', at: nowISO() }, env); } catch (e) { console.error('Failed to append academy_invite_failed', e); }
+    return { success: false, error: 'no_resend_config' };
+  }
+
+  const siteBase = env?.SITE_BASE_URL || process.env.SITE_BASE_URL || '';
+  const yesUrl = `${siteBase}/academy-response?token=${invitation.token}&response=yes`;
+  const noUrl = `${siteBase}/academy-response?token=${invitation.token}&response=no`;
+
+  // try to load a template from DB
+  let subject = 'EGAC: Academy Invitation';
+  let html = `<p>Hello,</p><p>We'd like to invite your child to the EGAC Academy. Please choose:</p><p><a href="${yesUrl}">Yes, I'm interested</a></p><p><a href="${noUrl}">No, thanks</a></p>`;
+  let text = `Please respond: ${yesUrl} (yes) or ${noUrl} (no)`;
+
+  try {
+    const tpl = await getEmailTemplate('academy_invitation', 'en', env);
+    if (tpl && tpl.body) {
+      html = tpl.body.replace(/\{\{responseYesUrl\}\}/g, yesUrl).replace(/\{\{responseNoUrl\}\}/g, noUrl).replace(/\{\{childName\}\}/g, enquiry.name || '');
+      subject = tpl.subject || subject;
+      text = html.replace(/<[^>]+>/g, '');
+    }
+  } catch (e) {
+    console.error('Failed to load academy template', e);
+  }
+
+  // Staging interception (reuse logic)
+  const appEnv = env?.APP_ENV || process.env.APP_ENV || 'production';
+  const stagingAllowed = (env?.STAGING_ALLOWED_EMAILS || process.env.STAGING_ALLOWED_EMAILS || '').split(',').map((s: string) => s.trim()).filter(Boolean);
+  const stagingRedirect = (env?.STAGING_REDIRECT_EMAILS || process.env.STAGING_REDIRECT_EMAILS || '').split(',').map((s: string) => s.trim()).filter(Boolean);
+  let effectiveTo = enquiry.email;
+  let effectiveSubject = subject;
+
+  if (appEnv === 'staging') {
+    const isAllowed = stagingAllowed.length === 0 || stagingAllowed.includes(enquiry.email);
+    if (!isAllowed) {
+      effectiveTo = stagingRedirect.length > 0 ? stagingRedirect.join(',') : (env?.MEMBERSHIP_SECRETARY_EMAIL || enquiry.email);
+      effectiveSubject = `[STAGING] ${subject} (original: ${enquiry.email})`;
+      try { await appendEnquiryEvent(enquiry.id || invitation.enquiry_id, { type: 'staging_email_redirected', invite_id: invitation.id, original_to: enquiry.email, redirected_to: effectiveTo, at: nowISO() }, env); } catch (e) { console.error('Failed to append staging_email_redirected for academy', e); }
+    } else {
+      effectiveSubject = `[STAGING] ${subject}`;
+    }
+  }
+
+  if (dry) {
+    try { await appendEnquiryEvent(enquiry.id || invitation.enquiry_id, { type: 'academy_invite_dry_run', invite_id: invitation.id, to: effectiveTo, at: nowISO() }, env); } catch (e) { console.error('Failed to append academy_invite_dry_run', e); }
+    return { success: true };
+  }
+
+  try {
+    const res = await sendInviteEmail({ apiKey: env.RESEND_API_KEY, from: env.RESEND_FROM, to: effectiveTo, subject: effectiveSubject, html, text });
+    try { await appendEnquiryEvent(enquiry.id || invitation.enquiry_id, { type: 'academy_invite_sent', invite_id: invitation.id, resend_id: res.id, at: nowISO(), meta: res.raw }, env); } catch (e) { console.error('Failed to append academy_invite_sent', e); }
+    return { success: true, resendId: res.id };
+  } catch (err) {
+    console.error('sendAcademyInvitation failed', err);
+    try { await appendEnquiryEvent(enquiry.id || invitation.enquiry_id, { type: 'academy_invite_failed', invite_id: invitation.id, error: (err && err.response) ? err.response : String(err), at: nowISO() }, env); } catch (e) { console.error('Failed to append academy_invite_failed', e); }
+    return { success: false, error: err };
   }
 }
