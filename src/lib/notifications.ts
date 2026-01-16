@@ -136,6 +136,63 @@ export async function sendBookingConfirmationNotification({ enquiryId, bookingId
   }
 }
 
+export async function sendReminderNotification({ enquiryId, to, date, slotLabel, env }: { enquiryId: string; to: string; date: string; slotLabel: string; env?: any }): Promise<NotifyResult> {
+  const dry = !!env?.RESEND_DRY_RUN;
+  if (!env?.RESEND_API_KEY || !env?.RESEND_FROM) {
+    try { await appendEnquiryEvent(enquiryId, { type: 'reminder_email_failed', date, slotLabel, error: 'Resend not configured', at: nowISO() }, env); } catch (e) { console.error('Failed to append reminder_email_failed', e); }
+    return { ok: false, error: 'no_resend_config' };
+  }
+
+  // Load template
+  let subject = `Reminder: your taster session on ${date} (${slotLabel}) is tomorrow`;
+  let html = `<p>This is a reminder that your free taster session is scheduled for <strong>${date}</strong> (${slotLabel}) tomorrow.</p>`;
+  let text = `Reminder: your taster session on ${date} (${slotLabel}) is tomorrow.`;
+
+  try {
+    const tpl = await getEmailTemplate('reminder', 'en', env);
+    if (tpl && tpl.body) {
+      html = tpl.body.replace(/\{\{date\}\}/g, date).replace(/\{\{slotLabel\}\}/g, slotLabel);
+      subject = tpl.subject ? tpl.subject.replace(/\{\{date\}\}/g, date).replace(/\{\{slotLabel\}\}/g, slotLabel) : subject;
+      text = tpl.plain || text;
+    }
+  } catch (e) {
+    console.error('Failed to load reminder template', e);
+  }
+
+  // Staging interception
+  const appEnv = env?.APP_ENV || process.env.APP_ENV || 'production';
+  const stagingAllowed = (env?.STAGING_ALLOWED_EMAILS || process.env.STAGING_ALLOWED_EMAILS || '').split(',').map((s: string) => s.trim()).filter(Boolean);
+  const stagingRedirect = (env?.STAGING_REDIRECT_EMAILS || process.env.STAGING_REDIRECT_EMAILS || '').split(',').map((s: string) => s.trim()).filter(Boolean);
+  let effectiveTo = to;
+  let effectiveSubject = subject;
+
+  if (appEnv === 'staging') {
+    const isAllowed = stagingAllowed.length === 0 || stagingAllowed.includes(to);
+    if (!isAllowed) {
+      effectiveTo = stagingRedirect.length > 0 ? stagingRedirect.join(',') : (env?.MEMBERSHIP_SECRETARY_EMAIL || to);
+      effectiveSubject = `[STAGING] ${subject} (original: ${to})`;
+      try { await appendEnquiryEvent(enquiryId, { type: 'staging_email_redirected', original_to: to, redirected_to: effectiveTo, at: nowISO() }, env); } catch (e) { console.error('Failed to append staging_email_redirected for reminder', e); }
+    } else {
+      effectiveSubject = `[STAGING] ${subject}`;
+    }
+  }
+
+  if (dry) {
+    try { await appendEnquiryEvent(enquiryId, { type: 'reminder_email_dry_run', date, slotLabel, to: effectiveTo, at: nowISO() }, env); } catch (e) { console.error('Failed to append reminder_email_dry_run', e); }
+    return { ok: true, dryRun: true };
+  }
+
+  try {
+    const res = await sendInviteEmail({ apiKey: env.RESEND_API_KEY, from: env.RESEND_FROM, to: effectiveTo, subject: effectiveSubject, html, text });
+    try { await appendEnquiryEvent(enquiryId, { type: 'reminder_email_sent', date, slotLabel, resend_id: res.id, at: nowISO(), meta: res.raw }, env); } catch (e) { console.error('Failed to append reminder_email_sent', e); }
+    return { ok: true, resendId: res.id };
+  } catch (err) {
+    console.error('sendReminderNotification failed', err);
+    try { await appendEnquiryEvent(enquiryId, { type: 'reminder_email_failed', date, slotLabel, error: (err && err.response) ? err.response : String(err), at: nowISO() }, env); } catch (e) { console.error('Failed to append reminder_email_failed', e); }
+    return { ok: false, error: err };
+  }
+}
+
 export async function sendAcademyInvitation(invitation: any, enquiry: any, env?: any): Promise<{ success: boolean; resendId?: string | null; error?: any }> {
   const dry = !!env?.RESEND_DRY_RUN;
   if (!env?.RESEND_API_KEY || !env?.RESEND_FROM) {
