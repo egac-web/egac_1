@@ -29,6 +29,10 @@ Development of the EGAC website with comprehensive admin portal, code quality to
   3. Fix any `RESEND_FROM` issues (no surrounding quotes) and verify the sending domain is verified in Resend.
   4. Flip `RESEND_DRY_RUN=false` in staging only after verification, then enable cron and monitor via the invite stats workflow.
 
+### 2026-01-17 — Staging E2E dry-run executed
+- Merged PR #18 (feat/e2e-runner) to `staging` and executed `POST /api/admin/run-e2e.json?token=dev` with `{ "confirm": "yes", "dry_run": true }`.
+- Result: **Success (dry-run)** — created enquiry `5504f464-24e9-4f27-af5a-5ac401b66987`, invite `37ed2a8f-f39a-4cd2-afd8-d560ebd3f73a` (token `b046f288cb691482621378d8`), booking `37e2790a-b2fc-4c78-b2e3-4fa8a64d7004` (session_date `2026-01-18`, slot `u13`). All email sends were executed in dry-run mode (no real emails sent). See `egac_1/TESTLOG_2026-01-16-E2E.md` for full result details.
+
 ## [2026-01-15] - Branching Strategy & Deployment Architecture
 
 ### Added
