@@ -5,6 +5,30 @@ Development of the EGAC website with comprehensive admin portal, code quality to
 
 ---
 
+## [2026-01-16] - Booking & Reminders, Environment columns
+
+### Added
+- **DB migration**: `db/migrations/2026-01-16_add_environment_columns.sql` — adds `environment text NOT NULL DEFAULT 'production'` and indexes to `enquiries`, `invites`, `bookings` and `academy_invitations` (if present).
+- **Email templates**: `src/lib/emailTemplates.ts` — branded HTML + plain text templates for `invite`, `booking_confirmation`, and `reminder`.
+- **Notifications**: `src/lib/notifications.ts` — added `sendReminderNotification`, updated booking confirmation to optionally BCC membership secretary, and wired templates into existing send paths.
+- **Admin endpoint**: `src/pages/api/admin/send-reminders.json.js` — sends reminders for bookings scheduled for the next day (dry-run support).
+- **Worker update**: `workers/retry-trigger.js` — now calls send-reminders after retries run.
+- **Booking API improvements**: `src/pages/api/booking.json.js` — POST now accepts `booking_for` and `subject_dob`, computes age with `computeAgeOnDate`, selects slot via `slotForAge`, prevents double-booking per invite, enforces capacity, marks invite accepted, appends events, and persists booking metadata.
+- **Scripts**: `egac_1/scripts/create_test_invite.mjs`, `egac_1/scripts/send_invite_really.mjs`, `egac_1/scripts/create_test_booking.mjs` — utilities to create test invites, run safe (dry-run) sends, and create bookings for testing reminders.
+- **Admin E2E endpoint**: `src/pages/api/admin/run-e2e.json.js` — protected admin endpoint (requires `token=dev` or `ADMIN_TOKEN`) that runs a safe dry-run E2E test using staging secrets: creates a test enquiry & invite, performs a dry-run invite send, creates a booking for tomorrow, sends booking confirmation (dry-run), and sends a reminder (dry-run); appends an `e2e_test_completed` event to the enquiry with step results.
+
+### Changed / Fixed
+- Fixed a duplicate declaration in `egac_1/src/components/TrainingBookingSystem.tsx` that blocked the client build.
+- Updated `src/lib/resend.ts` to support BCCs for secretary notifications.
+
+### Notes / Next steps
+- Local E2E dry-run was attempted in this runner but **failed due to missing Supabase environment variables** (`SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY`). See `egac_1/TESTLOG.md` for the failure details and recommended local commands to run with your staging DB credentials.
+- Recommended rollout:
+  1. Apply DB migrations to **staging** and verify there are no duplicate `invite_id` rows before applying any unique constraints.
+  2. Run the full E2E dry-run in staging (create invite → send (dry-run) → create booking → trigger `send-reminders` in dry-run) and record the outputs.
+  3. Fix any `RESEND_FROM` issues (no surrounding quotes) and verify the sending domain is verified in Resend.
+  4. Flip `RESEND_DRY_RUN=false` in staging only after verification, then enable cron and monitor via the invite stats workflow.
+
 ## [2026-01-15] - Branching Strategy & Deployment Architecture
 
 ### Added
