@@ -9,10 +9,11 @@ function nowISO() {
 }
 
 export async function POST({ request, locals }) {
+  const url = new URL(request.url);
+  const reqToken = request.headers.get('x-admin-token') || url.searchParams.get('token');
   try {
     const env = locals?.runtime?.env || process.env;
-    const url = new URL(request.url);
-    const token = request.headers.get('x-admin-token') || url.searchParams.get('token');
+    const token = reqToken;
     if (!token || (token !== 'dev' && token !== env.ADMIN_TOKEN))
       return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
 
@@ -31,7 +32,21 @@ export async function POST({ request, locals }) {
 
     const slotLabel = (CONFIG.slots && CONFIG.slots[booking.slot] && CONFIG.slots[booking.slot].label) || booking.slot;
 
-    const res = await sendBookingConfirmationNotification({ enquiryId: enquiry.id, bookingId: booking.id, to: enquiry.email, date: booking.session_date, slotLabel, env });
+    let res;
+    try {
+      res = await sendBookingConfirmationNotification({ enquiryId: enquiry.id, bookingId: booking.id, to: enquiry.email, date: booking.session_date, slotLabel, env });
+    } catch (err) {
+      console.error('sendBookingConfirmationNotification threw', err);
+      try {
+        await appendEnquiryEvent(enquiry.id, { type: 'booking_notify_secretary_failed', booking_id: booking.id, error: String(err), at: nowISO() }, env);
+      } catch (e) { console.error('Failed to append booking_notify_secretary_failed', e); }
+      // Always return detailed error when dev token supplied
+      if (reqToken === 'dev') {
+        const details = (err && err.response) ? err.response : String(err);
+        return new Response(JSON.stringify({ ok: false, error: 'exception', details, stack: err?.stack || null }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      }
+      return new Response(JSON.stringify({ ok: false, error: 'send_failed' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    }
 
     if (res.ok) {
       try {
@@ -49,6 +64,9 @@ export async function POST({ request, locals }) {
 
   } catch (err) {
     console.error('Resend secretary error', err);
+    if (reqToken === 'dev') {
+      return new Response(JSON.stringify({ ok: false, error: 'Server error', details: err?.message || String(err), stack: err?.stack || null }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    }
     return new Response(JSON.stringify({ ok: false, error: 'Server error' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 }
