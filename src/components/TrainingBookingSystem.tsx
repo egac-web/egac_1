@@ -195,7 +195,7 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
       </div>
 
       <div className="booking-grid">
-        {slots.map((slot) => (
+        {(inviteTokenState ? slots.filter(s => s.enabled) : slots).map((slot) => (
           <div
             key={slot.id}
             className={`booking-card ${slot.booked ? 'bg-gray-100' : ''} ${slot.eligible ? 'eligible-card' : ''}`}
