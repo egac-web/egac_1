@@ -39,7 +39,9 @@ SUPABASE_ANON_KEY=<get-from-supabase-dashboard>
 # Email Service (Resend)
 # Use production Resend API key (same domain for staging & production)
 RESEND_API_KEY=<your-resend-api-key>
-RESEND_FROM="EGAC Staging <noreply@eastgrinsteadac.co.uk>"
+# NOTE: When adding to Cloudflare Pages environment variables, do NOT include surrounding quotes. Set the value exactly as shown:
+#   RESEND_FROM=EGAC Staging <noreply@eastgrinsteadac.co.uk>
+RESEND_FROM=EGAC Staging <noreply@eastgrinsteadac.co.uk>
 
 # Admin Portal Access
 ADMIN_TOKEN=<generate-new-secure-token-for-staging>

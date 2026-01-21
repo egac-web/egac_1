@@ -45,7 +45,9 @@ Follow the guide: [`docs/deployment/test-site-setup.md`](./deployment/test-site-
    SUPABASE_SERVICE_ROLE_KEY=<get-from-supabase>
    SUPABASE_ANON_KEY=<get-from-supabase>
    RESEND_API_KEY=<your-resend-api-key>
-   RESEND_FROM="EGAC Staging <noreply@eastgrinsteadac.co.uk>"
+   # NOTE: In Cloudflare Pages environment variables, do NOT include surrounding quotes. Use:
+   #   RESEND_FROM=EGAC Staging <noreply@eastgrinsteadac.co.uk>
+   RESEND_FROM=EGAC Staging <noreply@eastgrinsteadac.co.uk>
    ADMIN_TOKEN=<generate-new-token>
    MEMBERSHIP_SECRETARY_EMAIL=staging-membership@eastgrinsteadac.co.uk
    SITE_BASE_URL=https://staging.eastgrinsteadac.co.uk

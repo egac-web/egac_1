@@ -45,15 +45,20 @@ try {
   </div>
 
   {inviteData ? (
-    <div class="invite-banner p-4 mb-4 border-l-4 border-blue-500 bg-blue-50">
-      <p class="font-semibold">Invited: {inviteData.enquiry.name || inviteData.enquiry.email}</p>
-      {inviteBanner ? (
-        <p>You're eligible for <strong>{CONFIG.slots[inviteBanner.eligibleSlot].label}</strong> on <strong>{new Date(inviteBanner.date).toLocaleDateString('en-GB')}</strong>. Click the <em>Book (invited)</em> button on that session to reserve your spot.</p>
-      ) : inviteData.booking ? (
-        <p>You already have a booking on {inviteData.booking.session_date}.</p>
-      ) : (
-        <p>We couldn't find an eligible slot with vacancies; check other dates or contact us.</p>
-      )}
+    <div class="invite-banner">
+      <div style="flex:1;">
+        <div class="meta">Invited: {inviteData.enquiry.name || inviteData.enquiry.email}</div>
+        {inviteBanner ? (
+          <div class="hint">You're eligible for <strong>{CONFIG.slots[inviteBanner.eligibleSlot].label}</strong> on <strong>{new Date(inviteBanner.date).toLocaleDateString('en-GB')}</strong>. Use the <em>Book (invited)</em> button to reserve your spot — it's held for you for a limited time.</div>
+        ) : inviteData.booking ? (
+          <div class="hint">You already have a booking on {inviteData.booking.session_date} — check your email for confirmation.</div>
+        ) : (
+          <div class="hint">We couldn't find an eligible slot with vacancies; check other dates or contact us.</div>
+        )}
+      </div>
+      <div style="text-align:right;">
+        <a class="btn-primary" href={`/bookings?invite=${inviteData.invite.token}`}>View available sessions</a>
+      </div>
     </div>
   ) : null}
 
@@ -83,10 +88,7 @@ try {
                 <button class="bg-gray-100 text-gray-800 py-2 px-4 rounded" disabled>Not eligible</button>
               )
             ) : (
-              <>
-                <a href={`/booking?date=${slot.date}&slot=${slot.group}`} class="btn-primary">Book</a>
-                <button class="bg-gray-100 text-gray-800 py-2 px-4 rounded">Details</button>
-              </>
+              <a href={`/booking?date=${slot.date}&slot=${slot.group}`} class="btn-primary">Book</a>
             )}
           </div>
         </article>

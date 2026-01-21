@@ -3,6 +3,18 @@ import { getNextNWeekdayDates, slotForAge, computeAgeOnDate, CONFIG } from '../.
 import { countBookingsForDateSlot, createBooking, appendEnquiryEvent, markInviteAccepted, getBookingByInvite, getSupabaseAdmin } from '../../lib/supabase';
 import sendInviteEmail, { sendBookingConfirmation } from '../../lib/resend';
 
+export async function OPTIONS({ request }) {
+  // Respond to preflight requests quickly with CORS headers
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+    }
+  });
+}
+
 export async function GET({ request, locals }) {
   try {
     const env = locals?.runtime?.env || process.env;
@@ -92,6 +104,13 @@ export async function POST({ request, locals }) {
     const { data: enqRes, error } = await client.from('enquiries').select('*').eq('id', invite.enquiry_id).maybeSingle();
     if (error) throw error;
     const enquiry = enqRes;
+
+    // Prevent duplicate bookings for the same invite (idempotency guard)
+    const existingBooking = await getBookingByInvite(invite.id, env);
+    if (existingBooking) return new Response(JSON.stringify({ ok: false, error: 'Invite already has a booking', booking: existingBooking }), {
+      status: 409,
+      headers: { 'Content-Type': 'application/json' }
+    });
 
     // determine slot from age on session_date
     const dob = enquiry.dob;
