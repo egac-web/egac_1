@@ -122,7 +122,9 @@ git pull origin staging
 ### Staging Environment
 ```bash
 SITE_BASE_URL=https://staging.eastgrinsteadac.co.uk
-RESEND_FROM="EGAC Staging <noreply@eastgrinsteadac.co.uk>"
+# NOTE: When adding to Cloudflare Pages environment variables, do NOT include surrounding quotes. Use:
+#   RESEND_FROM=EGAC Staging <noreply@eastgrinsteadac.co.uk>
+RESEND_FROM=EGAC Staging <noreply@eastgrinsteadac.co.uk>
 ADMIN_TOKEN=<staging-specific-token>
 MEMBERSHIP_SECRETARY_EMAIL=staging-membership@eastgrinsteadac.co.uk
 # Staging Supabase database
@@ -132,7 +134,9 @@ SUPABASE_URL=<staging-db-url>
 ### Production Environment
 ```bash
 SITE_BASE_URL=https://eastgrinsteadac.co.uk
-RESEND_FROM="EGAC <noreply@eastgrinsteadac.co.uk>"
+# NOTE: When adding to Cloudflare Pages environment variables, do NOT include surrounding quotes. Use:
+#   RESEND_FROM=EGAC <noreply@eastgrinsteadac.co.uk>
+RESEND_FROM=EGAC <noreply@eastgrinsteadac.co.uk>
 ADMIN_TOKEN=<production-specific-token>
 MEMBERSHIP_SECRETARY_EMAIL=membership@eastgrinsteadac.co.uk
 # Production Supabase database

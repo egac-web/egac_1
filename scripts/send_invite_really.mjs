@@ -9,7 +9,7 @@ import { createClient } from '@supabase/supabase-js';
 const argv = process.argv.slice(2);
 const hasFlag = (f) => argv.includes(f);
 const getArg = (k) => {
-  const idx = argv.indexOf(k); return (idx >= 0 && argv.length > idx + 1) ? argv[idx+1] : null;
+  const idx = argv.indexOf(k); return (idx >= 0 && argv.length > idx + 1) ? argv[idx + 1] : null;
 };
 
 const inviteId = getArg('--invite-id');
@@ -68,7 +68,7 @@ async function run() {
       process.exit(1);
     }
 
-    const inviteUrl = `${process.env.SITE_BASE_URL || 'http://localhost:3000'}/booking?invite=${encodeURIComponent(inviteRow.token)}`;
+    const inviteUrl = `${process.env.SITE_BASE_URL || 'http://localhost:3000'}/bookings?invite=${encodeURIComponent(inviteRow.token)}`;
 
     console.log('Sending invite to', enquiry.email, 'invite:', inviteRow.id);
 

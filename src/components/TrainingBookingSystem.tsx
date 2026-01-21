@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import "../styles/bookings.css";
-import { FaCalendarAlt, FaClock, FaUsers } from "react-icons/fa";
+import { FaCalendarAlt } from "react-icons/fa";
+import { CONFIG, getNextNWeekdayDates } from "../lib/booking";
 
 function formatDate(date: string): string {
-  // Expects date in ISO format (e.g., "2024-06-11")
   const d = new Date(date);
   if (isNaN(d.getTime())) return date;
   return d.toLocaleDateString('en-GB', {
@@ -14,67 +14,32 @@ function formatDate(date: string): string {
   });
 }
 
-
 // Session slot type
 type Slot = {
   id: string;
   date: string; // ISO date
-  time: string;
-  group: string;
+  time: string;     // '18:30'
+  group: string;    // 'u13' | 'u15plus'
+  label: string;    // human label
   enabled: boolean;
   booked: boolean;
+  slotsLeft?: number; // availability
+  eligible?: boolean; // invite eligible
   booker?: string;
 };
 
-// Initial slots (example for 4 weeks)
-function getInitialSlots() {
+function getInitialSlots(weeks = 6) {
+  const dates = getNextNWeekdayDates(2, weeks);
   const slots: Slot[] = [];
-  const today = new Date();
-  for (let week = 0; week < 4; week++) {
-    // Find next Tuesday
-    const tuesday = new Date(today);
-    tuesday.setDate(today.getDate() + ((2 + 7 - today.getDay()) % 7) + week * 7);
-    const dateStr = tuesday.toISOString().slice(0, 10);
-    slots.push(
-      {
-        id: `${dateStr}-u13-1`,
-        date: dateStr,
-        time: "18:30-19:30",
-        group: "U13s",
-        enabled: true,
-        booked: false,
-      },
-      {
-        id: `${dateStr}-u13-2`,
-        date: dateStr,
-        time: "18:30-19:30",
-        group: "U13s",
-        enabled: true,
-        booked: false,
-      },
-      {
-        id: `${dateStr}-u15-1`,
-        date: dateStr,
-        time: "19:30-20:30",
-        group: "U15s+",
-        enabled: true,
-        booked: false,
-      },
-      {
-        id: `${dateStr}-u15-2`,
-        date: dateStr,
-        time: "19:30-20:30",
-        group: "U15s+",
-        enabled: true,
-        booked: false,
-      }
-    );
+  for (const dateStr of dates) {
+    slots.push({ id: `${dateStr}-u13`, date: dateStr, time: CONFIG.slots.u13.time, group: 'u13', label: CONFIG.slots.u13.label, enabled: true, booked: false, slotsLeft: CONFIG.capacityPerSlot });
+    slots.push({ id: `${dateStr}-u15plus`, date: dateStr, time: CONFIG.slots.u15plus.time, group: 'u15plus', label: CONFIG.slots.u15plus.label, enabled: true, booked: false, slotsLeft: CONFIG.capacityPerSlot });
   }
   return slots;
 }
 
 const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken }) => {
-  const [slots, setSlots] = useState<Slot[]>(getInitialSlots());
+  const [slots, setSlots] = useState<Slot[]>(getInitialSlots(6));
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [inviteTokenState, setInviteTokenState] = useState<string | null>(inviteToken || null);
@@ -82,12 +47,10 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
   const [statusType, setStatusType] = useState<'success' | 'error' | null>(null);
   const [bookingDone, setBookingDone] = useState<boolean>(false);
   const [bookingInfo, setBookingInfo] = useState<any>(null);
+  const [submitting, setSubmitting] = useState<boolean>(false);
   const statusRef = React.useRef<HTMLDivElement | null>(null);
 
-  // Map server slot keys to client labels
-  const groupKeyToLabel: Record<string, string> = { u13: 'U13s', u15plus: 'U15s+' };
-
-  // If we're loaded with an invite token (either prop or URL), preselect the slot from query params
+  // If we're loaded with an invite token (prop or URL), preselect the slot from query params
   React.useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -97,8 +60,7 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
       if (qInvite && !inviteTokenState) setInviteTokenState(qInvite);
 
       if (qDate && qSlot) {
-        const targetLabel = groupKeyToLabel[qSlot] || qSlot;
-        const match = slots.find((s) => s.date === qDate && s.group === targetLabel);
+        const match = slots.find((s) => s.date === qDate && s.group === qSlot);
         if (match) {
           setSelectedSlot(match);
           setShowModal(true);
@@ -109,6 +71,42 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
     }
   }, []);
 
+  // Load availability for an invite token when present
+  React.useEffect(() => {
+    async function loadInvite() {
+      if (!inviteTokenState) return;
+      try {
+        const res = await fetch(`/api/booking.json?invite=${encodeURIComponent(inviteTokenState)}`);
+        const body = await res.json();
+        if (!res.ok || !body.ok) {
+          setStatusMessage('Failed to load invite data');
+          setStatusType('error');
+          return;
+        }
+        // Update slots with availability and eligible slot
+        const availability = (body.availability || []).reduce((acc: Record<string, any>, a: any) => { acc[a.date] = a; return acc; }, {});
+        setSlots((prev) => prev.map((s) => {
+          const a = availability[s.date];
+          if (!a) return s;
+          const slotsLeft = (a.slots && typeof a.slots[s.group] === 'number') ? a.slots[s.group] : CONFIG.capacityPerSlot;
+          const eligible = a.eligibleSlot === s.group;
+          return { ...s, slotsLeft, enabled: slotsLeft > 0, eligible };
+        }));
+
+        if (body.booking) {
+          setBookingDone(true);
+          setBookingInfo(body.booking);
+          setStatusMessage('You already have a booking — check your email.');
+          setStatusType('success');
+        }
+      } catch (err) {
+        setStatusMessage('Failed to fetch availability');
+        setStatusType('error');
+      }
+    }
+    loadInvite();
+  }, [inviteTokenState]);
+
   // Auto-focus status message for accessibility whenever it changes
   React.useEffect(() => {
     if (statusMessage && statusRef.current) {
@@ -117,6 +115,7 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
   }, [statusMessage]);
 
   const handleSelect = (slot: Slot) => {
+    if (!slot.enabled || slot.booked) return;
     setSelectedSlot(slot);
     setShowModal(true);
   };
@@ -126,11 +125,12 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
     setSelectedSlot(null);
   };
 
-  // Placeholder for booking action
   const handleBook = async () => {
     if (!selectedSlot) return;
+    if (submitting) return;
+    setSubmitting(true);
 
-    // If we have an invite token, POST to booking API so server-side booking is created
+    // Server booking flow only when invite present
     if (inviteTokenState) {
       setStatusMessage('Booking in progress...');
       setStatusType(null);
@@ -141,9 +141,19 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
           body: JSON.stringify({ invite: inviteTokenState, session_date: selectedSlot.date }),
         });
         const body = await res.json();
-        if (!res.ok || !body.ok) throw new Error(body.error || 'Booking failed');
-        // mark local slot as booked
-        setSlots((prev) => prev.map((s) => (s.id === selectedSlot.id ? { ...s, booked: true } : s)));
+        if (!res.ok || !body.ok) {
+          if (res.status === 409 && body.booking) {
+            // idempotent response: booking already exists
+            setBookingDone(true);
+            setBookingInfo(body.booking);
+            setStatusMessage('A booking already exists for this invite.');
+            setStatusType('success');
+            return;
+          }
+          throw new Error(body.error || 'Booking failed');
+        }
+        // update UI
+        setSlots((prev) => prev.map((s) => s.id === `${selectedSlot.date}-${selectedSlot.group}` ? { ...s, booked: true, slotsLeft: (s.slotsLeft || 1) - 1 } : s));
         setBookingDone(true);
         setBookingInfo(body.booking || null);
         setStatusMessage('Booking confirmed — check your email for confirmation.');
@@ -152,36 +162,33 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
         setStatusMessage('Booking failed: ' + (err?.message || String(err)));
         setStatusType('error');
       } finally {
+        setSubmitting(false);
         setShowModal(false);
         setSelectedSlot(null);
       }
       return;
     }
 
-    // Fallback local behavior
-    setSlots((prev) =>
-      prev.map((s) =>
-        s.id === selectedSlot.id ? { ...s, booked: true } : s
-      )
-    );
+    // Local dev fallback
+    setSlots((prev) => prev.map((s) => s.id === selectedSlot.id ? { ...s, booked: true } : s));
     setShowModal(false);
     setSelectedSlot(null);
     setStatusMessage('Booking reserved locally (dev mode)');
     setStatusType('success');
-    // TODO: Add notification, email, Airtable integration
+    setSubmitting(false);
   };
 
   return (
-    <div className="max-w-3xl mx-auto py-8">
+    <div className="max-w-7xl mx-auto py-8 px-4 booking-page">
       <div className="bookings-hero">
         <h2 className="text-3xl font-bold mb-2">Book a Training Session</h2>
-        <p className="bookings-lead">Choose a session below to reserve a free taster. If you received an invite, use the booking link provided in your email.</p>
+        <p className="bookings-lead">Choose a session below to reserve a free taster. If you received an invite, it will show your eligible slot and held availability.</p>
       </div>
 
       {/* Accessible status area */}
       <div aria-live="polite" aria-atomic="true" tabIndex={-1} ref={statusRef} style={{ outline: 'none' }}>
         {statusMessage ? (
-          <div className={`p-3 mb-4 rounded ${statusType === 'success' ? 'bg-green-50 border border-green-200 text-green-800' : statusType === 'error' ? 'bg-red-50 border border-red-200 text-red-800' : 'bg-gray-50 border border-gray-200 text-gray-800'}`} role="status">
+          <div className={`p-3 mb-4 rounded ${statusType === 'success' ? 'status-success' : statusType === 'error' ? 'status-error' : 'bg-gray-50'}`} role="status">
             {statusMessage}
           </div>
         ) : null}
@@ -191,55 +198,34 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
         {slots.map((slot) => (
           <div
             key={slot.id}
-            className={`booking-card p-4 border rounded-lg shadow cursor-pointer transition ${slot.booked
-              ? "bg-gray-200 border-gray-400 cursor-not-allowed"
-              : "card"
-              }`}
-            onClick={() => !slot.booked && slot.enabled && handleSelect(slot)}
-            aria-disabled={slot.booked || !slot.enabled}
+            className={`booking-card ${slot.booked ? 'bg-gray-100' : ''} ${slot.eligible ? 'eligible-card' : ''}`}
+            onClick={() => handleSelect(slot)}
             role="button"
-            tabIndex={slot.booked || !slot.enabled ? -1 : 0}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { if (!slot.booked && slot.enabled) handleSelect(slot); } }}
+            tabIndex={slot.enabled && !slot.booked ? 0 : -1}
           >
-            <div className="booking-meta">
-              <FaCalendarAlt style={{ color: 'var(--blue)' }} />
-              <div>
-                <div className="font-semibold">{formatDate(slot.date)}</div>
-                <div className="text-sm bookings-lead">{slot.time} • <span className="booking-slot-group">{slot.group}</span></div>
-              </div>
-            </div>
-
-            {/* capacity / status */}
-            <div className="mt-2 text-sm text-gray-700">
-              {slot.booked ? (
-                <strong>Booked{slot.booker ? ` by ${slot.booker}` : ''}</strong>
-              ) : (
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-600">Available</div>
-                  <div className="text-sm text-gray-600">Slots: 2</div>
+            <div>
+              <div className="booking-meta">
+                <FaCalendarAlt style={{ color: 'var(--blue)' }} />
+                <div>
+                  <div className="date">{formatDate(slot.date)}</div>
+                  <div className="time small-muted">{slot.time} • {slot.label}</div>
                 </div>
-              )}
-            </div>
-
-            {!slot.enabled && !slot.booked && (
-              <div className="mt-2 text-sm text-red-600">
-                <strong>Unavailable</strong>
               </div>
-            )}
+
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', alignItems: 'center' }}>
+                <div className="capacity-badge">{slot.slotsLeft ?? CONFIG.capacityPerSlot} left</div>
+                {slot.eligible ? <div className="eligible-pill">Your slot</div> : null}
+                {!slot.enabled && !slot.booked ? <div className="small-muted">Full</div> : null}
+              </div>
+            </div>
 
             <div className="slot-actions">
               <button
-                onClick={() => !slot.booked && slot.enabled && handleSelect(slot)}
-                disabled={bookingDone || slot.booked || !slot.enabled}
-                className={`btn-primary ${bookingDone || slot.booked || !slot.enabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                onClick={() => handleSelect(slot)}
+                disabled={!slot.enabled || slot.booked || bookingDone}
+                className="btn-primary"
               >
-                {slot.booked || bookingDone ? 'Booked' : 'Book'}
-              </button>
-              <button
-                onClick={() => alert('More info coming soon')}
-                className="bg-gray-100 text-gray-800 py-2 px-4 rounded hover:bg-gray-200"
-              >
-                Details
+                {slot.booked ? 'Booked' : (slot.enabled ? 'Book' : 'Full')}
               </button>
             </div>
           </div>
@@ -249,30 +235,16 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
       {/* Modal for booking confirmation */}
       {showModal && selectedSlot && (
         <div className="fixed inset-0 flex items-center justify-center z-50 booking-modal-backdrop">
-          <div className="card p-6 rounded-lg shadow-xl booking-modal">
-            <h3 className="text-xl font-bold mb-4">Confirm Booking</h3>
-            <p className="mb-2">
-              <strong>Date:</strong> {formatDate(selectedSlot.date)}
-            </p>
-            <p className="mb-2">
-              <strong>Time:</strong> {selectedSlot.time}
-            </p>
-            <p className="mb-4">
-              <strong>Group:</strong> {selectedSlot.group}
-            </p>
-            <div className="flex gap-4">
-              <button
-                onClick={handleBook}
-                className="flex-1 btn-primary"
-              >
-                Confirm booking
-              </button>
-              <button
-                onClick={handleCloseModal}
-                className="flex-1 bg-gray-300 text-gray-800 py-2 px-4 rounded hover:bg-gray-400"
-              >
-                Cancel
-              </button>
+          <div className="card booking-modal">
+            <h3>Confirm Booking</h3>
+            <div className="meta-row">
+              <div className="col"><strong>Date:</strong> {formatDate(selectedSlot.date)}</div>
+              <div className="col"><strong>Time:</strong> {selectedSlot.time}</div>
+            </div>
+            <p className="mb-4 small-muted">Group: {selectedSlot.label}</p>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button onClick={handleBook} disabled={submitting} className="btn-primary" style={{ flex: 1 }}>{submitting ? 'Booking…' : 'Confirm booking'}</button>
+              <button onClick={handleCloseModal} className="btn-ghost" style={{ flex: 1 }}>Cancel</button>
             </div>
           </div>
         </div>

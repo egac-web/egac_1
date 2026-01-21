@@ -152,7 +152,7 @@ export async function POST({ request, locals }) {
       // Send invite email via notifications helper (records events and marks invite)
       try {
         const { sendInviteNotification } = await import('../../lib/notifications');
-        const inviteUrl = `${env.SITE_BASE_URL || ''}/booking?invite=${encodeURIComponent(invite.token)}`;
+        const inviteUrl = `${env.SITE_BASE_URL || ''}/bookings?invite=${encodeURIComponent(invite.token)}`;
         await sendInviteNotification({ enquiryId: inserted.id, inviteId: invite.id, to: inserted.email, inviteUrl, env });
       } catch (err) {
         console.error('sendInviteNotification failed', err);

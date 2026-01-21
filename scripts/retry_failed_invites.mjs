@@ -79,7 +79,7 @@ async function run() {
     try {
       const { data: enquiry } = await supabase.from('enquiries').select('*').eq('id', invite.enquiry_id).maybeSingle();
       if (!enquiry) { console.warn('Enquiry missing for invite', invite.id); continue; }
-      const inviteUrl = `${process.env.SITE_BASE_URL || 'http://localhost:3000'}/booking?invite=${encodeURIComponent(invite.token)}`;
+      const inviteUrl = `${process.env.SITE_BASE_URL || 'http://localhost:3000'}/bookings?invite=${encodeURIComponent(invite.token)}`;
       const subject = 'EGAC: Book a taster / session';
       const html = `<p>Hello,</p><p>Thanks for your enquiry. To book a free taster, please follow this link:</p><p><a href="${inviteUrl}">${inviteUrl}</a></p><p>If you did not request this, ignore this email.</p>`;
       const text = `Book here: ${inviteUrl}`;
