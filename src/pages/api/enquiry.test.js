@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { POST } from './enquiry.json.js';
 
 // Mock supabase helpers
@@ -14,9 +14,13 @@ vi.mock('../../lib/supabase', () => ({
 
 vi.mock('../../lib/notifications', () => ({
   sendInviteNotification: vi.fn(async () => ({})),
+  sendAcademyWaitlistNotification: vi.fn(async () => ({ ok: true })),
 }));
 
 describe('Enquiry endpoint', () => {
+  // Clear mocks between tests to avoid cross-test leakage
+  beforeEach(() => { vi.clearAllMocks(); });
+
   it('adds U11 (age <= academy_max_age) to academy waiting list', async () => {
     const body = {
       contact_name: 'Parent',
@@ -32,8 +36,13 @@ describe('Enquiry endpoint', () => {
     const json = JSON.parse(await res.text());
     expect(json.ok).toBe(true);
     // Ensure createAcademyInvitation was invoked
-    const { createAcademyInvitation } = await import('../../lib/supabase');
+    const { createAcademyInvitation, createInviteForEnquiry } = await import('../../lib/supabase');
     expect(createAcademyInvitation).toHaveBeenCalledWith('enq-1', expect.anything());
+    // Ensure we did NOT create a normal booking invite for Academy enquiries
+    expect(createInviteForEnquiry).not.toHaveBeenCalled();
+    // Ensure the user was notified about waiting list addition
+    const { sendAcademyWaitlistNotification } = await import('../../lib/notifications');
+    expect(sendAcademyWaitlistNotification).toHaveBeenCalledWith(expect.objectContaining({ enquiry: expect.any(Object), invitation: expect.objectContaining({ id: 'acad-1' }), env: expect.any(Object) }));
   });
 
   it('does not add over-age enquiries to academy list', async () => {
@@ -50,8 +59,10 @@ describe('Enquiry endpoint', () => {
     expect(res.status).toBe(200);
     const json = JSON.parse(await res.text());
     expect(json.ok).toBe(true);
-    const { createAcademyInvitation } = await import('../../lib/supabase');
-    // Should not be called a second time for this test (invocation count remains 1)
-    expect(createAcademyInvitation).toHaveBeenCalledTimes(1);
+    const { createAcademyInvitation, createInviteForEnquiry } = await import('../../lib/supabase');
+    // For this over-age enquiry we should NOT create an academy invitation
+    expect(createAcademyInvitation).not.toHaveBeenCalled();
+    // And we should create a normal booking invite
+    expect(createInviteForEnquiry).toHaveBeenCalledWith('enq-1', expect.anything());
   });
 });

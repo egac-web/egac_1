@@ -253,3 +253,61 @@ export async function sendAcademyInvitation(invitation: any, enquiry: any, env?:
     return { success: false, error: err };
   }
 }
+
+// Notify parents that we've added their child to the Academy waiting list (no booking opportunity)
+export async function sendAcademyWaitlistNotification({ enquiry, invitation, env }: { enquiry: any; invitation: any; env?: any }): Promise<NotifyResult> {
+  const dry = !!env?.RESEND_DRY_RUN;
+  if (!env?.RESEND_API_KEY || !env?.RESEND_FROM) {
+    try { await appendEnquiryEvent(enquiry.id || invitation.enquiry_id, { type: 'academy_waitlist_notification_failed', invite_id: invitation.id, error: 'Resend not configured', at: nowISO() }, env); } catch (e) { console.error('Failed to append academy_waitlist_notification_failed', e); }
+    return { ok: false, error: 'no_resend_config' };
+  }
+
+  const siteBase = env?.SITE_BASE_URL || process.env.SITE_BASE_URL || '';
+  let subject = 'EGAC: Added to Academy waiting list';
+  let html = `<p>Hello,</p><p>Thank you for your enquiry. We've added your child to the EGAC Academy waiting list (U11). We will contact people in order during the Spring with an invitation.</p><p>Please note: you will not be given an opportunity to book a taster session — we'll invite families in order when spaces become available.</p>`;
+  let text = `We've added your child to the Academy waiting list (U11). We'll contact people in order during the Spring with an invitation. You will not be given an opportunity to book a taster session.`;
+
+  try {
+    const tpl = await getEmailTemplate('academy_waitlist', 'en', env);
+    if (tpl && tpl.body) {
+      html = tpl.body.replace(/\{\{siteBase\}\}/g, siteBase).replace(/\{\{childName\}\}/g, enquiry.name || '');
+      subject = tpl.subject || subject;
+      text = tpl.plain || text;
+    }
+  } catch (e) {
+    // No template is fine — fall back to default
+  }
+
+  // Staging interception
+  const appEnv = env?.APP_ENV || process.env.APP_ENV || 'production';
+  const stagingAllowed = (env?.STAGING_ALLOWED_EMAILS || process.env.STAGING_ALLOWED_EMAILS || '').split(',').map((s: string) => s.trim()).filter(Boolean);
+  const stagingRedirect = (env?.STAGING_REDIRECT_EMAILS || process.env.STAGING_REDIRECT_EMAILS || '').split(',').map((s: string) => s.trim()).filter(Boolean);
+  let effectiveTo = enquiry.email;
+  let effectiveSubject = subject;
+
+  if (appEnv === 'staging') {
+    const isAllowed = stagingAllowed.length === 0 || stagingAllowed.includes(enquiry.email);
+    if (!isAllowed) {
+      effectiveTo = stagingRedirect.length > 0 ? stagingRedirect.join(',') : (env?.MEMBERSHIP_SECRETARY_EMAIL || enquiry.email);
+      effectiveSubject = `[STAGING] ${subject} (original: ${enquiry.email})`;
+      try { await appendEnquiryEvent(enquiry.id || invitation.enquiry_id, { type: 'staging_email_redirected', invite_id: invitation.id, original_to: enquiry.email, redirected_to: effectiveTo, at: nowISO() }, env); } catch (e) { console.error('Failed to append staging_email_redirected for academy waitlist', e); }
+    } else {
+      effectiveSubject = `[STAGING] ${subject}`;
+    }
+  }
+
+  if (dry) {
+    try { await appendEnquiryEvent(enquiry.id || invitation.enquiry_id, { type: 'academy_waitlist_notification_dry_run', invite_id: invitation.id, to: effectiveTo, at: nowISO() }, env); } catch (e) { console.error('Failed to append academy_waitlist_notification_dry_run', e); }
+    return { ok: true, dryRun: true };
+  }
+
+  try {
+    const res = await sendInviteEmail({ apiKey: env.RESEND_API_KEY, from: env.RESEND_FROM, to: effectiveTo, subject: effectiveSubject, html, text });
+    try { await appendEnquiryEvent(enquiry.id || invitation.enquiry_id, { type: 'academy_waitlist_notification_sent', invite_id: invitation.id, resend_id: res.id, at: nowISO(), meta: res.raw }, env); } catch (e) { console.error('Failed to append academy_waitlist_notification_sent', e); }
+    return { ok: true, resendId: res.id };
+  } catch (err) {
+    console.error('sendAcademyWaitlistNotification failed', err);
+    try { await appendEnquiryEvent(enquiry.id || invitation.enquiry_id, { type: 'academy_waitlist_notification_failed', invite_id: invitation.id, error: (err && err.response) ? err.response : String(err), at: nowISO() }, env); } catch (e) { console.error('Failed to append academy_waitlist_notification_failed', e); }
+    return { ok: false, error: err };
+  }
+}
