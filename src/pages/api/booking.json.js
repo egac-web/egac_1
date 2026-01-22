@@ -95,7 +95,8 @@ export async function POST({ request, locals }) {
       status: 404,
       headers: { 'Content-Type': 'application/json' }
     });
-    if (invite.status !== 'pending') return new Response(JSON.stringify({ ok: false, error: 'Invite is not available for booking' }), {
+    // Allow invites that are pending or sent to be booked; only block failed or already accepted invites
+    if (!['pending','sent'].includes(invite.status)) return new Response(JSON.stringify({ ok: false, error: 'Invite is not available for booking' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' }
     });
