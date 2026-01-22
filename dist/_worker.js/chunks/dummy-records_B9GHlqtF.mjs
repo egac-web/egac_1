@@ -1,0 +1,185 @@
+globalThis.process ??= {}; globalThis.process.env ??= {};
+const dummyRecords = [
+	{
+		id: 1,
+		ageGroup: "u11",
+		athlete: "Lucy Rogers",
+		event: "60m",
+		result: "11.51s",
+		date: "29/03/14",
+		venue: "Crawley"
+	},
+	{
+		id: 2,
+		ageGroup: "u11",
+		athlete: "Maddie Sims",
+		event: "Long Jump",
+		result: "3.93m",
+		date: "22/06/15",
+		venue: "Birmingham"
+	},
+	{
+		id: 3,
+		ageGroup: "u11",
+		athlete: "Steven Hemblade",
+		event: "100m",
+		result: "15.0s",
+		date: "1979",
+		venue: "Redhill"
+	},
+	{
+		id: 4,
+		ageGroup: "u11",
+		athlete: "Rachel Cunningham",
+		event: "Shot Put",
+		result: "5.28m",
+		date: "1997",
+		venue: "East Grinstead"
+	},
+	{
+		id: 5,
+		ageGroup: "u13",
+		athlete: "Grace McCullough",
+		event: "75m",
+		result: "10.37s",
+		date: "21/07/18",
+		venue: "Woodford"
+	},
+	{
+		id: 6,
+		ageGroup: "u13",
+		athlete: "Maddie Sims",
+		event: "600m",
+		result: "1:47.35",
+		date: "29/06/16",
+		venue: "Birmingham"
+	},
+	{
+		id: 7,
+		ageGroup: "u13",
+		athlete: "Alison Ash",
+		event: "Long Jump",
+		result: "4.67m",
+		date: "10/06/84",
+		venue: "Hendon"
+	},
+	{
+		id: 8,
+		ageGroup: "u13",
+		athlete: "Craig Haylor",
+		event: "75m",
+		result: "9.9s",
+		date: "11/07/01",
+		venue: "Worthing"
+	},
+	{
+		id: 9,
+		ageGroup: "u13",
+		athlete: "Tom Sandys",
+		event: "Long Jump",
+		result: "5.19m",
+		date: "15/06/00",
+		venue: "Crawley"
+	},
+	{
+		id: 10,
+		ageGroup: "u13",
+		athlete: "Andrew Medcalf",
+		event: "Triple Jump",
+		result: "9.87m",
+		date: "12/04/95",
+		venue: "Brighton"
+	},
+	{
+		id: 11,
+		ageGroup: "u15",
+		athlete: "Sarah Johnson",
+		event: "100m",
+		result: "12.45s",
+		date: "15/05/22",
+		venue: "Crawley"
+	},
+	{
+		id: 12,
+		ageGroup: "u15",
+		athlete: "Mike Thompson",
+		event: "Long Jump",
+		result: "5.23m",
+		date: "22/06/21",
+		venue: "Brighton"
+	},
+	{
+		id: 13,
+		ageGroup: "u17",
+		athlete: "Emma Wilson",
+		event: "200m",
+		result: "25.67s",
+		date: "10/07/20",
+		venue: "Woodford"
+	},
+	{
+		id: 14,
+		ageGroup: "u17",
+		athlete: "James Brown",
+		event: "High Jump",
+		result: "1.85m",
+		date: "05/08/19",
+		venue: "Hendon"
+	},
+	{
+		id: 15,
+		ageGroup: "u20",
+		athlete: "Sophie Davis",
+		event: "400m",
+		result: "58.23s",
+		date: "18/06/18",
+		venue: "Birmingham"
+	},
+	{
+		id: 16,
+		ageGroup: "u20",
+		athlete: "Alex Taylor",
+		event: "Discus",
+		result: "42.15m",
+		date: "12/05/17",
+		venue: "Worthing"
+	},
+	{
+		id: 17,
+		ageGroup: "senior",
+		athlete: "David Miller",
+		event: "800m",
+		result: "1:52.34",
+		date: "25/07/16",
+		venue: "Crawley"
+	},
+	{
+		id: 18,
+		ageGroup: "senior",
+		athlete: "Lisa Anderson",
+		event: "Javelin",
+		result: "48.92m",
+		date: "03/06/15",
+		venue: "Brighton"
+	},
+	{
+		id: 19,
+		ageGroup: "masters",
+		athlete: "Robert Wilson",
+		event: "1500m",
+		result: "4:15.67",
+		date: "14/08/14",
+		venue: "Woodford"
+	},
+	{
+		id: 20,
+		ageGroup: "masters",
+		athlete: "Karen Smith",
+		event: "Shot Put",
+		result: "11.45m",
+		date: "09/05/13",
+		venue: "Hendon"
+	}
+];
+
+export { dummyRecords as default };

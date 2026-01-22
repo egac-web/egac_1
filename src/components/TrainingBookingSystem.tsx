@@ -38,6 +38,13 @@ function getInitialSlots(weeks = 6) {
   return slots;
 }
 
+// Helper to decide which slots to show to a user. If an invite is present, only the eligible slots
+// for that invite (and that are enabled) should be visible. Public users see all enabled slots.
+export function getVisibleSlots(allSlots: Slot[], invitePresent: boolean) {
+  if (invitePresent) return allSlots.filter((s) => s.eligible && s.enabled);
+  return allSlots.filter((s) => s.enabled);
+}
+
 const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken }) => {
   const [slots, setSlots] = useState<Slot[]>(getInitialSlots(6));
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
@@ -48,7 +55,17 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
   const [bookingDone, setBookingDone] = useState<boolean>(false);
   const [bookingInfo, setBookingInfo] = useState<any>(null);
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
+  const redirectTimerRef = React.useRef<number | null>(null);
+  const REDIRECT_DELAY = 6000; // ms before redirecting to home
   const statusRef = React.useRef<HTMLDivElement | null>(null);
+
+  // Clear redirect timer on unmount
+  React.useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) window.clearTimeout(redirectTimerRef.current);
+    };
+  }, []);
 
   // If we're loaded with an invite token (prop or URL), preselect the slot from query params
   React.useEffect(() => {
@@ -129,6 +146,10 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
     loadPublicAvailability();
   }, [inviteTokenState]);
 
+  // Compute visible slots and an eligible label for invite users
+  const visibleSlots = getVisibleSlots(slots, !!inviteTokenState);
+  const eligibleLabel = inviteTokenState ? (slots.find((s) => s.eligible)?.label ?? null) : null;
+
   // Auto-focus status message for accessibility whenever it changes
   React.useEffect(() => {
     if (statusMessage && statusRef.current) {
@@ -180,6 +201,12 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
         setBookingInfo(body.booking || null);
         setStatusMessage('Booking confirmed — check your email for confirmation.');
         setStatusType('success');
+        // Show a prominent confirmation panel and redirect home after a short delay
+        setShowConfirmation(true);
+        if (redirectTimerRef.current) window.clearTimeout(redirectTimerRef.current);
+        redirectTimerRef.current = window.setTimeout(() => {
+          window.location.assign('/');
+        }, REDIRECT_DELAY);
       } catch (err: any) {
         setStatusMessage('Booking failed: ' + (err?.message || String(err)));
         setStatusType('error');
@@ -195,8 +222,16 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
     setSlots((prev) => prev.map((s) => s.id === selectedSlot.id ? { ...s, booked: true } : s));
     setShowModal(false);
     setSelectedSlot(null);
-    setStatusMessage('Booking reserved locally (dev mode)');
+    setBookingDone(true);
+    setBookingInfo({ id: 'local-dev', session_date: selectedSlot.date, slot: selectedSlot.group, session_time: selectedSlot.time });
+    setStatusMessage('Booking reserved locally (dev mode) — check your email (dev)');
     setStatusType('success');
+    // Show confirmation and redirect (dev mode)
+    setShowConfirmation(true);
+    if (redirectTimerRef.current) window.clearTimeout(redirectTimerRef.current);
+    redirectTimerRef.current = window.setTimeout(() => {
+      window.location.assign('/');
+    }, REDIRECT_DELAY);
     setSubmitting(false);
   };
 
@@ -206,6 +241,19 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
         <h2 className="text-3xl font-bold mb-2">Book a Training Session</h2>
         <p className="bookings-lead">Choose a session below to reserve a free taster. If you received an invite, it will show your eligible slot and held availability.</p>
       </div>
+
+      {/* Confirmation overlay shown after booking */}
+      {showConfirmation && bookingInfo ? (
+        <div className="p-6 mb-6 rounded-lg border-l-4 border-green-500 bg-green-50" role="status" aria-live="polite">
+          <h3 className="text-xl font-semibold">Booking confirmed</h3>
+          <p className="mt-2">Your session on <strong>{new Date(bookingInfo.session_date).toLocaleDateString('en-GB')}</strong> ({CONFIG.slots[bookingInfo.slot]?.label || bookingInfo.slot}) has been booked. A confirmation email has been sent to the email address you provided when enquiring (check your inbox and spam folder).</p>
+          <p className="mt-2">You will be returned to the home page in {Math.round(REDIRECT_DELAY / 1000)} seconds.</p>
+          <div className="mt-4" style={{ display: 'flex', gap: '0.5rem' }}>
+            <button onClick={() => { if (redirectTimerRef.current) window.clearTimeout(redirectTimerRef.current); window.location.assign('/'); }} className="btn-primary">Return home now</button>
+            <button onClick={() => { setShowConfirmation(false); if (redirectTimerRef.current) window.clearTimeout(redirectTimerRef.current); }} className="btn-ghost">Stay on page</button>
+          </div>
+        </div>
+      ) : null}
 
       {/* Accessible status area */}
       <div aria-live="polite" aria-atomic="true" tabIndex={-1} ref={statusRef} style={{ outline: 'none' }}>
@@ -217,7 +265,21 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
       </div>
 
       <div className="booking-grid">
-        {(inviteTokenState ? slots.filter(s => s.enabled) : slots).map((slot) => (
+        {inviteTokenState ? (
+          <div className="p-3 mb-4 rounded border-l-4 border-blue-500 bg-blue-50">
+            {eligibleLabel ? (
+              <p className="small-muted">Showing sessions for <strong>{eligibleLabel}</strong>. If none are listed, it means there are no vacancies in your group.</p>
+            ) : (
+              <p className="small-muted">You're invited — showing only sessions for your eligible group.</p>
+            )}
+          </div>
+        ) : null}
+
+        {visibleSlots.length === 0 && inviteTokenState ? (
+          <div className="p-4 mb-4 rounded bg-yellow-50 border border-yellow-200">No eligible sessions with vacancies were found for your group. Please check other dates or contact us.</div>
+        ) : null}
+
+        {visibleSlots.map((slot) => (
           <div
             key={slot.id}
             className={`booking-card ${slot.booked ? 'bg-gray-100' : ''} ${slot.eligible ? 'eligible-card' : ''}`}
