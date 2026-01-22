@@ -52,67 +52,26 @@ if (!inviteToken) {
 ---
 
 <Layout title="Training Session Bookings">
-  <div class="bookings-hero">
-    <h2 class="text-3xl font-bold mb-2">Book a Training Session</h2>
-    <p class="bookings-lead">Choose a session below to reserve a free taster. If you received an invite, use the booking link provided in your email.</p>
-  </div>
 
-  {inviteData ? (
-    <div class="invite-banner">
-      <div style="flex:1;">
-        <div class="meta">Invited: {inviteData.enquiry.name || inviteData.enquiry.email}</div>
-        {inviteBanner ? (
-          <div class="hint">You're eligible for <strong>{CONFIG.slots[inviteBanner.eligibleSlot].label}</strong> on <strong>{new Date(inviteBanner.date).toLocaleDateString('en-GB')}</strong>. Use the <em>Book (invited)</em> button to reserve your spot — it's held for you for a limited time.</div>
-        ) : inviteData.booking ? (
-          <div class="hint">You already have a booking on {inviteData.booking.session_date} — check your email for confirmation.</div>
-        ) : (
-          <div class="hint">We couldn't find an eligible slot with vacancies; check other dates or contact us.</div>
-        )}
+    {inviteData ? (
+      <div class="invite-banner">
+        <div style="flex:1;">
+          <div class="meta">Invited: {inviteData.enquiry.name || inviteData.enquiry.email}</div>
+          {inviteBanner ? (
+            <div class="hint">You're eligible for <strong>{CONFIG.slots[inviteBanner.eligibleSlot].label}</strong> on <strong>{new Date(inviteBanner.date).toLocaleDateString('en-GB')}</strong>. Use the <em>Book (invited)</em> button to reserve your spot — it's held for you for a limited time.</div>
+          ) : inviteData.booking ? (
+            <div class="hint">You already have a booking on {inviteData.booking.session_date} — check your email for confirmation.</div>
+          ) : (
+            <div class="hint">We couldn't find an eligible slot with vacancies; check other dates or contact us.</div>
+          )}
+        </div>
+        <div style="text-align:right;">
+          <a class="btn-primary" href={`/bookings?invite=${inviteData.invite.token}`}>View available sessions</a>
+        </div>
       </div>
-      <div style="text-align:right;">
-        <a class="btn-primary" href={`/bookings?invite=${inviteData.invite.token}`}>View available sessions</a>
-      </div>
-    </div>
-  ) : null}
+    ) : null}
 
-  {inviteToken ? (
     <div>
       <TrainingBookingSystem client:load inviteToken={inviteToken} />
     </div>
-  ) : (
-    <div class="booking-grid">
-      {slots.map((slot) => {
-        const slotConfig = CONFIG.slots[slot.group];
-        const dateLabel = new Date(slot.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
-        const availabilityForDate = (pageAvailability || inviteData?.availability) ? (pageAvailability || inviteData?.availability).find((a) => a.date === slot.date) : null;
-        const eligibleForThisDate = availabilityForDate && availabilityForDate.eligibleSlot === slot.group;
-        const slotsLeft = availabilityForDate ? (availabilityForDate.slots[slot.group] ?? 0) : CONFIG.capacityPerSlot;
-        if (slotsLeft !== null && slotsLeft <= 0) return null;
-        return (
-          <article key={slot.id} class="booking-card p-4 border rounded-lg shadow">
-            <div class="booking-meta">
-              <span class="aria-icon">📅</span>
-              <div>
-                <div class="font-semibold">{dateLabel}</div>
-                <div class="text-sm bookings-lead">{slotConfig.time} • <span class="booking-slot-group">{slotConfig.label}</span></div>
-              </div>
-            </div>
-            <div class="slot-actions">
-              {inviteData ? (
-                inviteData.booking ? (
-                  <span class="text-sm">You already booked for {inviteData.booking.session_date}</span>
-                ) : eligibleForThisDate ? (
-                  <a href={`/bookings?invite=${inviteToken}&date=${slot.date}&slot=${slot.group}`} class="btn-primary">Book (invited)</a>
-                ) : (
-                  <button class="bg-gray-100 text-gray-800 py-2 px-4 rounded" disabled>Not eligible</button>
-                )
-              ) : (
-                <a href={`/booking?date=${slot.date}&slot=${slot.group}`} class="btn-primary">Book</a>
-              )}
-            </div>
-          </article>
-        );
-      })}
-    </div>
-  )}
-</Layout>
+
