@@ -107,6 +107,28 @@ const TrainingBookingSystem: React.FC<{ inviteToken?: string }> = ({ inviteToken
     loadInvite();
   }, [inviteTokenState]);
 
+  // Load public availability when no invite token present
+  React.useEffect(() => {
+    async function loadPublicAvailability() {
+      if (inviteTokenState) return; // only for public view
+      try {
+        const res = await fetch('/api/booking.json');
+        const body = await res.json();
+        if (!res.ok || !body.ok) return;
+        const availability = (body.availability || []).reduce((acc: Record<string, any>, a: any) => { acc[a.date] = a; return acc; }, {});
+        setSlots((prev) => prev.map((s) => {
+          const a = availability[s.date];
+          if (!a) return s;
+          const slotsLeft = (a.slots && typeof a.slots[s.group] === 'number') ? a.slots[s.group] : CONFIG.capacityPerSlot;
+          return { ...s, slotsLeft, enabled: slotsLeft > 0 };
+        }));
+      } catch (err) {
+        // ignore public availability errors silently
+      }
+    }
+    loadPublicAvailability();
+  }, [inviteTokenState]);
+
   // Auto-focus status message for accessibility whenever it changes
   React.useEffect(() => {
     if (statusMessage && statusRef.current) {
