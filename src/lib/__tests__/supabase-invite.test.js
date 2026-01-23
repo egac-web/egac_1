@@ -1,1 +1,7 @@
-// Flaky test removed - behavior covered by integration tests and manual checks
+import { describe, it } from 'vitest';
+
+describe('supabase invite placeholder', () => {
+  it('placeholder', () => {
+    // placeholder - flaky test removed
+  });
+});

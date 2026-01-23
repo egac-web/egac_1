@@ -60,6 +60,13 @@ export async function insertEnquiry(payload: Enquiry, env?: any) {
 
 export async function createInviteForEnquiry(enquiry_id: string, env?: any) {
   const client = getSupabaseAdmin(env);
+  // Do not allow creating a booking invite for enquiries already on the Academy waiting list
+  const { data: academyInv, error: acadErr } = await client.from('academy_invitations').select('*').eq('enquiry_id', enquiry_id).maybeSingle();
+  if (acadErr) throw acadErr;
+  if (academyInv) {
+    throw new Error('enquiry_on_academy_waitlist');
+  }
+
   const token = generateToken(24);
   const environment = env?.APP_ENV || process.env.APP_ENV || 'production';
   const payload = { token, enquiry_id, status: 'pending', send_attempts: 0, last_send_error: null, environment };

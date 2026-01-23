@@ -36,7 +36,7 @@ export function inviteEmailTemplate({
     <div class="container">
       <div class="card">
         <div class="header">
-          ${ logoUrl ? `<img src="${logoUrl}" alt="${siteName}" width="44" style="display:block;border-radius:6px"/>` : '' }
+          ${logoUrl ? `<img src="${logoUrl}" alt="${siteName}" width="44" style="display:block;border-radius:6px"/>` : ''}
           <div class="brand">${siteName}</div>
         </div>
         <div class="hero">

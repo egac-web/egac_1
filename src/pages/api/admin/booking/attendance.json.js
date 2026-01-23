@@ -51,10 +51,22 @@ export async function POST({ request, locals }) {
     // If attended and the admin asked to send membership link — create invite and send email
     if (status === 'attended' && send_membership_link) {
       try {
-        const invite = await createInviteForEnquiry(enquiry_id, env);
-        const membershipUrl = `${env.SITE_URL || ''}/membership?token=${invite.token}`;
+        let invite;
+        try {
+          invite = await createInviteForEnquiry(enquiry_id, env);
+        } catch (err) {
+          if (String(err.message || '').includes('enquiry_on_academy_waitlist')) {
+            responsePayload.membership_sent = false;
+            responsePayload.warning = 'Enquiry is on Academy waiting list; membership link will not be sent';
+            invite = null;
+          } else {
+            throw err;
+          }
+        }
+
+        const membershipUrl = invite ? `${env.SITE_URL || ''}/membership?token=${invite.token}` : null;
         const enquiry = booking.enquiry || {};
-        if (enquiry && enquiry.email) {
+        if (invite && enquiry && enquiry.email) {
           try {
             const { sendInviteNotification } = await import('../../../../lib/notifications');
             await sendInviteNotification({ enquiryId: enquiry_id, inviteId: invite.id, to: enquiry.email, inviteUrl: membershipUrl, env });
@@ -64,6 +76,8 @@ export async function POST({ request, locals }) {
             responsePayload.membership_sent = false;
             responsePayload.warning = 'Failed to send membership link';
           }
+        } else if (!invite) {
+          // already handled above
         } else {
           responsePayload.membership_sent = false;
           responsePayload.warning = 'No email address to send membership link';

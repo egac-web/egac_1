@@ -22,10 +22,26 @@ export async function sendInviteNotification({ enquiryId, inviteId, to, inviteUr
     return { ok: false, error: 'no_resend_config' };
   }
 
-  // Build message
-  const baseSubject = 'EGAC: Book a taster / session';
-  const html = `<p>Hello,</p><p>Thanks for your enquiry. To book a free taster, please follow this link:</p><p><a href="${inviteUrl}">${inviteUrl}</a></p><p>If you did not request this, ignore this email.</p>`;
-  const text = `Book here: ${inviteUrl}`;
+  // Prefer DB template or MJML file when available
+  const { getEmailTemplate } = await import('./supabase');
+  const tpl = await getEmailTemplate('invite_email', 'en', env);
+  let html = '';
+  let text = `Book here: ${inviteUrl}`;
+  if (tpl && tpl.html) {
+    // simple render
+    const renderVars: any = { inviteUrl, siteName: env.SITE_NAME || 'EGAC', accentColor: env.SITE_ACCENT || '#145FBA', logoUrl: env.SITE_LOGO_URL || '' };
+    try {
+      const { renderMjmlTemplate } = await import('./mjmlRenderer');
+      const mjmlHtml = renderMjmlTemplate('invite_email', renderVars);
+      html = mjmlHtml || tpl.html.replace(/\{\{inviteUrl\}\}/g, inviteUrl).replace(/\{\{siteName\}\}/g, renderVars.siteName);
+      text = tpl.text.replace(/\{\{inviteUrl\}\}/g, inviteUrl);
+    } catch (e) {
+      html = tpl.html.replace(/\{\{inviteUrl\}\}/g, inviteUrl).replace(/\{\{siteName\}\}/g, renderVars.siteName);
+      text = tpl.text.replace(/\{\{inviteUrl\}\}/g, inviteUrl);
+    }
+  } else {
+    html = `<p>Hello,</p><p>Thanks for your enquiry. To book a free taster, please follow this link:</p><p><a href="${inviteUrl}">${inviteUrl}</a></p><p>If you did not request this, ignore this email.</p>`;
+  }
 
   // Handle staging interception
   const appEnv = env?.APP_ENV || process.env.APP_ENV || 'production';
@@ -60,7 +76,7 @@ export async function sendInviteNotification({ enquiryId, inviteId, to, inviteUr
 
   if (dry) {
     try {
-      await appendEnquiryEvent(enquiryId, { type: 'invite_send_dry_run', invite_id: inviteId, to: effectiveTo, at: nowISO(), meta: { inviteUrl } }, env);
+      await appendEnquiryEvent(enquiryId, { type: 'invite_send_dry_run', invite_id: inviteId, to: effectiveTo, at: nowISO(), meta: { inviteUrl, template_key: 'invite_email' } }, env);
     } catch (e) { console.error('Failed to append invite_send_dry_run', e); }
     return { ok: true, dryRun: true };
   }
@@ -68,14 +84,14 @@ export async function sendInviteNotification({ enquiryId, inviteId, to, inviteUr
   try {
     const res = await sendInviteEmail({ apiKey: env.RESEND_API_KEY, from: env.RESEND_FROM, to: effectiveTo, subject: effectiveSubject, html, text });
     try {
-      await appendEnquiryEvent(enquiryId, { type: 'invite_sent', invite_id: inviteId, resend_id: res.id, at: nowISO(), meta: res.raw }, env);
+      await appendEnquiryEvent(enquiryId, { type: 'invite_sent', invite_id: inviteId, resend_id: res.id, at: nowISO(), meta: res.raw, template_key: 'invite_email' }, env);
     } catch (e) { console.error('Failed to append enquiry event after invite_sent', e); }
     try { await markInviteSent(inviteId, env); } catch (e) { console.error('Failed to mark invite sent', e); }
     return { ok: true, resendId: res.id };
   } catch (err) {
     console.error('sendInviteEmail failed', err);
     try {
-      await appendEnquiryEvent(enquiryId, { type: 'invite_send_failed', invite_id: inviteId, error: (err && err.response) ? err.response : String(err), at: nowISO() }, env);
+      await appendEnquiryEvent(enquiryId, { type: 'invite_send_failed', invite_id: inviteId, error: (err && err.response) ? err.response : String(err), at: nowISO(), template_key: 'invite_email' }, env);
     } catch (e) { console.error('Failed to append enquiry event for failed send', e); }
     try {
       const { markInviteSendFailed } = await import('./supabase');
@@ -125,13 +141,41 @@ export async function sendBookingConfirmationNotification({ enquiryId, bookingId
     return { ok: true, dryRun: true };
   }
 
+  // Prefer DB template / MJML compilation if available
   try {
-    const res = await sendBookingConfirmation({ apiKey: env.RESEND_API_KEY, from: env.RESEND_FROM, to: effectiveTo, date, slotLabel });
-    try { await appendEnquiryEvent(enquiryId, { type: 'booking_confirm_email_sent', booking_id: bookingId, resend_id: res.id, at: nowISO(), meta: res.raw }, env); } catch (e) { console.error('Failed to append booking_confirm_email_sent event', e); }
+    const { getEmailTemplate } = await import('./supabase');
+    let html = '';
+    let text = `Your booking for ${date} (${slotLabel}) is confirmed.`;
+    let subject = `${env?.SITE_NAME || 'EGAC'}: Booking confirmed`;
+    try {
+      const tpl = await getEmailTemplate('booking_confirmation', 'en', env);
+      const renderVars: any = { date, slotLabel, siteName: env.SITE_NAME || 'EGAC', accentColor: env.SITE_ACCENT || '#145FBA' };
+      // try MJML first
+      try {
+        const { renderMjmlTemplate } = await import('./mjmlRenderer');
+        const mjmlHtml = renderMjmlTemplate('booking_confirmation', renderVars);
+        if (mjmlHtml) {
+          html = mjmlHtml;
+        }
+      } catch (e) {
+        // ignore
+      }
+      if (!html && tpl && tpl.html) {
+        html = tpl.html.replace(/\{\{date\}\}/g, date).replace(/\{\{slotLabel\}\}/g, slotLabel).replace(/\{\{siteName\}\}/g, renderVars.siteName);
+        text = tpl.text.replace(/\{\{date\}\}/g, date).replace(/\{\{slotLabel\}\}/g, slotLabel);
+        subject = tpl.subject || subject;
+      }
+    } catch (e) {
+      // fallback to inline
+      html = `<p>Hello,</p><p>Your booking for <strong>${date}</strong> (${slotLabel}) is confirmed. See you at the session.</p>`;
+    }
+
+    const res = await sendInviteEmail({ apiKey: env.RESEND_API_KEY, from: env.RESEND_FROM, to: effectiveTo, subject: (effectiveSubjectPrefix + subject), html, text });
+    try { await appendEnquiryEvent(enquiryId, { type: 'booking_confirm_email_sent', booking_id: bookingId, resend_id: res.id, at: nowISO(), meta: res.raw, template_key: 'booking_confirmation' }, env); } catch (e) { console.error('Failed to append booking_confirm_email_sent event', e); }
     return { ok: true, resendId: res.id };
   } catch (err) {
     console.error('sendBookingConfirmation failed', err);
-    try { await appendEnquiryEvent(enquiryId, { type: 'booking_confirm_email_failed', booking_id: bookingId, error: (err && err.response) ? err.response : String(err), at: nowISO() }, env); } catch (e) { console.error('Failed to append booking_confirm_email_failed event', e); }
+    try { await appendEnquiryEvent(enquiryId, { type: 'booking_confirm_email_failed', booking_id: bookingId, error: (err && err.response) ? err.response : String(err), at: nowISO(), template_key: 'booking_confirmation' }, env); } catch (e) { console.error('Failed to append booking_confirm_email_failed event', e); }
     return { ok: false, error: err };
   }
 }
@@ -269,7 +313,18 @@ export async function sendAcademyWaitlistNotification({ enquiry, invitation, env
 
   try {
     const tpl = await getEmailTemplate('academy_waitlist', 'en', env);
-    if (tpl && tpl.body) {
+    const renderVars: any = { siteBase, childName: enquiry.name || '', siteName: env?.SITE_NAME || 'EGAC', accentColor: env?.SITE_ACCENT || '#145FBA' };
+    // try MJML first
+    try {
+      const { renderMjmlTemplate } = await import('./mjmlRenderer');
+      const mjmlHtml = renderMjmlTemplate('academy_waitlist', renderVars);
+      if (mjmlHtml) {
+        html = mjmlHtml;
+      }
+    } catch (e) {
+      // ignore and fall back to DB template
+    }
+    if ((!html || html.trim() === '') && tpl && tpl.body) {
       html = tpl.body.replace(/\{\{siteBase\}\}/g, siteBase).replace(/\{\{childName\}\}/g, enquiry.name || '');
       subject = tpl.subject || subject;
       text = tpl.plain || text;
@@ -303,11 +358,11 @@ export async function sendAcademyWaitlistNotification({ enquiry, invitation, env
 
   try {
     const res = await sendInviteEmail({ apiKey: env.RESEND_API_KEY, from: env.RESEND_FROM, to: effectiveTo, subject: effectiveSubject, html, text });
-    try { await appendEnquiryEvent(enquiry.id || invitation.enquiry_id, { type: 'academy_waitlist_notification_sent', invite_id: invitation.id, resend_id: res.id, at: nowISO(), meta: res.raw }, env); } catch (e) { console.error('Failed to append academy_waitlist_notification_sent', e); }
+    try { await appendEnquiryEvent(enquiry.id || invitation.enquiry_id, { type: 'academy_waitlist_notification_sent', invite_id: invitation.id, resend_id: res.id, at: nowISO(), meta: res.raw, template_key: 'academy_waitlist' }, env); } catch (e) { console.error('Failed to append academy_waitlist_notification_sent', e); }
     return { ok: true, resendId: res.id };
   } catch (err) {
     console.error('sendAcademyWaitlistNotification failed', err);
-    try { await appendEnquiryEvent(enquiry.id || invitation.enquiry_id, { type: 'academy_waitlist_notification_failed', invite_id: invitation.id, error: (err && err.response) ? err.response : String(err), at: nowISO() }, env); } catch (e) { console.error('Failed to append academy_waitlist_notification_failed', e); }
+    try { await appendEnquiryEvent(enquiry.id || invitation.enquiry_id, { type: 'academy_waitlist_notification_failed', invite_id: invitation.id, error: (err && err.response) ? err.response : String(err), at: nowISO(), template_key: 'academy_waitlist' }, env); } catch (e) { console.error('Failed to append academy_waitlist_notification_failed', e); }
     return { ok: false, error: err };
   }
 }
