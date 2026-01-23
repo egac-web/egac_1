@@ -1,8 +1,8 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { o as insertEnquiry, d as createInviteForEnquiry, p as createBooking, b as appendEnquiryEvent } from '../../../chunks/supabase_BK1iFgLr.mjs';
-import { sendInviteNotification, sendBookingConfirmationNotification, sendReminderNotification } from '../../../chunks/notifications_DQEtDqdD.mjs';
+import { o as insertEnquiry, d as createInviteForEnquiry, p as createBooking, b as appendEnquiryEvent } from '../../../chunks/supabase_ymhKQ2x1.mjs';
+import { sendInviteNotification, sendBookingConfirmationNotification, sendReminderNotification } from '../../../chunks/notifications_CX5oPyXA.mjs';
 import { C as CONFIG } from '../../../chunks/booking_CA6h9KO-.mjs';
-export { r as renderers } from '../../../chunks/_@astro-renderers_rSKK_bSn.mjs';
+export { r as renderers } from '../../../chunks/_@astro-renderers_BTUeEnL1.mjs';
 
 const prerender = false;
 function tomorrowDateString() {
@@ -29,7 +29,7 @@ async function POST({ request, locals }) {
       const enquiry = await insertEnquiry({ name: "E2E Test", email: testEmail, interest: "E2E dry-run" }, env);
       const invite = await createInviteForEnquiry(enquiry.id, env);
       const siteBase = env.SITE_BASE_URL || process.env.SITE_BASE_URL || "";
-      const inviteUrl = `${siteBase}/booking?invite=${encodeURIComponent(invite.token)}`;
+      const inviteUrl = `${siteBase}/bookings?invite=${encodeURIComponent(invite.token)}`;
       const steps = [];
       const notifyEnv = Object.assign({}, env, { RESEND_DRY_RUN: dryRun ? "1" : "" });
       const inviteRes = await sendInviteNotification({ enquiryId: enquiry.id, inviteId: invite.id, to: enquiry.email, inviteUrl, env: notifyEnv });

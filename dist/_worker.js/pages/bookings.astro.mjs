@@ -1,10 +1,10 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { e as createAstro, f as createComponent, k as renderComponent, r as renderTemplate, m as maybeRenderHead, h as addAttribute, p as Fragment } from '../chunks/astro/server_BJplAL8L.mjs';
-import { $ as $$Layout } from '../chunks/Layout_BIprt-IE.mjs';
-import { R as React, a as reactExports } from '../chunks/_@astro-renderers_rSKK_bSn.mjs';
-export { r as renderers } from '../chunks/_@astro-renderers_rSKK_bSn.mjs';
+import { e as createAstro, f as createComponent, k as renderComponent, r as renderTemplate, m as maybeRenderHead, h as addAttribute } from '../chunks/astro/server_D9mQmrFP.mjs';
+import { $ as $$Layout } from '../chunks/Layout_BqUPBaKK.mjs';
+import { R as React, a as reactExports } from '../chunks/_@astro-renderers_BTUeEnL1.mjs';
+export { r as renderers } from '../chunks/_@astro-renderers_BTUeEnL1.mjs';
 /* empty css                                    */
-import { g as getNextNWeekdayDates, C as CONFIG } from '../chunks/booking_CA6h9KO-.mjs';
+import { C as CONFIG, g as getNextNWeekdayDates } from '../chunks/booking_CA6h9KO-.mjs';
 
 var jsxRuntime = {exports: {}};
 
@@ -136,52 +136,21 @@ function formatDate(date) {
     year: "numeric"
   });
 }
-function getInitialSlots() {
+function getInitialSlots(weeks = 6) {
+  const dates = getNextNWeekdayDates(2, weeks);
   const slots = [];
-  const today = /* @__PURE__ */ new Date();
-  for (let week = 0; week < 4; week++) {
-    const tuesday = new Date(today);
-    tuesday.setDate(today.getDate() + (2 + 7 - today.getDay()) % 7 + week * 7);
-    const dateStr = tuesday.toISOString().slice(0, 10);
-    slots.push(
-      {
-        id: `${dateStr}-u13-1`,
-        date: dateStr,
-        time: "18:30-19:30",
-        group: "U13s",
-        enabled: true,
-        booked: false
-      },
-      {
-        id: `${dateStr}-u13-2`,
-        date: dateStr,
-        time: "18:30-19:30",
-        group: "U13s",
-        enabled: true,
-        booked: false
-      },
-      {
-        id: `${dateStr}-u15-1`,
-        date: dateStr,
-        time: "19:30-20:30",
-        group: "U15s+",
-        enabled: true,
-        booked: false
-      },
-      {
-        id: `${dateStr}-u15-2`,
-        date: dateStr,
-        time: "19:30-20:30",
-        group: "U15s+",
-        enabled: true,
-        booked: false
-      }
-    );
+  for (const dateStr of dates) {
+    slots.push({ id: `${dateStr}-u13`, date: dateStr, time: CONFIG.slots.u13.time, group: "u13", label: CONFIG.slots.u13.label, enabled: true, booked: false, slotsLeft: CONFIG.capacityPerSlot });
+    slots.push({ id: `${dateStr}-u15plus`, date: dateStr, time: CONFIG.slots.u15plus.time, group: "u15plus", label: CONFIG.slots.u15plus.label, enabled: true, booked: false, slotsLeft: CONFIG.capacityPerSlot });
   }
   return slots;
 }
+function getVisibleSlots(allSlots, invitePresent) {
+  if (invitePresent) return allSlots.filter((s) => s.eligible && s.enabled);
+  return allSlots.filter((s) => s.enabled);
+}
 const TrainingBookingSystem = ({ inviteToken }) => {
-  const [slots, setSlots] = reactExports.useState(getInitialSlots());
+  const [slots, setSlots] = reactExports.useState(getInitialSlots(6));
   const [selectedSlot, setSelectedSlot] = reactExports.useState(null);
   const [showModal, setShowModal] = reactExports.useState(false);
   const [inviteTokenState, setInviteTokenState] = reactExports.useState(inviteToken || null);
@@ -189,8 +158,16 @@ const TrainingBookingSystem = ({ inviteToken }) => {
   const [statusType, setStatusType] = reactExports.useState(null);
   const [bookingDone, setBookingDone] = reactExports.useState(false);
   const [bookingInfo, setBookingInfo] = reactExports.useState(null);
+  const [submitting, setSubmitting] = reactExports.useState(false);
+  const [showConfirmation, setShowConfirmation] = reactExports.useState(false);
+  const redirectTimerRef = React.useRef(null);
+  const REDIRECT_DELAY = 6e3;
   const statusRef = React.useRef(null);
-  const groupKeyToLabel = { u13: "U13s", u15plus: "U15s+" };
+  React.useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) window.clearTimeout(redirectTimerRef.current);
+    };
+  }, []);
   React.useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -199,8 +176,7 @@ const TrainingBookingSystem = ({ inviteToken }) => {
       const qSlot = params.get("slot");
       if (qInvite && !inviteTokenState) setInviteTokenState(qInvite);
       if (qDate && qSlot) {
-        const targetLabel = groupKeyToLabel[qSlot] || qSlot;
-        const match = slots.find((s) => s.date === qDate && s.group === targetLabel);
+        const match = slots.find((s) => s.date === qDate && s.group === qSlot);
         if (match) {
           setSelectedSlot(match);
           setShowModal(true);
@@ -210,11 +186,71 @@ const TrainingBookingSystem = ({ inviteToken }) => {
     }
   }, []);
   React.useEffect(() => {
+    async function loadInvite() {
+      if (!inviteTokenState) return;
+      try {
+        const res = await fetch(`/api/booking.json?invite=${encodeURIComponent(inviteTokenState)}`);
+        const body = await res.json();
+        if (!res.ok || !body.ok) {
+          setStatusMessage("Failed to load invite data");
+          setStatusType("error");
+          return;
+        }
+        const availability = (body.availability || []).reduce((acc, a) => {
+          acc[a.date] = a;
+          return acc;
+        }, {});
+        setSlots((prev) => prev.map((s) => {
+          const a = availability[s.date];
+          if (!a) return s;
+          const slotsLeft = a.slots && typeof a.slots[s.group] === "number" ? a.slots[s.group] : CONFIG.capacityPerSlot;
+          const eligible = a.eligibleSlot === s.group;
+          return { ...s, slotsLeft, enabled: slotsLeft > 0, eligible };
+        }));
+        if (body.booking) {
+          setBookingDone(true);
+          setBookingInfo(body.booking);
+          setStatusMessage("You already have a booking — check your email.");
+          setStatusType("success");
+        }
+      } catch (err) {
+        setStatusMessage("Failed to fetch availability");
+        setStatusType("error");
+      }
+    }
+    loadInvite();
+  }, [inviteTokenState]);
+  React.useEffect(() => {
+    async function loadPublicAvailability() {
+      if (inviteTokenState) return;
+      try {
+        const res = await fetch("/api/booking.json");
+        const body = await res.json();
+        if (!res.ok || !body.ok) return;
+        const availability = (body.availability || []).reduce((acc, a) => {
+          acc[a.date] = a;
+          return acc;
+        }, {});
+        setSlots((prev) => prev.map((s) => {
+          const a = availability[s.date];
+          if (!a) return s;
+          const slotsLeft = a.slots && typeof a.slots[s.group] === "number" ? a.slots[s.group] : CONFIG.capacityPerSlot;
+          return { ...s, slotsLeft, enabled: slotsLeft > 0 };
+        }));
+      } catch (err) {
+      }
+    }
+    loadPublicAvailability();
+  }, [inviteTokenState]);
+  const visibleSlots = getVisibleSlots(slots, !!inviteTokenState);
+  const eligibleLabel = inviteTokenState ? slots.find((s) => s.eligible)?.label ?? null : null;
+  React.useEffect(() => {
     if (statusMessage && statusRef.current) {
       statusRef.current.focus();
     }
   }, [statusMessage]);
   const handleSelect = (slot) => {
+    if (!slot.enabled || slot.booked) return;
     setSelectedSlot(slot);
     setShowModal(true);
   };
@@ -224,6 +260,8 @@ const TrainingBookingSystem = ({ inviteToken }) => {
   };
   const handleBook = async () => {
     if (!selectedSlot) return;
+    if (submitting) return;
+    setSubmitting(true);
     if (inviteTokenState) {
       setStatusMessage("Booking in progress...");
       setStatusType(null);
@@ -234,127 +272,152 @@ const TrainingBookingSystem = ({ inviteToken }) => {
           body: JSON.stringify({ invite: inviteTokenState, session_date: selectedSlot.date })
         });
         const body = await res.json();
-        if (!res.ok || !body.ok) throw new Error(body.error || "Booking failed");
-        setSlots((prev) => prev.map((s) => s.id === selectedSlot.id ? { ...s, booked: true } : s));
+        if (!res.ok || !body.ok) {
+          if (res.status === 409 && body.booking) {
+            setBookingDone(true);
+            setBookingInfo(body.booking);
+            setStatusMessage("A booking already exists for this invite.");
+            setStatusType("success");
+            return;
+          }
+          throw new Error(body.error || "Booking failed");
+        }
+        setSlots((prev) => prev.map((s) => s.id === `${selectedSlot.date}-${selectedSlot.group}` ? { ...s, booked: true, slotsLeft: (s.slotsLeft || 1) - 1 } : s));
         setBookingDone(true);
         setBookingInfo(body.booking || null);
         setStatusMessage("Booking confirmed — check your email for confirmation.");
         setStatusType("success");
+        setShowConfirmation(true);
+        if (redirectTimerRef.current) window.clearTimeout(redirectTimerRef.current);
+        redirectTimerRef.current = window.setTimeout(() => {
+          window.location.assign("/");
+        }, REDIRECT_DELAY);
       } catch (err) {
         setStatusMessage("Booking failed: " + (err?.message || String(err)));
         setStatusType("error");
       } finally {
+        setSubmitting(false);
         setShowModal(false);
         setSelectedSlot(null);
       }
       return;
     }
-    setSlots(
-      (prev) => prev.map(
-        (s) => s.id === selectedSlot.id ? { ...s, booked: true } : s
-      )
-    );
+    setSlots((prev) => prev.map((s) => s.id === selectedSlot.id ? { ...s, booked: true } : s));
     setShowModal(false);
     setSelectedSlot(null);
-    setStatusMessage("Booking reserved locally (dev mode)");
+    setBookingDone(true);
+    setBookingInfo({ id: "local-dev", session_date: selectedSlot.date, slot: selectedSlot.group, session_time: selectedSlot.time });
+    setStatusMessage("Booking reserved locally (dev mode) — check your email (dev)");
     setStatusType("success");
+    setShowConfirmation(true);
+    if (redirectTimerRef.current) window.clearTimeout(redirectTimerRef.current);
+    redirectTimerRef.current = window.setTimeout(() => {
+      window.location.assign("/");
+    }, REDIRECT_DELAY);
+    setSubmitting(false);
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-3xl mx-auto py-8", children: [
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-7xl mx-auto py-8 px-4 booking-page", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bookings-hero", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-3xl font-bold mb-2", children: "Book a Training Session" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "bookings-lead", children: "Choose a session below to reserve a free taster. If you received an invite, use the booking link provided in your email." })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "bookings-lead", children: "Choose a session below to reserve a free taster. If you received an invite, it will show your eligible slot and held availability." })
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { "aria-live": "polite", "aria-atomic": "true", tabIndex: -1, ref: statusRef, style: { outline: "none" }, children: statusMessage ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `p-3 mb-4 rounded ${statusType === "success" ? "bg-green-50 border border-green-200 text-green-800" : statusType === "error" ? "bg-red-50 border border-red-200 text-red-800" : "bg-gray-50 border border-gray-200 text-gray-800"}`, role: "status", children: statusMessage }) : null }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "booking-grid", children: slots.map((slot) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-      "div",
-      {
-        className: `booking-card p-4 border rounded-lg shadow cursor-pointer transition ${slot.booked ? "bg-gray-200 border-gray-400 cursor-not-allowed" : "card"}`,
-        onClick: () => !slot.booked && slot.enabled && handleSelect(slot),
-        "aria-disabled": slot.booked || !slot.enabled,
-        role: "button",
-        tabIndex: slot.booked || !slot.enabled ? -1 : 0,
-        onKeyDown: (e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            if (!slot.booked && slot.enabled) handleSelect(slot);
-          }
-        },
-        children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "booking-meta", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(FaCalendarAlt, { style: { color: "var(--blue)" } }),
+    showConfirmation && bookingInfo ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-6 mb-6 rounded-lg border-l-4 border-green-500 bg-green-50", role: "status", "aria-live": "polite", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "text-xl font-semibold", children: "Booking confirmed" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-2", children: [
+        "Your session on ",
+        /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: new Date(bookingInfo.session_date).toLocaleDateString("en-GB") }),
+        " (",
+        CONFIG.slots[bookingInfo.slot]?.label || bookingInfo.slot,
+        ") has been booked. A confirmation email has been sent to the email address you provided when enquiring (check your inbox and spam folder)."
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-2", children: [
+        "You will be returned to the home page in ",
+        Math.round(REDIRECT_DELAY / 1e3),
+        " seconds."
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-4", style: { display: "flex", gap: "0.5rem" }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: () => {
+          if (redirectTimerRef.current) window.clearTimeout(redirectTimerRef.current);
+          window.location.assign("/");
+        }, className: "btn-primary", children: "Return home now" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: () => {
+          setShowConfirmation(false);
+          if (redirectTimerRef.current) window.clearTimeout(redirectTimerRef.current);
+        }, className: "btn-ghost", children: "Stay on page" })
+      ] })
+    ] }) : null,
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { "aria-live": "polite", "aria-atomic": "true", tabIndex: -1, ref: statusRef, style: { outline: "none" }, children: statusMessage ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `p-3 mb-4 rounded ${statusType === "success" ? "status-success" : statusType === "error" ? "status-error" : "bg-gray-50"}`, role: "status", children: statusMessage }) : null }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "booking-grid", children: [
+      inviteTokenState ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "p-3 mb-4 rounded border-l-4 border-blue-500 bg-blue-50", children: eligibleLabel ? /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "small-muted", children: [
+        "Showing sessions for ",
+        /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: eligibleLabel }),
+        ". If none are listed, it means there are no vacancies in your group."
+      ] }) : /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "small-muted", children: "You're invited — showing only sessions for your eligible group." }) }) : null,
+      visibleSlots.length === 0 && inviteTokenState ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "p-4 mb-4 rounded bg-yellow-50 border border-yellow-200", children: "No eligible sessions with vacancies were found for your group. Please check other dates or contact us." }) : null,
+      visibleSlots.map((slot) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          className: `booking-card ${slot.booked ? "bg-gray-100" : ""} ${slot.eligible ? "eligible-card" : ""}`,
+          onClick: () => handleSelect(slot),
+          role: "button",
+          tabIndex: slot.enabled && !slot.booked ? 0 : -1,
+          children: [
             /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-semibold", children: formatDate(slot.date) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-sm bookings-lead", children: [
-                slot.time,
-                " • ",
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "booking-slot-group", children: slot.group })
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "booking-meta", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(FaCalendarAlt, { style: { color: "var(--blue)" } }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "date", children: formatDate(slot.date) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "time small-muted", children: [
+                    slot.time,
+                    " • ",
+                    slot.label
+                  ] })
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: "0.5rem", marginTop: "0.5rem", alignItems: "center" }, children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "capacity-badge", children: [
+                  slot.slotsLeft ?? CONFIG.capacityPerSlot,
+                  " left"
+                ] }),
+                slot.eligible ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "eligible-pill", children: "Your slot" }) : null,
+                !slot.enabled && !slot.booked ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "small-muted", children: "Full" }) : null
               ] })
-            ] })
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-2 text-sm text-gray-700", children: slot.booked ? /* @__PURE__ */ jsxRuntimeExports.jsxs("strong", { children: [
-            "Booked",
-            slot.booker ? ` by ${slot.booker}` : ""
-          ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-sm text-gray-600", children: "Available" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-sm text-gray-600", children: "Slots: 2" })
-          ] }) }),
-          !slot.enabled && !slot.booked && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-2 text-sm text-red-600", children: /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "Unavailable" }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "slot-actions", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "slot-actions", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
               "button",
               {
-                onClick: () => !slot.booked && slot.enabled && handleSelect(slot),
-                disabled: bookingDone || slot.booked || !slot.enabled,
-                className: `btn-primary ${bookingDone || slot.booked || !slot.enabled ? "opacity-50 cursor-not-allowed" : ""}`,
-                children: slot.booked || bookingDone ? "Booked" : "Book"
+                onClick: () => handleSelect(slot),
+                disabled: !slot.enabled || slot.booked || bookingDone,
+                className: "btn-primary",
+                children: slot.booked ? "Booked" : slot.enabled ? "Book" : "Full"
               }
-            ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              "button",
-              {
-                onClick: () => alert("More info coming soon"),
-                className: "bg-gray-100 text-gray-800 py-2 px-4 rounded hover:bg-gray-200",
-                children: "Details"
-              }
-            )
-          ] })
-        ]
-      },
-      slot.id
-    )) }),
-    showModal && selectedSlot && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "fixed inset-0 flex items-center justify-center z-50 booking-modal-backdrop", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "card p-6 rounded-lg shadow-xl booking-modal", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "text-xl font-bold mb-4", children: "Confirm Booking" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mb-2", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "Date:" }),
-        " ",
-        formatDate(selectedSlot.date)
+            ) })
+          ]
+        },
+        slot.id
+      ))
+    ] }),
+    showModal && selectedSlot && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "fixed inset-0 flex items-center justify-center z-50 booking-modal-backdrop", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "card booking-modal", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { children: "Confirm Booking" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "meta-row", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "col", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "Date:" }),
+          " ",
+          formatDate(selectedSlot.date)
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "col", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "Time:" }),
+          " ",
+          selectedSlot.time
+        ] })
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mb-2", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "Time:" }),
-        " ",
-        selectedSlot.time
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mb-4 small-muted", children: [
+        "Group: ",
+        selectedSlot.label
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mb-4", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "Group:" }),
-        " ",
-        selectedSlot.group
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-4", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "button",
-          {
-            onClick: handleBook,
-            className: "flex-1 btn-primary",
-            children: "Confirm booking"
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "button",
-          {
-            onClick: handleCloseModal,
-            className: "flex-1 bg-gray-300 text-gray-800 py-2 px-4 rounded hover:bg-gray-400",
-            children: "Cancel"
-          }
-        )
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: "1rem" }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: handleBook, disabled: submitting, className: "btn-primary", style: { flex: 1 }, children: submitting ? "Booking…" : "Confirm booking" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: handleCloseModal, className: "btn-ghost", style: { flex: 1 }, children: "Cancel" })
       ] })
     ] }) })
   ] });
@@ -365,7 +428,7 @@ const $$Bookings = createComponent(async ($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
   Astro2.self = $$Bookings;
   const dates = getNextNWeekdayDates(2, 6);
-  const slots = dates.flatMap((date) => [
+  dates.flatMap((date) => [
     { id: `${date}-u13-1`, date, group: "u13" },
     { id: `${date}-u15-1`, date, group: "u15plus" }
   ]);
@@ -390,14 +453,20 @@ const $$Bookings = createComponent(async ($$result, $$props, $$slots) => {
   } catch (err) {
     console.error("Failed to fetch invite data", err);
   }
-  return renderTemplate`${renderComponent($$result, "Layout", $$Layout, { "title": "Training Session Bookings" }, { "default": async ($$result2) => renderTemplate` ${maybeRenderHead()}<div class="bookings-hero"> <h2 class="text-3xl font-bold mb-2">Book a Training Session</h2> <p class="bookings-lead">Choose a session below to reserve a free taster. If you received an invite, use the booking link provided in your email.</p> </div> ${inviteData ? renderTemplate`<div class="invite-banner p-4 mb-4 border-l-4 border-blue-500 bg-blue-50"> <p class="font-semibold">Invited: ${inviteData.enquiry.name || inviteData.enquiry.email}</p> ${inviteBanner ? renderTemplate`<p>You're eligible for <strong>${CONFIG.slots[inviteBanner.eligibleSlot].label}</strong> on <strong>${new Date(inviteBanner.date).toLocaleDateString("en-GB")}</strong>. Click the <em>Book (invited)</em> button on that session to reserve your spot.</p>` : inviteData.booking ? renderTemplate`<p>You already have a booking on ${inviteData.booking.session_date}.</p>` : renderTemplate`<p>We couldn't find an eligible slot with vacancies; check other dates or contact us.</p>`} </div>` : null}<div class="booking-grid"> ${slots.map((slot) => {
-    const slotConfig = CONFIG.slots[slot.group];
-    const dateLabel = new Date(slot.date).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
-    const availabilityForDate = inviteData?.availability?.find((a) => a.date === slot.date);
-    const eligibleForThisDate = availabilityForDate && availabilityForDate.eligibleSlot === slot.group;
-    availabilityForDate ? availabilityForDate.slots[slot.group] ?? 0 : null;
-    return renderTemplate`<article${addAttribute(slot.id, "key")} class="booking-card p-4 border rounded-lg shadow"> <div class="booking-meta"> <span class="aria-icon">📅</span> <div> <div class="font-semibold">${dateLabel}</div> <div class="text-sm bookings-lead">${slotConfig.time} • <span class="booking-slot-group">${slotConfig.label}</span></div> </div> </div> <div class="slot-actions"> ${inviteData ? inviteData.booking ? renderTemplate`<span class="text-sm">You already booked for ${inviteData.booking.session_date}</span>` : eligibleForThisDate ? renderTemplate`<a${addAttribute(`/bookings?invite=${inviteToken}&date=${slot.date}&slot=${slot.group}`, "href")} class="btn-primary">Book (invited)</a>` : renderTemplate`<button class="bg-gray-100 text-gray-800 py-2 px-4 rounded" disabled>Not eligible</button>` : renderTemplate`${renderComponent($$result2, "Fragment", Fragment, {}, { "default": async ($$result3) => renderTemplate` <a${addAttribute(`/booking?date=${slot.date}&slot=${slot.group}`, "href")} class="btn-primary">Book</a> <button class="bg-gray-100 text-gray-800 py-2 px-4 rounded">Details</button> ` })}`} </div> </article>`;
-  })} <!-- Interactive client component for invite-aware booking (hydrated only when invite present) --> ${inviteToken ? renderTemplate`${renderComponent($$result2, "TrainingBookingSystem", TrainingBookingSystem, { "client:load": true, "inviteToken": inviteToken, "client:component-hydration": "load", "client:component-path": "/home/eddie/athletics/egac_1/src/components/TrainingBookingSystem", "client:component-export": "default" })}` : null} </div> ` })}`;
+  let pageAvailability = null;
+  if (!inviteToken) {
+    try {
+      const apiUrl = new URL(`/api/booking.json`, new URL(Astro2.request.url).origin).toString();
+      const r = await fetch(apiUrl);
+      if (r.ok) {
+        const body = await r.json();
+        if (body && body.ok) pageAvailability = body.availability;
+      }
+    } catch (e) {
+      console.error("Failed to fetch availability for public bookings page", e);
+    }
+  }
+  return renderTemplate`${renderComponent($$result, "Layout", $$Layout, { "title": "Training Session Bookings" }, { "default": async ($$result2) => renderTemplate`${inviteData ? renderTemplate`${maybeRenderHead()}<div class="invite-banner"> <div style="flex:1;"> <div class="meta">Invited: ${inviteData.enquiry.name || inviteData.enquiry.email}</div> ${inviteBanner ? renderTemplate`<div class="hint">You're eligible for <strong>${CONFIG.slots[inviteBanner.eligibleSlot].label}</strong> on <strong>${new Date(inviteBanner.date).toLocaleDateString("en-GB")}</strong>. Use the <em>Book (invited)</em> button to reserve your spot — it's held for you for a limited time.</div>` : inviteData.booking ? renderTemplate`<div class="hint">You already have a booking on ${inviteData.booking.session_date} — check your email for confirmation.</div>` : renderTemplate`<div class="hint">We couldn't find an eligible slot with vacancies; check other dates or contact us.</div>`} </div> <div style="text-align:right;"> <a class="btn-primary"${addAttribute(`/bookings?invite=${inviteData.invite.token}`, "href")}>View available sessions</a> </div> </div>` : null}<div> ${renderComponent($$result2, "TrainingBookingSystem", TrainingBookingSystem, { "client:load": true, "inviteToken": inviteToken, "client:component-hydration": "load", "client:component-path": "/home/eddie/athletics/egac_1/src/components/TrainingBookingSystem", "client:component-export": "default" })} </div>` })}`;
 }, "/home/eddie/athletics/egac_1/src/pages/bookings.astro", void 0);
 
 const $$file = "/home/eddie/athletics/egac_1/src/pages/bookings.astro";

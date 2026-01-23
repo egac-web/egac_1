@@ -1,9 +1,19 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { y as countBookingsForDateSlot, v as getInviteByToken, a as getSupabaseAdmin, w as getBookingByInvite, p as createBooking, z as markInviteAccepted, b as appendEnquiryEvent } from '../../chunks/supabase_BK1iFgLr.mjs';
+import { y as countBookingsForDateSlot, v as getInviteByToken, a as getSupabaseAdmin, w as getBookingByInvite, p as createBooking, z as markInviteAccepted, b as appendEnquiryEvent } from '../../chunks/supabase_ymhKQ2x1.mjs';
 import { g as getNextNWeekdayDates, C as CONFIG, c as computeAgeOnDate, s as slotForAge } from '../../chunks/booking_CA6h9KO-.mjs';
-import { s as sendInviteEmail } from '../../chunks/resend_vvNh5OkU.mjs';
-export { r as renderers } from '../../chunks/_@astro-renderers_rSKK_bSn.mjs';
+import { s as sendInviteEmail } from '../../chunks/resend_CZA8PHeW.mjs';
+export { r as renderers } from '../../chunks/_@astro-renderers_BTUeEnL1.mjs';
 
+async function OPTIONS({ request }) {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    }
+  });
+}
 async function GET({ request, locals }) {
   try {
     const env = locals?.runtime?.env || process.env;
@@ -70,7 +80,7 @@ async function POST({ request, locals }) {
       status: 404,
       headers: { "Content-Type": "application/json" }
     });
-    if (invite.status !== "pending") return new Response(JSON.stringify({ ok: false, error: "Invite is not available for booking" }), {
+    if (!["pending", "sent"].includes(invite.status)) return new Response(JSON.stringify({ ok: false, error: "Invite is not available for booking" }), {
       status: 400,
       headers: { "Content-Type": "application/json" }
     });
@@ -78,6 +88,11 @@ async function POST({ request, locals }) {
     const { data: enqRes, error } = await client.from("enquiries").select("*").eq("id", invite.enquiry_id).maybeSingle();
     if (error) throw error;
     const enquiry = enqRes;
+    const existingBooking = await getBookingByInvite(invite.id, env);
+    if (existingBooking) return new Response(JSON.stringify({ ok: false, error: "Invite already has a booking", booking: existingBooking }), {
+      status: 409,
+      headers: { "Content-Type": "application/json" }
+    });
     const dob = enquiry.dob;
     if (!dob) return new Response(JSON.stringify({ ok: false, error: "DOB required to determine age group" }), {
       status: 400,
@@ -103,7 +118,7 @@ async function POST({ request, locals }) {
       console.error("Failed to mark accepted/append event", err);
     }
     try {
-      const { sendBookingConfirmationNotification } = await import('../../chunks/notifications_DQEtDqdD.mjs');
+      const { sendBookingConfirmationNotification } = await import('../../chunks/notifications_CX5oPyXA.mjs');
       await sendBookingConfirmationNotification({ enquiryId: enquiry.id, bookingId: booking.id, to: enquiry.email, date: session_date, slotLabel: CONFIG.slots[slot].label, env });
     } catch (err) {
       console.error("sendBookingConfirmationNotification failed", err);
@@ -150,6 +165,7 @@ async function POST({ request, locals }) {
 const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
   __proto__: null,
   GET,
+  OPTIONS,
   POST
 }, Symbol.toStringTag, { value: 'Module' }));
 

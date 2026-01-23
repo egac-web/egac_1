@@ -25,15 +25,10 @@ async function sendInviteEmail({ apiKey, from, to, subject, html, text }) {
   }
   return { id: json?.id, status: "sent", raw: json };
 }
-async function sendBookingConfirmation({ apiKey, from, to, date, slotLabel }) {
-  const html = `<p>Hello,</p><p>Your booking for <strong>${date}</strong> (${slotLabel}) is confirmed. See you at the session.</p>`;
-  const text = `Your booking for ${date} (${slotLabel}) is confirmed.`;
-  return await sendInviteEmail({ apiKey, from, to, subject: "EGAC: Booking confirmed", html, text });
-}
 async function sendBookingCancellation({ apiKey, from, to, date }) {
   const html = `<p>Hello,</p><p>Your booking for <strong>${date}</strong> has been cancelled.</p>`;
   const text = `Your booking for ${date} has been cancelled.`;
   return await sendInviteEmail({ apiKey, from, to, subject: "EGAC: Booking cancelled", html, text });
 }
 
-export { sendBookingCancellation as a, sendBookingConfirmation as b, sendInviteEmail as s };
+export { sendBookingCancellation as a, sendInviteEmail as s };

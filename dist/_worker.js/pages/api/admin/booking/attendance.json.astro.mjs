@@ -1,6 +1,6 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { a as getSupabaseAdmin, b as appendEnquiryEvent, d as createInviteForEnquiry } from '../../../../chunks/supabase_BK1iFgLr.mjs';
-export { r as renderers } from '../../../../chunks/_@astro-renderers_rSKK_bSn.mjs';
+import { a as getSupabaseAdmin, b as appendEnquiryEvent, d as createInviteForEnquiry } from '../../../../chunks/supabase_ymhKQ2x1.mjs';
+export { r as renderers } from '../../../../chunks/_@astro-renderers_BTUeEnL1.mjs';
 
 async function POST({ request, locals }) {
   try {
@@ -18,22 +18,46 @@ async function POST({ request, locals }) {
       headers: { "Content-Type": "application/json" }
     });
     const client = getSupabaseAdmin(env);
-    const { data: booking, error: fetchErr } = await client.from("bookings").select("*").eq("id", booking_id).maybeSingle();
-    if (fetchErr) return new Response(JSON.stringify({ ok: false, error: fetchErr.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" }
-    });
-    if (!booking) return new Response(JSON.stringify({ ok: false, error: "Booking not found" }), {
-      status: 404,
-      headers: { "Content-Type": "application/json" }
-    });
-    // Load enquiry explicitly to avoid ambiguous relationship embedding
-    const { data: enquiryData, error: enqErr } = await client.from("enquiries").select("*").eq("id", booking.enquiry_id).maybeSingle();
-    if (enqErr) return new Response(JSON.stringify({ ok: false, error: enqErr.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" }
-    });
-    booking.enquiry = enquiryData || null;
+    let booking, enquiry = null;
+    try {
+      const { data, error } = await client.from("bookings").select("*, enquiry:enquiries(*)").eq("id", booking_id).maybeSingle();
+      if (error && error.message && error.message.includes("Could not embed")) {
+        const { data: bookingData, error: bookingErr } = await client.from("bookings").select("*").eq("id", booking_id).maybeSingle();
+        if (bookingErr) return new Response(JSON.stringify({ ok: false, error: bookingErr.message }), {
+          status: 500,
+          headers: { "Content-Type": "application/json" }
+        });
+        if (!bookingData) return new Response(JSON.stringify({ ok: false, error: "Booking not found" }), {
+          status: 404,
+          headers: { "Content-Type": "application/json" }
+        });
+        booking = bookingData;
+        const { data: enquiryData, error: enquiryErr } = await client.from("enquiries").select("*").eq("id", booking.enquiry_id).maybeSingle();
+        if (enquiryErr) return new Response(JSON.stringify({ ok: false, error: enquiryErr.message }), {
+          status: 500,
+          headers: { "Content-Type": "application/json" }
+        });
+        enquiry = enquiryData;
+        booking.enquiry = enquiry;
+      } else if (error) {
+        return new Response(JSON.stringify({ ok: false, error: error.message }), {
+          status: 500,
+          headers: { "Content-Type": "application/json" }
+        });
+      } else {
+        if (!data) return new Response(JSON.stringify({ ok: false, error: "Booking not found" }), {
+          status: 404,
+          headers: { "Content-Type": "application/json" }
+        });
+        booking = data;
+        enquiry = data.enquiry;
+      }
+    } catch (e) {
+      return new Response(JSON.stringify({ ok: false, error: `Booking fetch failed: ${e.message}` }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
     const { data: updated, error: updErr } = await client.from("bookings").update({ status, attendance_note: note }).eq("id", booking_id).select().single();
     if (updErr) return new Response(JSON.stringify({ ok: false, error: updErr.message }), {
       status: 500,
@@ -49,19 +73,30 @@ async function POST({ request, locals }) {
     const responsePayload = { ok: true, booking: updated, events_appended: event };
     if (status === "attended" && send_membership_link) {
       try {
-        const invite = await createInviteForEnquiry(enquiry_id, env);
-        const membershipUrl = `${env.SITE_URL || ""}/membership?token=${invite.token}`;
-        const enquiry2 = booking.enquiry || {};
-        if (enquiry2 && enquiry2.email) {
+        let invite;
+        try {
+          invite = await createInviteForEnquiry(enquiry_id, env);
+        } catch (err) {
+          if (String(err.message || "").includes("enquiry_on_academy_waitlist")) {
+            responsePayload.membership_sent = false;
+            responsePayload.warning = "Enquiry is on Academy waiting list; membership link will not be sent";
+            invite = null;
+          } else {
+            throw err;
+          }
+        }
+        const membershipUrl = invite ? `${env.SITE_URL || ""}/membership?token=${invite.token}` : null;
+        if (invite && enquiry && enquiry.email) {
           try {
-            const { sendInviteNotification } = await import('../../../../chunks/notifications_DQEtDqdD.mjs');
-            await sendInviteNotification({ enquiryId: enquiry_id, inviteId: invite.id, to: enquiry2.email, inviteUrl: membershipUrl, env });
+            const { sendInviteNotification } = await import('../../../../chunks/notifications_CX5oPyXA.mjs');
+            await sendInviteNotification({ enquiryId: enquiry_id, inviteId: invite.id, to: enquiry.email, inviteUrl: membershipUrl, env });
             responsePayload.membership_sent = true;
           } catch (err) {
             console.error("sendInviteNotification failed for membership link", err);
             responsePayload.membership_sent = false;
             responsePayload.warning = "Failed to send membership link";
           }
+        } else if (!invite) {
         } else {
           responsePayload.membership_sent = false;
           responsePayload.warning = "No email address to send membership link";
@@ -71,7 +106,6 @@ async function POST({ request, locals }) {
         responsePayload.membership_error = err.message || String(err);
       }
     }
-    const enquiry = booking.enquiry || {};
     const slot = booking.slot || "";
     const session_date = booking.session_date || "";
     const coachMessage = `Attended: ${enquiry.name || ""} (${enquiry.email || ""}, ${enquiry.phone || ""}) — ${session_date} ${slot} — Please record in Presli per EA criteria.`;

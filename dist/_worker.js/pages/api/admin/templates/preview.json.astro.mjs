@@ -1,7 +1,7 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { a as getSupabaseAdmin } from '../../../../chunks/supabase_BK1iFgLr.mjs';
-import { s as sanitizeHtml } from '../../../../chunks/index_BGcPWSb4.mjs';
-export { r as renderers } from '../../../../chunks/_@astro-renderers_rSKK_bSn.mjs';
+import { a as getSupabaseAdmin } from '../../../../chunks/supabase_ymhKQ2x1.mjs';
+import { s as sanitizeHtml } from '../../../../chunks/index_gKChO-B6.mjs';
+export { r as renderers } from '../../../../chunks/_@astro-renderers_BTUeEnL1.mjs';
 
 const prerender = false;
 function renderTemplate(str, vars = {}) {
@@ -26,30 +26,47 @@ async function POST({ request, locals }) {
       });
     const body = await request.json();
     const { id, key, vars, html: overrideHtml, subject: overrideSubject, text: overrideText } = body;
-    const client = getSupabaseAdmin(env);
     let tpl = null;
-    if (id || key) {
-      let q = client.from("email_templates").select("*");
-      if (id) q = q.eq("id", id).maybeSingle();
-      else q = q.eq("key", key).maybeSingle();
-      const { data, error } = await q;
-      if (error) throw error;
-      if (!data)
-        return new Response(JSON.stringify({ ok: false, error: "Template not found" }), {
-          status: 404,
+    if (key) {
+      const renderVars2 = Object.assign({}, vars || {}, {
+        siteName: env.SITE_NAME || "EGAC",
+        accentColor: env.SITE_ACCENT || "#145FBA",
+        logoUrl: env.SITE_LOGO_URL || ""
+      });
+      try {
+        const { renderMjmlTemplate } = await import('../../../../chunks/mjmlRenderer_BaqPAvNU.mjs');
+        const mjmlHtml = renderMjmlTemplate(key, renderVars2);
+        if (mjmlHtml) {
+          tpl = { key, html: mjmlHtml, subject: overrideSubject || "", text: overrideText || "" };
+        }
+      } catch (e) {
+      }
+    }
+    if (!tpl) {
+      if (id || key) {
+        const client = getSupabaseAdmin(env);
+        let q = client.from("email_templates").select("*");
+        if (id) q = q.eq("id", id).maybeSingle();
+        else q = q.eq("key", key).maybeSingle();
+        const { data, error } = await q;
+        if (error) throw error;
+        if (!data)
+          return new Response(JSON.stringify({ ok: false, error: "Template not found" }), {
+            status: 404,
+            headers: { "Content-Type": "application/json" }
+          });
+        tpl = data;
+        if (overrideHtml) tpl.html = overrideHtml;
+        if (overrideSubject) tpl.subject = overrideSubject;
+        if (overrideText) tpl.text = overrideText;
+      } else if (overrideHtml || overrideSubject || overrideText) {
+        tpl = { html: overrideHtml || "", subject: overrideSubject || "", text: overrideText || "" };
+      } else {
+        return new Response(JSON.stringify({ ok: false, error: "id/key or html/subject required" }), {
+          status: 400,
           headers: { "Content-Type": "application/json" }
         });
-      tpl = data;
-      if (overrideHtml) tpl.html = overrideHtml;
-      if (overrideSubject) tpl.subject = overrideSubject;
-      if (overrideText) tpl.text = overrideText;
-    } else if (overrideHtml || overrideSubject || overrideText) {
-      tpl = { html: overrideHtml || "", subject: overrideSubject || "", text: overrideText || "" };
-    } else {
-      return new Response(JSON.stringify({ ok: false, error: "id/key or html/subject required" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" }
-      });
+      }
     }
     const renderVars = Object.assign({}, vars || {}, {
       siteName: env.SITE_NAME || "EGAC",
@@ -57,7 +74,16 @@ async function POST({ request, locals }) {
       logoUrl: env.SITE_LOGO_URL || ""
     });
     const subject = renderTemplate(tpl.subject, renderVars);
-    const rawHtml = renderTemplate(tpl.html, renderVars);
+    const renderMjml = await (async () => {
+      try {
+        const { renderMjmlTemplate } = await import('../../../../chunks/mjmlRenderer_BaqPAvNU.mjs');
+        const mjmlHtml = renderMjmlTemplate(tpl.key || tpl.subject?.replace(/\s+/g, "_").toLowerCase(), renderVars);
+        return mjmlHtml;
+      } catch (e) {
+        return null;
+      }
+    })();
+    const rawHtml = renderMjml || renderTemplate(tpl.html, renderVars);
     const text = renderTemplate(tpl.text, renderVars);
     const html = sanitizeHtml(rawHtml, { allowedSchemes: ["http", "https", "mailto", "tel", "data"] });
     return new Response(JSON.stringify({ ok: true, subject, html, text }), {

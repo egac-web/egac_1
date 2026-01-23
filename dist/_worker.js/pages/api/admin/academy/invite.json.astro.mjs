@@ -1,7 +1,7 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { a as getSupabaseAdmin, c as createAcademyInvitation, m as markAcademyInvitationSent } from '../../../../chunks/supabase_BK1iFgLr.mjs';
-import { sendAcademyInvitation } from '../../../../chunks/notifications_DQEtDqdD.mjs';
-export { r as renderers } from '../../../../chunks/_@astro-renderers_rSKK_bSn.mjs';
+import { a as getSupabaseAdmin, c as createAcademyInvitation, m as markAcademyInvitationSent } from '../../../../chunks/supabase_ymhKQ2x1.mjs';
+import { sendAcademyInvitation } from '../../../../chunks/notifications_CX5oPyXA.mjs';
+export { r as renderers } from '../../../../chunks/_@astro-renderers_BTUeEnL1.mjs';
 
 const prerender = false;
 async function POST({ request, locals }) {

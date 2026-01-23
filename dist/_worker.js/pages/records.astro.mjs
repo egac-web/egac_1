@@ -1,9 +1,9 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { f as createComponent, k as renderComponent, r as renderTemplate, m as maybeRenderHead } from '../chunks/astro/server_BJplAL8L.mjs';
-import { $ as $$Layout } from '../chunks/Layout_BIprt-IE.mjs';
-import { $ as $$Card } from '../chunks/Card_sKqGNxV1.mjs';
+import { f as createComponent, k as renderComponent, r as renderTemplate, m as maybeRenderHead } from '../chunks/astro/server_D9mQmrFP.mjs';
+import { $ as $$Layout } from '../chunks/Layout_BqUPBaKK.mjs';
+import { $ as $$Card } from '../chunks/Card_Qvr5B6IB.mjs';
 /* empty css                                   */
-export { r as renderers } from '../chunks/_@astro-renderers_rSKK_bSn.mjs';
+export { r as renderers } from '../chunks/_@astro-renderers_BTUeEnL1.mjs';
 
 const $$Records = createComponent(($$result, $$props, $$slots) => {
   return renderTemplate`${renderComponent($$result, "Layout", $$Layout, { "data-astro-cid-q7u7l26j": true }, { "default": ($$result2) => renderTemplate` ${maybeRenderHead()}<div style="max-width:900px;margin:0 auto;padding:0 1.5rem;" data-astro-cid-q7u7l26j> <section style="padding:3rem 0 2rem 0;" data-astro-cid-q7u7l26j> <h1 class="egac-section-title" data-astro-cid-q7u7l26j>Club Records</h1> <p class="egac-section-lead" data-astro-cid-q7u7l26j>

@@ -1,5 +1,5 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { f as createComponent, an as renderSlot, ao as renderHead, l as renderScript, r as renderTemplate } from './astro/server_BJplAL8L.mjs';
+import { f as createComponent, an as renderSlot, ao as renderHead, l as renderScript, r as renderTemplate } from './astro/server_D9mQmrFP.mjs';
 /* empty css                         */
 
 const $$Layout = createComponent(($$result, $$props, $$slots) => {

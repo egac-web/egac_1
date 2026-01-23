@@ -19,14 +19,14 @@ export async function POST({ request, locals }) {
     });
 
     const client = getSupabaseAdmin(env);
-    
+
     // Fetch booking with embedded enquiry fallback logic
     let booking, enquiry = null;
-    
+
     try {
       // Try to fetch booking with embedded enquiry (legacy approach)
       const { data, error } = await client.from('bookings').select('*, enquiry:enquiries(*)').eq('id', booking_id).maybeSingle();
-      
+
       // Check if error is the "Could not embed" relationship error
       if (error && error.message && error.message.includes('Could not embed')) {
         // Fallback: fetch booking and enquiry separately
@@ -39,9 +39,9 @@ export async function POST({ request, locals }) {
           status: 404,
           headers: { 'Content-Type': 'application/json' }
         });
-        
+
         booking = bookingData;
-        
+
         // Load enquiry explicitly
         const { data: enquiryData, error: enquiryErr } = await client.from('enquiries').select('*').eq('id', booking.enquiry_id).maybeSingle();
         if (enquiryErr) return new Response(JSON.stringify({ ok: false, error: enquiryErr.message }), {
@@ -109,7 +109,7 @@ export async function POST({ request, locals }) {
         }
 
         const membershipUrl = invite ? `${env.SITE_URL || ''}/membership?token=${invite.token}` : null;
-        const enquiry = booking.enquiry || {};
+        // Use the enquiry already fetched and attached to booking
         if (invite && enquiry && enquiry.email) {
           try {
             const { sendInviteNotification } = await import('../../../../lib/notifications');
@@ -133,7 +133,7 @@ export async function POST({ request, locals }) {
     }
 
     // Generate coach message text for copy/paste
-    const enquiry = booking.enquiry || {};
+    // Use the enquiry already fetched and attached to booking
     const slot = booking.slot || '';
     const session_date = booking.session_date || '';
     const coachMessage = `Attended: ${enquiry.name || ''} (${enquiry.email || ''}, ${enquiry.phone || ''}) — ${session_date} ${slot} — Please record in Presli per EA criteria.`;

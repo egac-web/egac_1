@@ -1,5 +1,6 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { o as insertEnquiry, d as createInviteForEnquiry, a as getSupabaseAdmin, A as markInviteSent } from './supabase_BK1iFgLr.mjs';
+import { o as insertEnquiry, h as getSystemConfigAll, c as createAcademyInvitation, b as appendEnquiryEvent, d as createInviteForEnquiry, a as getSupabaseAdmin, A as markInviteSent } from './supabase_ymhKQ2x1.mjs';
+import { c as computeAgeOnDate } from './booking_CA6h9KO-.mjs';
 
 const prerender = false;
 async function POST({ request, locals }) {
@@ -108,23 +109,81 @@ async function POST({ request, locals }) {
     };
     const inserted = await insertEnquiry(enquiryPayload, env);
     let invite = null;
+    let isAcademy = false;
     try {
-      invite = await createInviteForEnquiry(inserted.id, env);
-      try {
-        const client = getSupabaseAdmin(env);
-        await client.from("enquiries").update({ invite_id: invite.id }).eq("id", inserted.id);
-      } catch (err) {
-        console.error("Could not update enquiry with invite id", err);
+      const config = await getSystemConfigAll(env);
+      const academyMaxAge = config && config.academy_max_age ? parseInt(String(config.academy_max_age), 10) : 10;
+      if (inserted && inserted.dob) {
+        const ageOnAug31 = computeAgeOnDate(inserted.dob, "2026-08-31");
+        if (ageOnAug31 !== null && !Number.isNaN(ageOnAug31) && ageOnAug31 <= academyMaxAge) {
+          isAcademy = true;
+          try {
+            const acadInv = await createAcademyInvitation(inserted.id, env);
+            try {
+              await appendEnquiryEvent(inserted.id, { type: "academy_invitation_created", invite_id: acadInv.id, at: (/* @__PURE__ */ new Date()).toISOString() }, env);
+            } catch (e) {
+              console.error("Failed to append academy_invitation_created", e);
+            }
+            try {
+              const { sendAcademyWaitlistNotification } = await import('./notifications_CX5oPyXA.mjs');
+              await sendAcademyWaitlistNotification({ enquiry: inserted, invitation: acadInv, env });
+            } catch (e) {
+              console.error("sendAcademyWaitlistNotification failed", e);
+            }
+          } catch (e) {
+            console.error("createAcademyInvitation failed", e);
+          }
+        }
       }
+    } catch (e) {
+      console.error("Failed to evaluate academy eligibility", e);
+    }
+    if (!isAcademy) {
       try {
-        const { sendInviteNotification } = await import('./notifications_DQEtDqdD.mjs');
-        const inviteUrl = `${env.SITE_BASE_URL || ""}/booking?invite=${encodeURIComponent(invite.token)}`;
-        await sendInviteNotification({ enquiryId: inserted.id, inviteId: invite.id, to: inserted.email, inviteUrl, env });
+        invite = await createInviteForEnquiry(inserted.id, env);
+        try {
+          const client = getSupabaseAdmin(env);
+          await client.from("enquiries").update({ invite_id: invite.id }).eq("id", inserted.id);
+        } catch (err) {
+          console.error("Could not update enquiry with invite id", err);
+        }
+        try {
+          const { sendInviteNotification } = await import('./notifications_CX5oPyXA.mjs');
+          const inviteUrl = `${env.SITE_BASE_URL || ""}/bookings?invite=${encodeURIComponent(invite.token)}`;
+          await sendInviteNotification({ enquiryId: inserted.id, inviteId: invite.id, to: inserted.email, inviteUrl, env });
+        } catch (err) {
+          console.error("sendInviteNotification failed", err);
+        }
       } catch (err) {
-        console.error("sendInviteNotification failed", err);
+        console.error("Failed to create invite record for enquiry", err);
       }
-    } catch (err) {
-      console.error("Failed to create invite record for enquiry", err);
+    } else {
+      try {
+        await appendEnquiryEvent(inserted.id, { type: "academy_waitlist_added", at: (/* @__PURE__ */ new Date()).toISOString() }, env);
+      } catch (e) {
+        console.error("Failed to append academy_waitlist_added", e);
+      }
+    }
+    try {
+      const config = await getSystemConfigAll(env);
+      const academyMaxAge = config && config.academy_max_age ? parseInt(String(config.academy_max_age), 10) : 10;
+      if (inserted && inserted.dob) {
+        const ageOnAug31 = computeAgeOnDate(inserted.dob, "2026-08-31");
+        if (ageOnAug31 !== null && !Number.isNaN(ageOnAug31) && ageOnAug31 <= academyMaxAge) {
+          try {
+            const acadInv = await createAcademyInvitation(inserted.id, env);
+            try {
+              await appendEnquiryEvent(inserted.id, { type: "academy_invitation_created", invite_id: acadInv.id, at: (/* @__PURE__ */ new Date()).toISOString() }, env);
+            } catch (e) {
+              console.error("Failed to append academy_invitation_created", e);
+            }
+          } catch (e) {
+            console.error("createAcademyInvitation failed", e);
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to evaluate academy eligibility", e);
     }
     const webhook = env.ENQUIRY_WEBHOOK || null;
     const payloadForWebhook = { enquiry: inserted, invite };

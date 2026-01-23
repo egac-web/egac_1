@@ -1,7 +1,7 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { f as createComponent, r as renderTemplate } from '../chunks/astro/server_BJplAL8L.mjs';
-import { g as getAcademyInvitationByToken, u as updateAcademyInvitationResponse } from '../chunks/supabase_BK1iFgLr.mjs';
-export { r as renderers } from '../chunks/_@astro-renderers_rSKK_bSn.mjs';
+import { f as createComponent, r as renderTemplate } from '../chunks/astro/server_D9mQmrFP.mjs';
+import { g as getAcademyInvitationByToken, u as updateAcademyInvitationResponse } from '../chunks/supabase_ymhKQ2x1.mjs';
+export { r as renderers } from '../chunks/_@astro-renderers_BTUeEnL1.mjs';
 
 const prerender = false;
 async function GET({ request, locals, url }) {

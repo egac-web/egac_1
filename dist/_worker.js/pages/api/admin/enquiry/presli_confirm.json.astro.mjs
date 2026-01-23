@@ -1,6 +1,6 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { a as getSupabaseAdmin, l as markEnquiryPresliConfirmed, b as appendEnquiryEvent, n as getLatestInviteForEnquiry, d as createInviteForEnquiry } from '../../../../chunks/supabase_BK1iFgLr.mjs';
-export { r as renderers } from '../../../../chunks/_@astro-renderers_rSKK_bSn.mjs';
+import { a as getSupabaseAdmin, l as markEnquiryPresliConfirmed, b as appendEnquiryEvent, n as getLatestInviteForEnquiry, d as createInviteForEnquiry } from '../../../../chunks/supabase_ymhKQ2x1.mjs';
+export { r as renderers } from '../../../../chunks/_@astro-renderers_BTUeEnL1.mjs';
 
 async function POST({ request, locals }) {
   try {
@@ -34,11 +34,23 @@ async function POST({ request, locals }) {
     if (send_membership_link) {
       try {
         let invite = await getLatestInviteForEnquiry(enquiry_id, env);
-        if (!invite) invite = await createInviteForEnquiry(enquiry_id, env);
-        const membershipUrl = `${env.SITE_URL || ""}/membership?token=${invite.token}`;
+        if (!invite) {
+          try {
+            invite = await createInviteForEnquiry(enquiry_id, env);
+          } catch (err) {
+            if (String(err.message || "").includes("enquiry_on_academy_waitlist")) {
+              response.membership_sent = false;
+              response.warning = "Enquiry is on Academy waiting list; membership link will not be sent";
+              invite = null;
+            } else {
+              throw err;
+            }
+          }
+        }
+        const membershipUrl = invite ? `${env.SITE_URL || ""}/membership?token=${invite.token}` : null;
         if (enquiry.email) {
           try {
-            const { sendInviteNotification } = await import('../../../../chunks/notifications_DQEtDqdD.mjs');
+            const { sendInviteNotification } = await import('../../../../chunks/notifications_CX5oPyXA.mjs');
             await sendInviteNotification({ enquiryId: enquiry_id, inviteId: invite.id, to: enquiry.email, inviteUrl: membershipUrl, env });
             response.membership_sent = true;
           } catch (err) {

@@ -1,6 +1,6 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { a as getSupabaseAdmin } from '../../../chunks/supabase_BK1iFgLr.mjs';
-export { r as renderers } from '../../../chunks/_@astro-renderers_rSKK_bSn.mjs';
+import { a as getSupabaseAdmin } from '../../../chunks/supabase_ymhKQ2x1.mjs';
+export { r as renderers } from '../../../chunks/_@astro-renderers_BTUeEnL1.mjs';
 
 async function GET({ request, locals }) {
   try {
