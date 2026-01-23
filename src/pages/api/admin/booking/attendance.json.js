@@ -19,27 +19,58 @@ export async function POST({ request, locals }) {
     });
 
     const client = getSupabaseAdmin(env);
-    // Fetch booking record first (avoid ambiguous embedded relationships)
-    const { data: booking, error: fetchErr } = await client.from('bookings').select('*').eq('id', booking_id).maybeSingle();
-    if (fetchErr) return new Response(JSON.stringify({ ok: false, error: fetchErr.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
-    if (!booking) return new Response(JSON.stringify({ ok: false, error: 'Booking not found' }), {
-      status: 404,
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-    // Load enquiry explicitly to avoid Supabase ambiguous-relationship errors
-    let enquiry = null;
+    
+    // Fetch booking with embedded enquiry fallback logic
+    let booking, enquiry = null;
+    
     try {
-      const { data: enq, error: enqErr } = await client.from('enquiries').select('*').eq('id', booking.enquiry_id).maybeSingle();
-      if (enqErr) return new Response(JSON.stringify({ ok: false, error: enqErr.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
-      enquiry = enq || null;
-      // attach to booking object for downstream usage
-      booking.enquiry = enquiry;
+      // Try to fetch booking with embedded enquiry (legacy approach)
+      const { data, error } = await client.from('bookings').select('*, enquiry:enquiries(*)').eq('id', booking_id).maybeSingle();
+      
+      // Check if error is the "Could not embed" relationship error
+      if (error && error.message && error.message.includes('Could not embed')) {
+        // Fallback: fetch booking and enquiry separately
+        const { data: bookingData, error: bookingErr } = await client.from('bookings').select('*').eq('id', booking_id).maybeSingle();
+        if (bookingErr) return new Response(JSON.stringify({ ok: false, error: bookingErr.message }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (!bookingData) return new Response(JSON.stringify({ ok: false, error: 'Booking not found' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        booking = bookingData;
+        
+        // Load enquiry explicitly
+        const { data: enquiryData, error: enquiryErr } = await client.from('enquiries').select('*').eq('id', booking.enquiry_id).maybeSingle();
+        if (enquiryErr) return new Response(JSON.stringify({ ok: false, error: enquiryErr.message }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        });
+        enquiry = enquiryData;
+        booking.enquiry = enquiry;
+      } else if (error) {
+        // Other error
+        return new Response(JSON.stringify({ ok: false, error: error.message }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      } else {
+        // Success with embedded select
+        if (!data) return new Response(JSON.stringify({ ok: false, error: 'Booking not found' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        });
+        booking = data;
+        enquiry = data.enquiry;
+      }
     } catch (e) {
-      return new Response(JSON.stringify({ ok: false, error: 'Failed to load enquiry' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      // Unexpected error during fetch
+      return new Response(JSON.stringify({ ok: false, error: `Booking fetch failed: ${e.message}` }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     // update booking status and optional note
