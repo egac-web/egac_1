@@ -12,6 +12,9 @@ function nowISO() {
   return new Date().toISOString();
 }
 
+// Default subject used for invite emails when templating isn't available
+const baseSubject = `${process.env.SITE_NAME || 'EGAC'}: Book a taster / session`;
+
 export async function sendInviteNotification({ enquiryId, inviteId, to, inviteUrl, env }: { enquiryId: string; inviteId: string; to: string; inviteUrl: string; env?: any }): Promise<NotifyResult> {
   const dry = !!env?.RESEND_DRY_RUN;
   if (!env?.RESEND_API_KEY || !env?.RESEND_FROM) {
