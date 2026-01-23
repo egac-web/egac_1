@@ -279,6 +279,27 @@ import '../../styles/forms.css';
     margin: 1.5rem 0;
   }
 
+  /* Academy list responsive grid to make better use of space */
+  #tab-academy .academy-list-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 1rem;
+    align-items: start;
+  }
+
+  /* Ensure academy cards expand to fill column */
+  #tab-academy .card {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Improve spacing inside card for wider screens */
+  @media (min-width: 960px) {
+    #tab-academy .card > div:first-child { gap: 1.25rem; }
+    #tab-academy .card .hero { padding: 26px; }
+  }
+
   .stat-card {
     background: white;
     padding: 1.5rem;
@@ -773,7 +794,7 @@ import '../../styles/forms.css';
         </button>
       </div>
       
-      <div style="display:grid;gap:1rem">
+      <div class="academy-list-grid">
         ${filtered.map(enquiry => {
           const age = calculateAge(enquiry.dob);
           const hasInvite = enquiry.invites && enquiry.invites.length > 0;
