@@ -19,9 +19,12 @@ const { createClient } = require('@supabase/supabase-js');
   }
 
   try {
-    const { data: booking, error: bErr } = await client.from('bookings').select('*, enquiry:enquiries(*)').eq('id', booking_id).maybeSingle();
+    const { data: booking, error: bErr } = await client.from('bookings').select('*').eq('id', booking_id).maybeSingle();
     if (bErr) throw bErr;
     if (!booking) { console.error('Booking not found'); process.exit(2); }
+    const { data: enquiry, error: enqErr } = await client.from('enquiries').select('*').eq('id', booking.enquiry_id).maybeSingle();
+    if (enqErr) throw enqErr;
+    booking.enquiry = enquiry || null;
 
     const { data: updated, error: updErr } = await client.from('bookings').update({ status }).eq('id', booking_id).select().single();
     if (updErr) throw updErr;

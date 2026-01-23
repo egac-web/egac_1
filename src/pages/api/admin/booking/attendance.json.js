@@ -19,7 +19,8 @@ export async function POST({ request, locals }) {
     });
 
     const client = getSupabaseAdmin(env);
-    const { data: booking, error: fetchErr } = await client.from('bookings').select('*, enquiry:enquiries(*)').eq('id', booking_id).maybeSingle();
+    // Fetch booking record first (avoid ambiguous embedded relationships)
+    const { data: booking, error: fetchErr } = await client.from('bookings').select('*').eq('id', booking_id).maybeSingle();
     if (fetchErr) return new Response(JSON.stringify({ ok: false, error: fetchErr.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
@@ -28,6 +29,18 @@ export async function POST({ request, locals }) {
       status: 404,
       headers: { 'Content-Type': 'application/json' }
     });
+
+    // Load enquiry explicitly to avoid Supabase ambiguous-relationship errors
+    let enquiry = null;
+    try {
+      const { data: enq, error: enqErr } = await client.from('enquiries').select('*').eq('id', booking.enquiry_id).maybeSingle();
+      if (enqErr) return new Response(JSON.stringify({ ok: false, error: enqErr.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      enquiry = enq || null;
+      // attach to booking object for downstream usage
+      booking.enquiry = enquiry;
+    } catch (e) {
+      return new Response(JSON.stringify({ ok: false, error: 'Failed to load enquiry' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    }
 
     // update booking status and optional note
     const { data: updated, error: updErr } = await client.from('bookings').update({ status, attendance_note: note }).eq('id', booking_id).select().single();
