@@ -86,10 +86,11 @@ async function POST({ request, locals }) {
           }
         }
         const membershipUrl = invite ? `${env.SITE_URL || ""}/membership?token=${invite.token}` : null;
-        if (invite && enquiry && enquiry.email) {
+        const enq2 = enquiry || booking.enquiry || {};
+        if (invite && enq2 && enq2.email) {
           try {
             const { sendInviteNotification } = await import('../../../../chunks/notifications_CX5oPyXA.mjs');
-            await sendInviteNotification({ enquiryId: enquiry_id, inviteId: invite.id, to: enquiry.email, inviteUrl: membershipUrl, env });
+            await sendInviteNotification({ enquiryId: enquiry_id, inviteId: invite.id, to: enq2.email, inviteUrl: membershipUrl, env });
             responsePayload.membership_sent = true;
           } catch (err) {
             console.error("sendInviteNotification failed for membership link", err);
@@ -106,11 +107,12 @@ async function POST({ request, locals }) {
         responsePayload.membership_error = err.message || String(err);
       }
     }
+    const enq = enquiry || booking.enquiry || {};
     const slot = booking.slot || "";
     const session_date = booking.session_date || "";
-    const coachMessage = `Attended: ${enquiry.name || ""} (${enquiry.email || ""}, ${enquiry.phone || ""}) — ${session_date} ${slot} — Please record in Presli per EA criteria.`;
+    const coachMessage = `Attended: ${enq.name || ""} (${enq.email || ""}, ${enq.phone || ""}) — ${session_date} ${slot} — Please record in Presli per EA criteria.`;
     responsePayload.coachMessage = coachMessage;
-    responsePayload.presliCSV = `${enquiry.name || ""},${enquiry.email || ""},${enquiry.phone || ""},${session_date},${slot}`;
+    responsePayload.presliCSV = `${enq.name || ""},${enq.email || ""},${enq.phone || ""},${session_date},${slot}`;
     return { status: 200, body: responsePayload };
   } catch (err) {
     console.error("Attendance endpoint error", err);

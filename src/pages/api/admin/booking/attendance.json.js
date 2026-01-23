@@ -109,11 +109,12 @@ export async function POST({ request, locals }) {
         }
 
         const membershipUrl = invite ? `${env.SITE_URL || ''}/membership?token=${invite.token}` : null;
-        // Use the enquiry already fetched and attached to booking
-        if (invite && enquiry && enquiry.email) {
+        // Use the enquiry already fetched (either from fallback or embedded)
+        const enq = enquiry || booking.enquiry || {};
+        if (invite && enq && enq.email) {
           try {
             const { sendInviteNotification } = await import('../../../../lib/notifications');
-            await sendInviteNotification({ enquiryId: enquiry_id, inviteId: invite.id, to: enquiry.email, inviteUrl: membershipUrl, env });
+            await sendInviteNotification({ enquiryId: enquiry_id, inviteId: invite.id, to: enq.email, inviteUrl: membershipUrl, env });
             responsePayload.membership_sent = true;
           } catch (err) {
             console.error('sendInviteNotification failed for membership link', err);
@@ -133,14 +134,15 @@ export async function POST({ request, locals }) {
     }
 
     // Generate coach message text for copy/paste
-    // Use the enquiry already fetched and attached to booking
+    // Use the enquiry already fetched and attached to booking (fallback to separate enquiry var)
+    const enq = enquiry || booking.enquiry || {};
     const slot = booking.slot || '';
     const session_date = booking.session_date || '';
-    const coachMessage = `Attended: ${enquiry.name || ''} (${enquiry.email || ''}, ${enquiry.phone || ''}) — ${session_date} ${slot} — Please record in Presli per EA criteria.`;
+    const coachMessage = `Attended: ${enq.name || ''} (${enq.email || ''}, ${enq.phone || ''}) — ${session_date} ${slot} — Please record in Presli per EA criteria.`;
     responsePayload.coachMessage = coachMessage;
 
     // Optionally include a CSV row suitable for manual Presli import
-    responsePayload.presliCSV = `${enquiry.name || ''},${enquiry.email || ''},${enquiry.phone || ''},${session_date},${slot}`;
+    responsePayload.presliCSV = `${enq.name || ''},${enq.email || ''},${enq.phone || ''},${session_date},${slot}`;
 
     return { status: 200, body: responsePayload };
   } catch (err) {
