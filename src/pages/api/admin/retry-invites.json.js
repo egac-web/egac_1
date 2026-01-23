@@ -21,7 +21,7 @@ async function runRetryLogic(env) {
         continue;
       }
 
-      const inviteUrl = `${env.SITE_BASE_URL || ''}/booking?invite=${encodeURIComponent(invite.token)}`;
+      const inviteUrl = `${env.SITE_BASE_URL || ''}/bookings?invite=${encodeURIComponent(invite.token)}`;
 
       // Use the centralized notifications helper which respects RESEND_DRY_RUN and handles
       // DB event logging and invite status updates (markInviteSent/markInviteSendFailed)

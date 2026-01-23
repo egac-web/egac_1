@@ -38,7 +38,7 @@ export async function POST({ request, locals }) {
 
       // Build invite URL
       const siteBase = env.SITE_BASE_URL || process.env.SITE_BASE_URL || '';
-      const inviteUrl = `${siteBase}/booking?invite=${encodeURIComponent(invite.token)}`;
+      const inviteUrl = `${siteBase}/bookings?invite=${encodeURIComponent(invite.token)}`;
 
       const steps = [];
 
