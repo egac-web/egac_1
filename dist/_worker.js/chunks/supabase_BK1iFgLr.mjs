@@ -13308,9 +13308,17 @@ async function getBookingByInvite(invite_id, env) {
 }
 async function getBookingById(booking_id, env) {
   const client = getSupabaseAdmin(env);
-  const { data, error } = await client.from("bookings").select("*, enquiry:enquiries(*)").eq("id", booking_id).maybeSingle();
+  const { data: booking, error } = await client.from("bookings").select("*").eq("id", booking_id).maybeSingle();
   if (error) throw error;
-  return data || null;
+  if (!booking) return null;
+  try {
+    const { data: enquiry, error: enqErr } = await client.from("enquiries").select("*").eq("id", booking.enquiry_id).maybeSingle();
+    if (enqErr) throw enqErr;
+    booking.enquiry = enquiry || null;
+  } catch (e) {
+    throw e;
+  }
+  return booking;
 }
 async function updateBookingStatus(booking_id, status, note, env) {
   const client = getSupabaseAdmin(env);

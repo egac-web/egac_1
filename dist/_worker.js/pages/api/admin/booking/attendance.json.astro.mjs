@@ -18,7 +18,7 @@ async function POST({ request, locals }) {
       headers: { "Content-Type": "application/json" }
     });
     const client = getSupabaseAdmin(env);
-    const { data: booking, error: fetchErr } = await client.from("bookings").select("*, enquiry:enquiries(*)").eq("id", booking_id).maybeSingle();
+    const { data: booking, error: fetchErr } = await client.from("bookings").select("*").eq("id", booking_id).maybeSingle();
     if (fetchErr) return new Response(JSON.stringify({ ok: false, error: fetchErr.message }), {
       status: 500,
       headers: { "Content-Type": "application/json" }
@@ -27,6 +27,13 @@ async function POST({ request, locals }) {
       status: 404,
       headers: { "Content-Type": "application/json" }
     });
+    // Load enquiry explicitly to avoid ambiguous relationship embedding
+    const { data: enquiryData, error: enqErr } = await client.from("enquiries").select("*").eq("id", booking.enquiry_id).maybeSingle();
+    if (enqErr) return new Response(JSON.stringify({ ok: false, error: enqErr.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
+    booking.enquiry = enquiryData || null;
     const { data: updated, error: updErr } = await client.from("bookings").update({ status, attendance_note: note }).eq("id", booking_id).select().single();
     if (updErr) return new Response(JSON.stringify({ ok: false, error: updErr.message }), {
       status: 500,
