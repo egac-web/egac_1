@@ -1,9 +1,9 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { f as createComponent, k as renderComponent, r as renderTemplate, m as maybeRenderHead } from '../chunks/astro/server_D9mQmrFP.mjs';
-import { $ as $$Layout } from '../chunks/Layout_BqUPBaKK.mjs';
-import { $ as $$Card } from '../chunks/Card_Qvr5B6IB.mjs';
+import { f as createComponent, k as renderComponent, r as renderTemplate, m as maybeRenderHead } from '../chunks/astro/server_BcA0Y13i.mjs';
+import { $ as $$Layout } from '../chunks/Layout_P41lZQiM.mjs';
+import { $ as $$Card } from '../chunks/Card_BLUlLpdG.mjs';
 /* empty css                                   */
-export { r as renderers } from '../chunks/_@astro-renderers_BTUeEnL1.mjs';
+export { r as renderers } from '../chunks/_@astro-renderers_CjgTivB9.mjs';
 
 const $$Contact = createComponent(($$result, $$props, $$slots) => {
   return renderTemplate`${renderComponent($$result, "Layout", $$Layout, { "data-astro-cid-uw5kdbxl": true }, { "default": ($$result2) => renderTemplate` ${maybeRenderHead()}<div style="max-width:900px;margin:0 auto;padding:0 1.5rem;" data-astro-cid-uw5kdbxl> <section style="padding:3rem 0 2rem 0;" data-astro-cid-uw5kdbxl> <h1 class="egac-section-title" data-astro-cid-uw5kdbxl>Contact Us</h1> <p class="egac-section-lead" data-astro-cid-uw5kdbxl>Get in touch with East Grinstead AC</p> ${renderComponent($$result2, "Card", $$Card, { "class": "card--padded", "title": "Contact Details", "data-astro-cid-uw5kdbxl": true }, { "default": ($$result3) => renderTemplate` <p data-astro-cid-uw5kdbxl>

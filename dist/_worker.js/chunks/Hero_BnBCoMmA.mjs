@@ -1,5 +1,5 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { e as createAstro, f as createComponent, m as maybeRenderHead, an as renderSlot, h as addAttribute, r as renderTemplate } from './astro/server_D9mQmrFP.mjs';
+import { e as createAstro, f as createComponent, m as maybeRenderHead, am as renderSlot, h as addAttribute, r as renderTemplate } from './astro/server_BcA0Y13i.mjs';
 /* empty css                         */
 
 const $$Astro = createAstro("https://your-egac-site.pages.dev");

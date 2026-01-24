@@ -1,11 +1,17 @@
-import { test, expect, vi } from 'vitest';
-import * as supabaseModule from '../../pages/api/admin/booking/attendance.json.js';
+import { test, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as sb from '../../lib/supabase';
 
-// Mock getSupabaseAdmin to control rpc/from calls
-vi.mock('../../src/lib/supabase.ts', async () => {
-  // We'll replace functions by injecting in tests
-  return {}; // placeholder - we'll stub methods via vi.spyOn where needed
+// Mock supabase client creation to avoid real network calls; tests will set global.__FAKE_SUPABASE_CLIENT__ per-case
+vi.mock('@supabase/supabase-js', () => ({ createClient: vi.fn(() => global.__FAKE_SUPABASE_CLIENT__) }));
+
+// Ensure environment variables are present so getSupabaseAdmin doesn't throw
+beforeEach(() => {
+  process.env.SUPABASE_URL = process.env.SUPABASE_URL || 'http://localhost:5432';
+  process.env.SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'test-role-key';
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 // Test the RPC success path and fallback path
@@ -15,14 +21,15 @@ test('getBookingById uses RPC when available', async () => {
   const fakeClient = {
     rpc: vi.fn().mockResolvedValue({ data: [{ id: 'b1', enquiry_id: 'e1', slot: 'u15', enquiry: { id: 'e1', name: 'Test' } }], error: null }),
   };
-  const spy = vi.spyOn(sb, 'getSupabaseAdmin').mockReturnValue(fakeClient as any);
+  // Ensure the mocked supabase createClient returns our fake client
+  global.__FAKE_SUPABASE_CLIENT__ = fakeClient;
 
-  const b = await getBookingById('b1', {});
+  const b = await getBookingById('b1');
   expect(fakeClient.rpc).toHaveBeenCalledWith('get_booking_with_enquiry', { bid: 'b1' });
   expect(b).toBeDefined();
   expect(b.enquiry).toBeDefined();
 
-  spy.mockRestore();
+  global.__FAKE_SUPABASE_CLIENT__ = undefined;
 });
 
 test('getBookingById falls back when RPC fails', async () => {
@@ -34,13 +41,14 @@ test('getBookingById falls back when RPC fails', async () => {
       return null;
     })
   };
-  const spy = vi.spyOn(sb, 'getSupabaseAdmin').mockReturnValue(fakeClient as any);
+  // Ensure the mocked supabase createClient returns our fake client
+  global.__FAKE_SUPABASE_CLIENT__ = fakeClient;
 
-  const b = await getBookingById('b2', {});
+  const b = await getBookingById('b2');
   expect(fakeClient.rpc).toHaveBeenCalled();
   expect(b).toBeDefined();
   expect(b.enquiry).toBeDefined();
   expect(b.enquiry.name).toBe('Fallback');
 
-  spy.mockRestore();
+  global.__FAKE_SUPABASE_CLIENT__ = undefined;
 });

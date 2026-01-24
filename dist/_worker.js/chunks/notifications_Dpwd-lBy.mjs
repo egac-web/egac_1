@@ -1,5 +1,5 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { b as appendEnquiryEvent, B as getEmailTemplate, A as markInviteSent } from './supabase_ymhKQ2x1.mjs';
+import { f as appendEnquiryEvent, C as markInviteSent, D as getEmailTemplate } from './supabase_DDVehETI.mjs';
 import { s as sendInviteEmail } from './resend_CZA8PHeW.mjs';
 
 function nowISO() {
@@ -16,14 +16,14 @@ async function sendInviteNotification({ enquiryId, inviteId, to, inviteUrl, env 
     }
     return { ok: false, error: "no_resend_config" };
   }
-  const { getEmailTemplate: getEmailTemplate2 } = await import('./supabase_ymhKQ2x1.mjs').then(n => n.s);
+  const { getEmailTemplate: getEmailTemplate2 } = await import('./supabase_DDVehETI.mjs').then(n => n.s);
   const tpl = await getEmailTemplate2("invite_email", "en", env);
   let html = "";
   let text = `Book here: ${inviteUrl}`;
   if (tpl && tpl.html) {
     const renderVars = { inviteUrl, siteName: env.SITE_NAME || "EGAC", accentColor: env.SITE_ACCENT || "#145FBA", logoUrl: env.SITE_LOGO_URL || "" };
     try {
-      const { renderMjmlTemplate } = await import('./mjmlRenderer_BaqPAvNU.mjs');
+      const { renderMjmlTemplate } = await import('./mjmlRenderer_C_Z29IyI.mjs');
       const mjmlHtml = renderMjmlTemplate("invite_email", renderVars);
       html = mjmlHtml || tpl.html.replace(/\{\{inviteUrl\}\}/g, inviteUrl).replace(/\{\{siteName\}\}/g, renderVars.siteName);
       text = tpl.text.replace(/\{\{inviteUrl\}\}/g, inviteUrl);
@@ -86,7 +86,7 @@ async function sendInviteNotification({ enquiryId, inviteId, to, inviteUrl, env 
       console.error("Failed to append enquiry event for failed send", e);
     }
     try {
-      const { markInviteSendFailed } = await import('./supabase_ymhKQ2x1.mjs').then(n => n.s);
+      const { markInviteSendFailed } = await import('./supabase_DDVehETI.mjs').then(n => n.s);
       await markInviteSendFailed(inviteId, err && err.response ? JSON.stringify(err.response) : String(err), env);
     } catch (e) {
       console.error("Failed to mark invite send failed", e);
@@ -136,7 +136,7 @@ async function sendBookingConfirmationNotification({ enquiryId, bookingId, to, d
     return { ok: true, dryRun: true };
   }
   try {
-    const { getEmailTemplate: getEmailTemplate2 } = await import('./supabase_ymhKQ2x1.mjs').then(n => n.s);
+    const { getEmailTemplate: getEmailTemplate2 } = await import('./supabase_DDVehETI.mjs').then(n => n.s);
     let html = "";
     let text = `Your booking for ${date} (${slotLabel}) is confirmed.`;
     let subject = `${env?.SITE_NAME || "EGAC"}: Booking confirmed`;
@@ -144,7 +144,7 @@ async function sendBookingConfirmationNotification({ enquiryId, bookingId, to, d
       const tpl = await getEmailTemplate2("booking_confirmation", "en", env);
       const renderVars = { date, slotLabel, siteName: env.SITE_NAME || "EGAC", accentColor: env.SITE_ACCENT || "#145FBA" };
       try {
-        const { renderMjmlTemplate } = await import('./mjmlRenderer_BaqPAvNU.mjs');
+        const { renderMjmlTemplate } = await import('./mjmlRenderer_C_Z29IyI.mjs');
         const mjmlHtml = renderMjmlTemplate("booking_confirmation", renderVars);
         if (mjmlHtml) {
           html = mjmlHtml;
@@ -333,7 +333,7 @@ async function sendAcademyWaitlistNotification({ enquiry, invitation, env }) {
     const tpl = await getEmailTemplate("academy_waitlist", "en", env);
     const renderVars = { siteBase, childName: enquiry.name || "", siteName: env?.SITE_NAME || "EGAC", accentColor: env?.SITE_ACCENT || "#145FBA" };
     try {
-      const { renderMjmlTemplate } = await import('./mjmlRenderer_BaqPAvNU.mjs');
+      const { renderMjmlTemplate } = await import('./mjmlRenderer_C_Z29IyI.mjs');
       const mjmlHtml = renderMjmlTemplate("academy_waitlist", renderVars);
       if (mjmlHtml) {
         html = mjmlHtml;

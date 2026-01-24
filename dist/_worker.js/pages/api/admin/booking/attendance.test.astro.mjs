@@ -1,4 +1,9 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+globalThis.process ??= {}; globalThis.process.env ??= {};
+import { b as getBookingById, d as updateBookingStatus, e as createInviteForEnquiry, f as appendEnquiryEvent } from '../../../../chunks/supabase_DDVehETI.mjs';
+import { sendInviteNotification } from '../../../../chunks/notifications_Dpwd-lBy.mjs';
+import { P as POST } from '../../../../chunks/attendance.json_DNAWQ2qq.mjs';
+import { v as vi, b as beforeEach, d as describe, i as it, g as globalExpect } from '../../../../chunks/vi.2VT5v0um_BqJ87Wy1.mjs';
+export { r as renderers } from '../../../../chunks/_@astro-renderers_CjgTivB9.mjs';
 
 // Mock locally imported helpers and notifications where appropriate
 vi.mock('../../../../lib/supabase', () => ({
@@ -10,10 +15,6 @@ vi.mock('../../../../lib/supabase', () => ({
 vi.mock('../../../../lib/notifications', () => ({
   sendInviteNotification: vi.fn(),
 }));
-
-import { appendEnquiryEvent, createInviteForEnquiry, updateBookingStatus, getBookingById } from '../../../../lib/supabase';
-import { sendInviteNotification } from '../../../../lib/notifications';
-import { POST } from './attendance.json.js';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -35,14 +36,13 @@ describe('Admin booking attendance endpoint', () => {
     });
 
     const res = await POST({ request: req, locals: { runtime: { env: {} } } });
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body.ok).toBe(true);
-    expect(updateBookingStatus).toHaveBeenCalledWith('b1', 'attended', 'Test', {});
-    expect(createInviteForEnquiry).toHaveBeenCalledWith('e1', {});
-    expect(sendInviteNotification).toHaveBeenCalled();
-    expect(appendEnquiryEvent).toHaveBeenCalled();
-    expect(body.membership_sent).toBe(true);
+    globalExpect(res.status).toBe(200);
+    globalExpect(res.body.ok).toBe(true);
+    globalExpect(updateBookingStatus).toHaveBeenCalledWith('b1', 'attended', 'Test', {});
+    globalExpect(createInviteForEnquiry).toHaveBeenCalledWith('e1', {});
+    globalExpect(sendInviteNotification).toHaveBeenCalled();
+    globalExpect(appendEnquiryEvent).toHaveBeenCalled();
+    globalExpect(res.body.membership_sent).toBe(true);
   });
 
   it('does not send membership link if enquiry is on academy waitlist', async () => {
@@ -59,13 +59,12 @@ describe('Admin booking attendance endpoint', () => {
     });
 
     const res = await POST({ request: req, locals: { runtime: { env: {} } } });
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body.ok).toBe(true);
-    expect(updateBookingStatus).toHaveBeenCalledWith('b2', 'attended', 'Test', {});
-    expect(createInviteForEnquiry).toHaveBeenCalledWith('e2', {});
-    expect(body.membership_sent).toBe(false);
-    expect(body.warning).toMatch(/waiting list|Academy/i);
+    globalExpect(res.status).toBe(200);
+    globalExpect(res.body.ok).toBe(true);
+    globalExpect(updateBookingStatus).toHaveBeenCalledWith('b2', 'attended', 'Test', {});
+    globalExpect(createInviteForEnquiry).toHaveBeenCalledWith('e2', {});
+    globalExpect(res.body.membership_sent).toBe(false);
+    globalExpect(res.body.warning).toMatch(/waiting list|Academy/i);
   });
 
   it('marks no_show and does not attempt to send membership link', async () => {
@@ -81,11 +80,18 @@ describe('Admin booking attendance endpoint', () => {
     });
 
     const res = await POST({ request: req, locals: { runtime: { env: {} } } });
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body.ok).toBe(true);
-    expect(updateBookingStatus).toHaveBeenCalledWith('b3', 'no_show', 'No show', {});
-    expect(createInviteForEnquiry).not.toHaveBeenCalled();
-    expect(appendEnquiryEvent).toHaveBeenCalled();
+    globalExpect(res.status).toBe(200);
+    globalExpect(res.body.ok).toBe(true);
+    globalExpect(updateBookingStatus).toHaveBeenCalledWith('b3', 'no_show', 'No show', {});
+    globalExpect(createInviteForEnquiry).not.toHaveBeenCalled();
+    globalExpect(appendEnquiryEvent).toHaveBeenCalled();
   });
 });
+
+const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+  __proto__: null
+}, Symbol.toStringTag, { value: 'Module' }));
+
+const page = () => _page;
+
+export { page };

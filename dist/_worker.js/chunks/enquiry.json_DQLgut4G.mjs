@@ -1,5 +1,5 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { o as insertEnquiry, h as getSystemConfigAll, c as createAcademyInvitation, b as appendEnquiryEvent, d as createInviteForEnquiry, a as getSupabaseAdmin, A as markInviteSent } from './supabase_ymhKQ2x1.mjs';
+import { q as insertEnquiry, i as getSystemConfigAll, c as createAcademyInvitation, f as appendEnquiryEvent, e as createInviteForEnquiry, a as getSupabaseAdmin, C as markInviteSent } from './supabase_DDVehETI.mjs';
 import { c as computeAgeOnDate } from './booking_CA6h9KO-.mjs';
 
 const prerender = false;
@@ -125,7 +125,7 @@ async function POST({ request, locals }) {
               console.error("Failed to append academy_invitation_created", e);
             }
             try {
-              const { sendAcademyWaitlistNotification } = await import('./notifications_CX5oPyXA.mjs');
+              const { sendAcademyWaitlistNotification } = await import('./notifications_Dpwd-lBy.mjs');
               await sendAcademyWaitlistNotification({ enquiry: inserted, invitation: acadInv, env });
             } catch (e) {
               console.error("sendAcademyWaitlistNotification failed", e);
@@ -148,7 +148,7 @@ async function POST({ request, locals }) {
           console.error("Could not update enquiry with invite id", err);
         }
         try {
-          const { sendInviteNotification } = await import('./notifications_CX5oPyXA.mjs');
+          const { sendInviteNotification } = await import('./notifications_Dpwd-lBy.mjs');
           const inviteUrl = `${env.SITE_BASE_URL || ""}/bookings?invite=${encodeURIComponent(invite.token)}`;
           await sendInviteNotification({ enquiryId: inserted.id, inviteId: invite.id, to: inserted.email, inviteUrl, env });
         } catch (err) {

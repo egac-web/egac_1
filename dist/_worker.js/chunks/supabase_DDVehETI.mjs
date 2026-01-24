@@ -13281,15 +13281,50 @@ async function markInviteAccepted(invite_id, env) {
 }
 async function createMemberFromEnquiry(enquiry, env) {
   const client = getSupabaseAdmin(env);
+  const additional = {};
+  if (enquiry.medication) additional.medication = enquiry.medication;
+  if (enquiry.illnesses) additional.illnesses = enquiry.illnesses;
+  if (enquiry.allergies) additional.allergies = enquiry.allergies;
+  if (enquiry.emergency_contact) additional.emergency_contact = enquiry.emergency_contact;
   const memberPayload = {
     name: enquiry.name,
     email: enquiry.email,
     phone: enquiry.phone,
-    source: enquiry.source
+    source: enquiry.source,
+    dob: enquiry.dob || null,
+    address: enquiry.address || null,
+    postcode: enquiry.postcode || null,
+    enquiry_id: enquiry.id || null,
+    additional: Object.keys(additional).length ? additional : null
   };
   const { data, error } = await client.from("members").insert([memberPayload]).select().single();
   if (error) throw error;
   return data;
+}
+async function getRecentMembers(limit = 100, env) {
+  const client = getSupabaseAdmin(env);
+  const { data, error } = await client.from("members").select("*").order("created_at", { ascending: false }).limit(limit);
+  if (error) throw error;
+  return data || [];
+}
+async function createMembershipOtp(invite_id, env) {
+  const client = getSupabaseAdmin(env);
+  const code = String(Math.floor(1e5 + Math.random() * 9e5));
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1e3).toISOString();
+  const payload = { invite_id, code, expires_at: expiresAt };
+  const { data, error } = await client.from("membership_otps").insert([payload]).select().single();
+  if (error) throw error;
+  return data;
+}
+async function verifyMembershipOtp(invite_id, code, env) {
+  const client = getSupabaseAdmin(env);
+  const { data, error } = await client.from("membership_otps").select("*").eq("invite_id", invite_id).eq("code", code).eq("used", false).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  if (error) throw error;
+  if (!data) return { ok: false, reason: "not_found" };
+  if (new Date(data.expires_at) < /* @__PURE__ */ new Date()) return { ok: false, reason: "expired" };
+  const { data: upd, error: updErr } = await client.from("membership_otps").update({ used: true }).eq("id", data.id).select().single();
+  if (updErr) throw updErr;
+  return { ok: true, row: upd };
 }
 async function countBookingsForDateSlot(session_date, slot, env) {
   const client = getSupabaseAdmin(env);
@@ -13313,6 +13348,15 @@ async function getBookingByInvite(invite_id, env) {
 }
 async function getBookingById(booking_id, env) {
   const client = getSupabaseAdmin(env);
+  try {
+    const { data, error: error2 } = await client.rpc("get_booking_with_enquiry", { bid: booking_id });
+    if (!error2 && data) {
+      const booking2 = Array.isArray(data) ? data[0] : data;
+      if (booking2) return booking2;
+    }
+  } catch (e) {
+    console.warn("RPC get_booking_with_enquiry failed, falling back to sequential fetch", e?.message || e);
+  }
   const { data: booking, error } = await client.from("bookings").select("*").eq("id", booking_id).maybeSingle();
   if (error) throw error;
   if (!booking) return null;
@@ -13435,7 +13479,7 @@ async function updateAcademyInvitationResponse(token, response, env) {
   return data;
 }
 
-const supabase = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+const sup = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
   __proto__: null,
   appendEnquiryEvent,
   cancelBooking,
@@ -13446,6 +13490,7 @@ const supabase = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
   createEmailTemplate,
   createInviteForEnquiry,
   createMemberFromEnquiry,
+  createMembershipOtp,
   default: getSupabaseAdmin,
   getAcademyInvitationByToken,
   getActiveAgeGroups,
@@ -13454,6 +13499,7 @@ const supabase = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
   getEmailTemplate,
   getInviteByToken,
   getLatestInviteForEnquiry,
+  getRecentMembers,
   getSupabaseAdmin,
   getSystemConfigAll,
   insertEnquiry,
@@ -13467,7 +13513,8 @@ const supabase = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
   updateAgeGroup,
   updateBookingStatus,
   updateEmailTemplate,
-  updateSystemConfig
+  updateSystemConfig,
+  verifyMembershipOtp
 }, Symbol.toStringTag, { value: 'Module' }));
 
-export { markInviteSent as A, getEmailTemplate as B, getSupabaseAdmin as a, appendEnquiryEvent as b, createAcademyInvitation as c, createInviteForEnquiry as d, getBookingById as e, getActiveAgeGroups as f, getAcademyInvitationByToken as g, getSystemConfigAll as h, updateSystemConfig as i, createAgeGroup as j, updateAgeGroup as k, markEnquiryPresliConfirmed as l, markAcademyInvitationSent as m, getLatestInviteForEnquiry as n, insertEnquiry as o, createBooking as p, listEmailTemplates as q, createEmailTemplate as r, supabase as s, updateEmailTemplate as t, updateAcademyInvitationResponse as u, getInviteByToken as v, getBookingByInvite as w, cancelBooking as x, countBookingsForDateSlot as y, markInviteAccepted as z };
+export { countBookingsForDateSlot as A, markInviteAccepted as B, markInviteSent as C, getEmailTemplate as D, createMembershipOtp as E, verifyMembershipOtp as F, createMemberFromEnquiry as G, getSupabaseAdmin as a, getBookingById as b, createAcademyInvitation as c, updateBookingStatus as d, createInviteForEnquiry as e, appendEnquiryEvent as f, getAcademyInvitationByToken as g, getActiveAgeGroups as h, getSystemConfigAll as i, updateSystemConfig as j, createAgeGroup as k, updateAgeGroup as l, markAcademyInvitationSent as m, markEnquiryPresliConfirmed as n, getLatestInviteForEnquiry as o, getRecentMembers as p, insertEnquiry as q, createBooking as r, sup as s, listEmailTemplates as t, updateAcademyInvitationResponse as u, createEmailTemplate as v, updateEmailTemplate as w, getInviteByToken as x, getBookingByInvite as y, cancelBooking as z };

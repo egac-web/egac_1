@@ -53,7 +53,7 @@ describe('Membership API', () => {
 
   it('POST returns error for invalid OTP', async () => {
     sup.verifyMembershipOtp.mockResolvedValue({ ok: false, reason: 'expired' });
-    const payload = { invite_id: 'inv1', otp_code: '000000', form: { } };
+    const payload = { invite_id: 'inv1', otp_code: '000000', form: {} };
     const req = new Request('http://localhost/api/membership.json', { method: 'POST', body: JSON.stringify(payload) });
     const res = await POST({ request: req, locals: { runtime: { env: {} } } });
     const body = await res.json();

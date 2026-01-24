@@ -1,8 +1,8 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { y as countBookingsForDateSlot, v as getInviteByToken, a as getSupabaseAdmin, w as getBookingByInvite, p as createBooking, z as markInviteAccepted, b as appendEnquiryEvent } from '../../chunks/supabase_ymhKQ2x1.mjs';
+import { A as countBookingsForDateSlot, x as getInviteByToken, a as getSupabaseAdmin, y as getBookingByInvite, r as createBooking, B as markInviteAccepted, f as appendEnquiryEvent } from '../../chunks/supabase_DDVehETI.mjs';
 import { g as getNextNWeekdayDates, C as CONFIG, c as computeAgeOnDate, s as slotForAge } from '../../chunks/booking_CA6h9KO-.mjs';
 import { s as sendInviteEmail } from '../../chunks/resend_CZA8PHeW.mjs';
-export { r as renderers } from '../../chunks/_@astro-renderers_BTUeEnL1.mjs';
+export { r as renderers } from '../../chunks/_@astro-renderers_CjgTivB9.mjs';
 
 async function OPTIONS({ request }) {
   return new Response(null, {
@@ -118,7 +118,7 @@ async function POST({ request, locals }) {
       console.error("Failed to mark accepted/append event", err);
     }
     try {
-      const { sendBookingConfirmationNotification } = await import('../../chunks/notifications_CX5oPyXA.mjs');
+      const { sendBookingConfirmationNotification } = await import('../../chunks/notifications_Dpwd-lBy.mjs');
       await sendBookingConfirmationNotification({ enquiryId: enquiry.id, bookingId: booking.id, to: enquiry.email, date: session_date, slotLabel: CONFIG.slots[slot].label, env });
     } catch (err) {
       console.error("sendBookingConfirmationNotification failed", err);

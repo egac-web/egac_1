@@ -4123,23 +4123,11 @@ function replaceAsymmetricMatcher(actual, expected, actualReplaced = new WeakSet
 		const actualValue = actual[key];
 		if (isAsymmetricMatcher(expectedValue)) {
 			if (expectedValue.asymmetricMatch(actualValue)) {
-				// When matcher matches, replace expected with actual value
-				// so they appear the same in the diff
-				expected[key] = actualValue;
-			} else if ("sample" in expectedValue && expectedValue.sample !== undefined && isReplaceable(actualValue, expectedValue.sample)) {
-				// For container matchers (ArrayContaining, ObjectContaining), unwrap and recursively process
-				// Matcher doesn't match: unwrap but keep structure to show mismatch
-				const replaced = replaceAsymmetricMatcher(actualValue, expectedValue.sample, actualReplaced, expectedReplaced);
-				actual[key] = replaced.replacedActual;
-				expected[key] = replaced.replacedExpected;
+				actual[key] = expectedValue;
 			}
 		} else if (isAsymmetricMatcher(actualValue)) {
 			if (actualValue.asymmetricMatch(expectedValue)) {
-				actual[key] = expectedValue;
-			} else if ("sample" in actualValue && actualValue.sample !== undefined && isReplaceable(actualValue.sample, expectedValue)) {
-				const replaced = replaceAsymmetricMatcher(actualValue.sample, expectedValue, actualReplaced, expectedReplaced);
-				actual[key] = replaced.replacedActual;
-				expected[key] = replaced.replacedExpected;
+				expected[key] = actualValue;
 			}
 		} else if (isReplaceable(actualValue, expectedValue)) {
 			const replaced = replaceAsymmetricMatcher(actualValue, expectedValue, actualReplaced, expectedReplaced);
@@ -11712,7 +11700,7 @@ let defaultSuite;
 let currentTestFilepath;
 function assert(condition, message) {
 	if (!condition) {
-		throw new Error(`Vitest failed to find ${message}. One of the following is possible:` + "\n- \"vitest\" is imported directly without running \"vitest\" command" + "\n- \"vitest\" is imported inside \"globalSetup\" (to fix this, use \"setupFiles\" instead, because \"globalSetup\" runs in a different context)" + "\n- \"vitest\" is imported inside Vite / Vitest config file" + "\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n");
+		throw new Error(`Vitest failed to find ${message}. This is a bug in Vitest. Please, open an issue with reproduction.`);
 	}
 }
 function getRunner() {

@@ -1,6 +1,6 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { s as supabase, f as getActiveAgeGroups, h as getSystemConfigAll, i as updateSystemConfig, j as createAgeGroup, k as updateAgeGroup } from '../../../chunks/supabase_ymhKQ2x1.mjs';
-export { r as renderers } from '../../../chunks/_@astro-renderers_BTUeEnL1.mjs';
+import { s as sup, h as getActiveAgeGroups, i as getSystemConfigAll, j as updateSystemConfig, k as createAgeGroup, l as updateAgeGroup } from '../../../chunks/supabase_DDVehETI.mjs';
+export { r as renderers } from '../../../chunks/_@astro-renderers_CjgTivB9.mjs';
 
 const prerender = false;
 async function GET({ request, locals }) {
@@ -23,7 +23,7 @@ async function GET({ request, locals }) {
         headers: { "Content-Type": "application/json" }
       });
     }
-    console.debug("Config GET - supabase exports:", Object.keys(supabase).join(", "));
+    console.debug("Config GET - supabase exports:", Object.keys(sup).join(", "));
     console.debug("Config GET - getActiveAgeGroups type:", typeof getActiveAgeGroups, "getSystemConfigAll type:", typeof getSystemConfigAll);
     const ageGroups = await getActiveAgeGroups(env);
     const systemConfig = await getSystemConfigAll(env);

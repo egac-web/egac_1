@@ -1,10 +1,10 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { f as createComponent, k as renderComponent, r as renderTemplate, m as maybeRenderHead } from '../chunks/astro/server_D9mQmrFP.mjs';
-import { $ as $$Layout } from '../chunks/Layout_BqUPBaKK.mjs';
-import { $ as $$Card } from '../chunks/Card_Qvr5B6IB.mjs';
-import { $ as $$EnquiryForm } from '../chunks/EnquiryForm_CtZMovxm.mjs';
+import { f as createComponent, k as renderComponent, r as renderTemplate, m as maybeRenderHead } from '../chunks/astro/server_BcA0Y13i.mjs';
+import { $ as $$Layout } from '../chunks/Layout_P41lZQiM.mjs';
+import { $ as $$Card } from '../chunks/Card_BLUlLpdG.mjs';
+import { $ as $$EnquiryForm } from '../chunks/EnquiryForm_Cky_7Uc7.mjs';
 /* empty css                                        */
-export { r as renderers } from '../chunks/_@astro-renderers_BTUeEnL1.mjs';
+export { r as renderers } from '../chunks/_@astro-renderers_CjgTivB9.mjs';
 
 const $$Volunteering = createComponent(($$result, $$props, $$slots) => {
   return renderTemplate`${renderComponent($$result, "Layout", $$Layout, { "data-astro-cid-ynxzpfgu": true }, { "default": ($$result2) => renderTemplate` ${maybeRenderHead()}<div class="volunteer-wrapper" data-astro-cid-ynxzpfgu> <!-- Hero Section --> <section class="volunteer-hero" data-astro-cid-ynxzpfgu> <div class="container" data-astro-cid-ynxzpfgu> <h1 data-astro-cid-ynxzpfgu>Make a Difference</h1> <p class="hero-subtitle" data-astro-cid-ynxzpfgu>

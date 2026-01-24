@@ -1,7 +1,7 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { P as POST } from '../../chunks/enquiry.json_DuG6ljOG.mjs';
-import { v as vi, d as describe, b as beforeEach, i as it, g as globalExpect } from '../../chunks/vi.2VT5v0um_BGuskS_r.mjs';
-export { r as renderers } from '../../chunks/_@astro-renderers_BTUeEnL1.mjs';
+import { P as POST } from '../../chunks/enquiry.json_DQLgut4G.mjs';
+import { v as vi, d as describe, b as beforeEach, i as it, g as globalExpect } from '../../chunks/vi.2VT5v0um_BqJ87Wy1.mjs';
+export { r as renderers } from '../../chunks/_@astro-renderers_CjgTivB9.mjs';
 
 vi.mock("../../lib/supabase", () => ({
   insertEnquiry: vi.fn(async (payload) => ({ id: "enq-1", ...payload })),
@@ -34,10 +34,10 @@ describe("Enquiry endpoint", () => {
     globalExpect(res.status).toBe(200);
     const json = JSON.parse(await res.text());
     globalExpect(json.ok).toBe(true);
-    const { createAcademyInvitation, createInviteForEnquiry } = await import('../../chunks/supabase_ymhKQ2x1.mjs').then(n => n.s);
+    const { createAcademyInvitation, createInviteForEnquiry } = await import('../../chunks/supabase_DDVehETI.mjs').then(n => n.s);
     globalExpect(createAcademyInvitation).toHaveBeenCalledWith("enq-1", globalExpect.anything());
     globalExpect(createInviteForEnquiry).not.toHaveBeenCalled();
-    const { sendAcademyWaitlistNotification } = await import('../../chunks/notifications_CX5oPyXA.mjs');
+    const { sendAcademyWaitlistNotification } = await import('../../chunks/notifications_Dpwd-lBy.mjs');
     globalExpect(sendAcademyWaitlistNotification).toHaveBeenCalledWith(globalExpect.objectContaining({ enquiry: globalExpect.any(Object), invitation: globalExpect.objectContaining({ id: "acad-1" }), env: globalExpect.any(Object) }));
   });
   it("does not add over-age enquiries to academy list", async () => {
@@ -54,7 +54,7 @@ describe("Enquiry endpoint", () => {
     globalExpect(res.status).toBe(200);
     const json = JSON.parse(await res.text());
     globalExpect(json.ok).toBe(true);
-    const { createAcademyInvitation, createInviteForEnquiry } = await import('../../chunks/supabase_ymhKQ2x1.mjs').then(n => n.s);
+    const { createAcademyInvitation, createInviteForEnquiry } = await import('../../chunks/supabase_DDVehETI.mjs').then(n => n.s);
     globalExpect(createAcademyInvitation).not.toHaveBeenCalled();
     globalExpect(createInviteForEnquiry).toHaveBeenCalledWith("enq-1", globalExpect.anything());
   });

@@ -15,9 +15,9 @@ export async function GET() {
     });
   } catch (err) {
     console.error('Version endpoint error', err);
-    return new Response(JSON.stringify({ ok: false, error: String(err) }), { 
-      status: 500, 
-      headers: { 'Content-Type': 'application/json' } 
+    return new Response(JSON.stringify({ ok: false, error: String(err) }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
     });
   }
 }

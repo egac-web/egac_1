@@ -1,7 +1,7 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { q as listEmailTemplates, r as createEmailTemplate, t as updateEmailTemplate } from '../../../chunks/supabase_ymhKQ2x1.mjs';
-import { s as sanitizeHtml } from '../../../chunks/index_gKChO-B6.mjs';
-export { r as renderers } from '../../../chunks/_@astro-renderers_BTUeEnL1.mjs';
+import { t as listEmailTemplates, v as createEmailTemplate, w as updateEmailTemplate } from '../../../chunks/supabase_DDVehETI.mjs';
+import { s as sanitizeHtml } from '../../../chunks/index_gpHHe4y6.mjs';
+export { r as renderers } from '../../../chunks/_@astro-renderers_CjgTivB9.mjs';
 
 const prerender = false;
 async function GET({ request, locals }) {

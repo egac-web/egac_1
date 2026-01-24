@@ -1,8 +1,8 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
 import { j as joinPaths, i as isRemotePath } from './path_CH3auf61.mjs';
-import { A as AstroError, E as ExpectedImage, L as LocalImageUsedWrongly, M as MissingImageDimension, U as UnsupportedImageFormat, I as IncompatibleDescriptorOptions, a as UnsupportedImageConversion, t as toStyleString, N as NoImageMetadata, F as FailedToFetchRemoteImageDimensions, b as ExpectedImageOptions, c as ExpectedNotESMImage, d as InvalidImageService, e as createAstro, f as createComponent, g as ImageMissingAlt, m as maybeRenderHead, h as addAttribute, s as spreadAttributes, r as renderTemplate, i as ExperimentalFontsNotEnabled, j as FontFamilyNotFound, u as unescapeHTML } from './astro/server_D9mQmrFP.mjs';
+import { A as AstroError, E as ExpectedImage, L as LocalImageUsedWrongly, M as MissingImageDimension, U as UnsupportedImageFormat, I as IncompatibleDescriptorOptions, a as UnsupportedImageConversion, t as toStyleString, N as NoImageMetadata, F as FailedToFetchRemoteImageDimensions, b as ExpectedImageOptions, c as ExpectedNotESMImage, d as InvalidImageService, e as createAstro, f as createComponent, g as ImageMissingAlt, m as maybeRenderHead, h as addAttribute, s as spreadAttributes, r as renderTemplate, i as ExperimentalFontsNotEnabled, j as FontFamilyNotFound, u as unescapeHTML } from './astro/server_BcA0Y13i.mjs';
 import { i as isRemoteAllowed } from './remote_CrdlObHx.mjs';
-import './_@astro-renderers_BTUeEnL1.mjs';
+import './_@astro-renderers_CjgTivB9.mjs';
 
 const VALID_SUPPORTED_FORMATS = [
   "jpeg",
@@ -1225,7 +1225,7 @@ async function getConfiguredImageService() {
   if (!globalThis?.astroAsset?.imageService) {
     const { default: service } = await import(
       // @ts-expect-error
-      './sharp_CJgEPiw2.mjs'
+      './sharp_B_TBMBna.mjs'
     ).catch((e) => {
       const error = new AstroError(InvalidImageService);
       error.cause = e;
@@ -1407,7 +1407,7 @@ const $$Image = createComponent(async ($$result, $$props, $$slots) => {
   }
   const { class: className, ...attributes } = { ...additionalAttributes, ...image.attributes };
   return renderTemplate`${maybeRenderHead()}<img${addAttribute(image.src, "src")}${spreadAttributes(attributes)}${addAttribute(className, "class")}>`;
-}, "/home/eddie/athletics/egac_1/node_modules/.pnpm/astro@5.16.6_@types+node@25.0.3_rollup@4.54.0_typescript@5.9.3_yaml@2.8.2/node_modules/astro/components/Image.astro", void 0);
+}, "/home/eddie/athletics/egac_1/node_modules/astro/components/Image.astro", void 0);
 
 const mimes = {
   "3g2": "video/3gpp2",
@@ -1925,7 +1925,7 @@ const $$Picture = createComponent(async ($$result, $$props, $$slots) => {
     const srcsetAttribute = props.densities || !props.densities && !props.widths && !useResponsive ? `${image.src}${image.srcSet.values.length > 0 ? ", " + image.srcSet.attribute : ""}` : image.srcSet.attribute;
     return renderTemplate`<source${addAttribute(srcsetAttribute, "srcset")}${addAttribute(lookup(image.options.format ?? image.src) ?? `image/${image.options.format}`, "type")}${spreadAttributes(sourceAdditionalAttributes)}>`;
   })}  <img${addAttribute(fallbackImage.src, "src")}${spreadAttributes(attributes)}${addAttribute(className, "class")}> </picture>`;
-}, "/home/eddie/athletics/egac_1/node_modules/.pnpm/astro@5.16.6_@types+node@25.0.3_rollup@4.54.0_typescript@5.9.3_yaml@2.8.2/node_modules/astro/components/Picture.astro", void 0);
+}, "/home/eddie/athletics/egac_1/node_modules/astro/components/Picture.astro", void 0);
 
 const fontsMod = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
   __proto__: null
@@ -1984,7 +1984,7 @@ const $$Font = createComponent(($$result, $$props, $$slots) => {
   }
   const filteredPreloadData = filterPreloads(data.preloadData, preload);
   return renderTemplate`<style>${unescapeHTML(data.css)}</style>${filteredPreloadData?.map(({ url, type }) => renderTemplate`<link rel="preload"${addAttribute(url, "href")} as="font"${addAttribute(`font/${type}`, "type")} crossorigin>`)}`;
-}, "/home/eddie/athletics/egac_1/node_modules/.pnpm/astro@5.16.6_@types+node@25.0.3_rollup@4.54.0_typescript@5.9.3_yaml@2.8.2/node_modules/astro/components/Font.astro", void 0);
+}, "/home/eddie/athletics/egac_1/node_modules/astro/components/Font.astro", void 0);
 
 const assetQueryParams = undefined;
 							const imageConfig = {"endpoint":{"route":"/_image","entrypoint":"@astrojs/cloudflare/image-endpoint"},"service":{"entrypoint":"astro/assets/services/sharp","config":{}},"domains":[],"remotePatterns":[],"responsiveStyles":false};

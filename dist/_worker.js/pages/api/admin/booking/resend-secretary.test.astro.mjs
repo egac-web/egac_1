@@ -1,7 +1,7 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { P as POST } from '../../../../chunks/resend-secretary.json_CJYYIe0H.mjs';
-import { v as vi, d as describe, i as it, g as globalExpect } from '../../../../chunks/vi.2VT5v0um_BGuskS_r.mjs';
-export { r as renderers } from '../../../../chunks/_@astro-renderers_BTUeEnL1.mjs';
+import { P as POST } from '../../../../chunks/resend-secretary.json_iZpKP9Vo.mjs';
+import { v as vi, d as describe, i as it, g as globalExpect } from '../../../../chunks/vi.2VT5v0um_BqJ87Wy1.mjs';
+export { r as renderers } from '../../../../chunks/_@astro-renderers_CjgTivB9.mjs';
 
 vi.mock("../../../../lib/supabase", () => ({
   getBookingById: vi.fn(async (id) => ({ id, enquiry_id: "test-enquiry-id", slot: "u13", session_date: "2026-01-20" })),
@@ -21,7 +21,7 @@ vi.mock("../../../../lib/notifications", () => ({
 }));
 describe("resend-secretary endpoint", () => {
   it("returns detailed error when notification throws and token=dev", async () => {
-    const { sendBookingConfirmationNotification } = await import('../../../../chunks/notifications_CX5oPyXA.mjs');
+    const { sendBookingConfirmationNotification } = await import('../../../../chunks/notifications_Dpwd-lBy.mjs');
     sendBookingConfirmationNotification.mockImplementationOnce(async () => {
       throw new Error("simulated send failure");
     });
@@ -34,7 +34,7 @@ describe("resend-secretary endpoint", () => {
     globalExpect(body.details).toBeDefined();
   });
   it("returns generic error for non-dev token when notification throws", async () => {
-    const { sendBookingConfirmationNotification } = await import('../../../../chunks/notifications_CX5oPyXA.mjs');
+    const { sendBookingConfirmationNotification } = await import('../../../../chunks/notifications_Dpwd-lBy.mjs');
     sendBookingConfirmationNotification.mockImplementationOnce(async () => {
       throw new Error("simulated send failure");
     });
