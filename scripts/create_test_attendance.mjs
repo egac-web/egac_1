@@ -8,7 +8,7 @@ const { data: enquiry, error: enquiryErr } = await client.from('enquiries').inse
   name: 'Test Attendance User',
   email: 'test-attendance@example.com',
   phone: '07700900000',
-  age: 14,
+  dob: '2012-01-01',
   postcode: 'RH19 1AA',
   marketing_consent: false
 }).select().single();
