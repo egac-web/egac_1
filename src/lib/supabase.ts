@@ -147,15 +147,55 @@ export async function markInviteAccepted(invite_id: string, env?: any) {
 
 export async function createMemberFromEnquiry(enquiry: Enquiry, env?: any) {
   const client = getSupabaseAdmin(env);
+  const additional: any = {};
+  if ((enquiry as any).medication) additional.medication = (enquiry as any).medication;
+  if ((enquiry as any).illnesses) additional.illnesses = (enquiry as any).illnesses;
+  if ((enquiry as any).allergies) additional.allergies = (enquiry as any).allergies;
+  if ((enquiry as any).emergency_contact) additional.emergency_contact = (enquiry as any).emergency_contact;
+
   const memberPayload = {
     name: enquiry.name,
     email: enquiry.email,
     phone: enquiry.phone,
     source: enquiry.source,
+    dob: enquiry.dob || null,
+    address: enquiry.address || null,
+    postcode: enquiry.postcode || null,
+    enquiry_id: enquiry.id || null,
+    additional: Object.keys(additional).length ? additional : null,
   };
   const { data, error } = await client.from('members').insert([memberPayload]).select().single();
   if (error) throw error;
   return data;
+}
+
+export async function getRecentMembers(limit = 100, env?: any) {
+  const client = getSupabaseAdmin(env);
+  const { data, error } = await client.from('members').select('*').order('created_at', { ascending: false }).limit(limit);
+  if (error) throw error;
+  return data || [];
+}
+
+// Membership OTP helpers
+export async function createMembershipOtp(invite_id: string, env?: any) {
+  const client = getSupabaseAdmin(env);
+  const code = String(Math.floor(100000 + Math.random() * 900000)); // 6-digit
+  const expiresAt = new Date(Date.now() + (15 * 60 * 1000)).toISOString(); // 15 minutes
+  const payload = { invite_id, code, expires_at: expiresAt };
+  const { data, error } = await client.from('membership_otps').insert([payload]).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function verifyMembershipOtp(invite_id: string, code: string, env?: any) {
+  const client = getSupabaseAdmin(env);
+  const { data, error } = await client.from('membership_otps').select('*').eq('invite_id', invite_id).eq('code', code).eq('used', false).order('created_at', { ascending: false }).limit(1).maybeSingle();
+  if (error) throw error;
+  if (!data) return { ok: false, reason: 'not_found' };
+  if (new Date(data.expires_at) < new Date()) return { ok: false, reason: 'expired' };
+  const { data: upd, error: updErr } = await client.from('membership_otps').update({ used: true }).eq('id', data.id).select().single();
+  if (updErr) throw updErr;
+  return { ok: true, row: upd };
 }
 
 // Bookings helpers

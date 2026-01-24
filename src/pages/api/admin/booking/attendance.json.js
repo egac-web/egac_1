@@ -18,67 +18,37 @@ export async function POST({ request, locals }) {
       headers: { 'Content-Type': 'application/json' }
     });
 
-    const client = getSupabaseAdmin(env);
-
-    // Fetch booking with embedded enquiry fallback logic
-    let booking, enquiry = null;
-
+    // Use centralized helper which prefers RPC and falls back to safe queries
+    let booking = null;
     try {
-      // Try to fetch booking with embedded enquiry (legacy approach)
-      const { data, error } = await client.from('bookings').select('*, enquiry:enquiries(*)').eq('id', booking_id).maybeSingle();
-
-      // Check if error is the "Could not embed" relationship error
-      if (error && error.message && error.message.includes('Could not embed')) {
-        // Fallback: fetch booking and enquiry separately
-        const { data: bookingData, error: bookingErr } = await client.from('bookings').select('*').eq('id', booking_id).maybeSingle();
-        if (bookingErr) return new Response(JSON.stringify({ ok: false, error: bookingErr.message }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' }
-        });
-        if (!bookingData) return new Response(JSON.stringify({ ok: false, error: 'Booking not found' }), {
-          status: 404,
-          headers: { 'Content-Type': 'application/json' }
-        });
-
-        booking = bookingData;
-
-        // Load enquiry explicitly
-        const { data: enquiryData, error: enquiryErr } = await client.from('enquiries').select('*').eq('id', booking.enquiry_id).maybeSingle();
-        if (enquiryErr) return new Response(JSON.stringify({ ok: false, error: enquiryErr.message }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' }
-        });
-        enquiry = enquiryData;
-        booking.enquiry = enquiry;
-      } else if (error) {
-        // Other error
-        return new Response(JSON.stringify({ ok: false, error: error.message }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      } else {
-        // Success with embedded select
-        if (!data) return new Response(JSON.stringify({ ok: false, error: 'Booking not found' }), {
-          status: 404,
-          headers: { 'Content-Type': 'application/json' }
-        });
-        booking = data;
-        enquiry = data.enquiry;
-      }
+      const { getBookingById } = await import('../../../../lib/supabase');
+      booking = await getBookingById(booking_id, env);
+      if (!booking) return new Response(JSON.stringify({ ok: false, error: 'Booking not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
     } catch (e) {
-      // Unexpected error during fetch
+      console.error('Booking fetch error', e);
       return new Response(JSON.stringify({ ok: false, error: `Booking fetch failed: ${e.message}` }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    // update booking status and optional note
-    const { data: updated, error: updErr } = await client.from('bookings').update({ status, attendance_note: note }).eq('id', booking_id).select().single();
-    if (updErr) return new Response(JSON.stringify({ ok: false, error: updErr.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    // Capture related enquiry for later use
+    const enquiry = booking.enquiry || null;
+
+    // update booking status and optional note using helper
+    let updated;
+    try {
+      const { updateBookingStatus } = await import('../../../../lib/supabase');
+      updated = await updateBookingStatus(booking_id, status, note, env);
+    } catch (err) {
+      return new Response(JSON.stringify({ ok: false, error: err.message || String(err) }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
 
     // append event on enquiry
     const enquiry_id = booking.enquiry_id || (booking.enquiry && booking.enquiry.id);
@@ -110,7 +80,7 @@ export async function POST({ request, locals }) {
 
         const membershipUrl = invite ? `${env.SITE_URL || ''}/membership?token=${invite.token}` : null;
         // Use the enquiry already fetched (either from fallback or embedded)
-        const enq = enquiry || booking.enquiry || {};
+        const enq = enquiry || {};
         if (invite && enq && enq.email) {
           try {
             const { sendInviteNotification } = await import('../../../../lib/notifications');
@@ -134,8 +104,8 @@ export async function POST({ request, locals }) {
     }
 
     // Generate coach message text for copy/paste
-    // Use the enquiry already fetched and attached to booking (fallback to separate enquiry var)
-    const enq = enquiry || booking.enquiry || {};
+    // Use the enquiry already fetched and attached to booking
+    const enq = enquiry || {};
     const slot = booking.slot || '';
     const session_date = booking.session_date || '';
     const coachMessage = `Attended: ${enq.name || ''} (${enq.email || ''}, ${enq.phone || ''}) — ${session_date} ${slot} — Please record in Presli per EA criteria.`;

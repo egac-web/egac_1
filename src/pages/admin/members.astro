@@ -31,6 +31,7 @@ import '../../styles/forms.css';
         <button id="tab-btn-academy" class="tab-btn" data-tab="academy" role="tab" aria-selected="false" aria-controls="tab-academy" tabindex="-1">Academy (U11)</button>
         <button id="tab-btn-reports" class="tab-btn" data-tab="reports" role="tab" aria-selected="false" aria-controls="tab-reports" tabindex="-1">Reports</button>
         <button id="tab-btn-config" class="tab-btn" data-tab="config" role="tab" aria-selected="false" aria-controls="tab-config" tabindex="-1">Configuration</button>
+  <button id="tab-btn-memberships" class="tab-btn" data-tab="memberships" role="tab" aria-selected="false" aria-controls="tab-memberships" tabindex="-1">Memberships</button>
       </nav>
 
       <!-- Enquiries & Bookings Tab -->
@@ -82,6 +83,53 @@ import '../../styles/forms.css';
           <div id="templates-config"></div>
         </section>
       </div>
+
+      <!-- Memberships Rendering Script -->
+      <script>
+        async function loadMemberships(){
+          const list = document.getElementById('memberships-list');
+          list.innerHTML = '<p>Loading...</p>';
+          try{
+            const res = await fetch('/api/admin/memberships.json?token=dev');
+            const json = await res.json();
+            if(!json.ok){ list.innerHTML = `<p class="status-error">${json.error}</p>`; return; }
+            if(!json.members || json.members.length===0){ list.innerHTML = '<p>No memberships found</p>'; return; }
+            let out = '';
+            json.members.forEach(m => {
+              const name = m.name || '';
+              const email = m.email || '';
+              const phone = m.phone || '';
+              const dob = m.dob || '';
+              const emergency = (m.additional && m.additional.emergency_contact) ? `${m.additional.emergency_contact.name} (${m.additional.emergency_contact.phone})` : '';
+              out += `<div class="card"><h3>${name}</h3><div><strong>Email:</strong> ${email} &nbsp; <strong>Phone:</strong> ${phone}</div><div><strong>DOB:</strong> ${dob} &nbsp; <strong>Emergency:</strong> ${emergency}</div><div style="margin-top:0.75rem"><button class="btn btn-sm" onclick="copyPresli('${m.id}')">Copy Presli CSV</button> <button class="btn btn-sm" onclick="copyJSON('${m.id}')">Copy JSON</button></div></div>`;
+            });
+            list.innerHTML = out;
+          }catch(e){ list.innerHTML = '<p class="status-error">Connection error</p>'; }
+        }
+
+        window.copyPresli = function(memberId){
+          const m = window._members && window._members.find(x => x.id===memberId);
+          if(!m){ navigator.clipboard.writeText(''); return; }
+          // Simple CSV: name,email,phone,dob
+          const row = `${m.name||''},${m.email||''},${m.phone||''},${m.dob||''}`;
+          navigator.clipboard.writeText(row);
+          alert('Presli CSV copied to clipboard');
+        }
+
+        window.copyJSON = function(memberId){
+          const m = window._members && window._members.find(x => x.id===memberId);
+          if(!m){ navigator.clipboard.writeText(''); return; }
+          navigator.clipboard.writeText(JSON.stringify(m, null, 2));
+          alert('Member JSON copied to clipboard');
+        }
+
+        // store members for copy helpers
+        (async()=>{ try{ const r = await fetch('/api/admin/memberships.json?token=dev'); const j = await r.json(); window._members = j.members || []; }catch(e){} })();
+
+        // Load when memberships tab is activated
+        document.querySelectorAll('.tab-btn').forEach(btn=>{ btn.addEventListener('click', ()=>{ if(btn.dataset.tab==='memberships'){ loadMemberships(); } }); });
+      </script>
+
     </div>
   </main>
 </Layout>
