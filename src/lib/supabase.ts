@@ -184,6 +184,21 @@ export async function getBookingByInvite(invite_id: string, env?: any) {
 
 export async function getBookingById(booking_id: string, env?: any) {
   const client = getSupabaseAdmin(env);
+
+  // Try DB RPC first (robust single-statement join)
+  try {
+    const { data, error } = await client.rpc('get_booking_with_enquiry', { bid: booking_id });
+    if (!error && data) {
+      // RPC may return an array of rows or a single row
+      const booking = Array.isArray(data) ? data[0] : data;
+      if (booking) return booking;
+    }
+  } catch (e) {
+    // RPC failed or not available; fall back to explicit fetch
+    console.warn('RPC get_booking_with_enquiry failed, falling back to sequential fetch', e?.message || e);
+  }
+
+  // Fallback: fetch booking then enquiry separately
   const { data: booking, error } = await client.from('bookings').select('*').eq('id', booking_id).maybeSingle();
   if (error) throw error;
   if (!booking) return null;
