@@ -1,4 +1,4 @@
-import { GET } from '../../pages/api/_version.json.js';
+import { GET } from '../../pages/api/version.json.js';
 import { test, expect } from 'vitest';
 
 test('version endpoint returns ok and sha', async () => {
