@@ -27,6 +27,18 @@ jobs:
           fi
           git clone https://x-access-token:${WIKI_PAT}@github.com/egac-web/egac_1.wiki.git wiki-temp
 
+      - name: Backup current wiki
+        env:
+          WIKI_PAT: ${{ secrets.WIKI_PAT }}
+        run: |
+          cd wiki-temp
+          # Create a timestamped backup branch of the current wiki state
+          current_branch=$(git rev-parse --abbrev-ref HEAD || echo main)
+          ts=$(date -u +"%Y%m%dT%H%M%SZ")
+          git checkout -b "wiki-backup/$ts"
+          git push origin "wiki-backup/$ts" || echo "Backup push failed; continuing"
+          git checkout "$current_branch"
+
       - name: Sync wiki content
         run: |
           rsync -av --delete wiki-export/ wiki-temp/
