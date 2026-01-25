@@ -41,9 +41,21 @@ export async function POST({ request, locals }) {
       try {
         // find existing invite or create
         let invite = await getLatestInviteForEnquiry(enquiry_id, env);
-        if (!invite) invite = await createInviteForEnquiry(enquiry_id, env);
+        if (!invite) {
+          try {
+            invite = await createInviteForEnquiry(enquiry_id, env);
+          } catch (err) {
+            if (String(err.message || '').includes('enquiry_on_academy_waitlist')) {
+              response.membership_sent = false;
+              response.warning = 'Enquiry is on Academy waiting list; membership link will not be sent';
+              invite = null;
+            } else {
+              throw err;
+            }
+          }
+        }
 
-        const membershipUrl = `${env.SITE_URL || ''}/membership?token=${invite.token}`;
+        const membershipUrl = invite ? `${env.SITE_URL || ''}/membership?token=${invite.token}` : null;
         if (enquiry.email) {
           try {
             const { sendInviteNotification } = await import('../../../../lib/notifications');

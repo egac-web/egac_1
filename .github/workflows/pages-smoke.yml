@@ -1,0 +1,34 @@
+name: Pages smoke test
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Wait for staging to pick up commit
+        env:
+          SITE_URL: ${{ secrets.STAGING_SITE_URL || 'https://staging.eastgrinsteadac.co.uk' }}
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          echo "Expecting SHA: $EXPECTED_SHA"
+          for i in {1..40}; do
+            echo "Check $i..."
+            resp=$(curl -sS "$SITE_URL/api/version.json" || true)
+            sha=$(echo "$resp" | jq -r '.version.sha // ""')
+            echo "remote sha: $sha"
+            if [ "$sha" = "$EXPECTED_SHA" ]; then
+              echo "Staging is at expected SHA"
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "Timeout waiting for staging to report build SHA"
+          exit 1

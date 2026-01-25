@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "include": [
+    "/*"
+  ],
+  "exclude": [
+    "/_astro/*",
+    "/academy_list.png",
+    "/images/*",
+    "/styles/*"
+  ]
+}

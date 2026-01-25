@@ -1,0 +1,39 @@
+name: Publish wiki
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare git
+        run: |
+          git config user.name "EGAC Wiki Bot"
+          git config user.email "ci-bot@egac.local"
+
+      - name: Clone wiki repo
+        env:
+          WIKI_PAT: ${{ secrets.WIKI_PAT }}
+        run: |
+          if [ -z "$WIKI_PAT" ]; then
+            echo "Error: WIKI_PAT secret is not set";
+            exit 1;
+          fi
+          git clone https://x-access-token:${WIKI_PAT}@github.com/egac-web/egac_1.wiki.git wiki-temp
+
+      - name: Sync wiki content
+        run: |
+          rsync -av --delete wiki-export/ wiki-temp/
+          cd wiki-temp
+          git add -A
+          git commit -m "chore(wiki): update content from repo (automated)" || echo "No changes to commit"
+          git push origin HEAD
+
+      - name: Done
+        run: echo "Wiki published (if credentials were valid and changes existed)"

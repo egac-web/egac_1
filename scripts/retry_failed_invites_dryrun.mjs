@@ -63,7 +63,7 @@ async function run() {
     try {
       const { data: enquiry } = await supabase.from('enquiries').select('*').eq('id', invite.enquiry_id).maybeSingle();
       if (!enquiry) { console.warn('Enquiry missing for invite', invite.id); continue; }
-      const inviteUrl = `${process.env.SITE_BASE_URL || 'http://localhost:3000'}/booking?invite=${encodeURIComponent(invite.token)}`;
+      const inviteUrl = `${process.env.SITE_BASE_URL || 'http://localhost:3000'}/bookings?invite=${encodeURIComponent(invite.token)}`;
 
       console.log('Dry-run sending invite', invite.id, 'to', enquiry.email, 'attempt', (invite.send_attempts || 0) + 1);
       // Append a dry-run event to enquiries.events column (do not mark invite sent)

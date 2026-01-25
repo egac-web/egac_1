@@ -1,4 +1,5 @@
-import { insertEnquiry, createInviteForEnquiry, markInviteSent, getSupabaseAdmin } from '../../lib/supabase';
+import { insertEnquiry, createInviteForEnquiry, markInviteSent, getSupabaseAdmin, getSystemConfigAll, createAcademyInvitation, appendEnquiryEvent } from '../../lib/supabase';
+import { computeAgeOnDate } from '../../lib/booking';
 
 // This API route must be server-rendered so POST requests are accepted during dev/runtime
 export const prerender = false;
@@ -137,29 +138,81 @@ export async function POST({ request, locals }) {
     // Persist to Supabase
     const inserted = await insertEnquiry(enquiryPayload, env);
 
-    // Create an invite record for the enquiry
+    // Determine Academy eligibility (age as of 2026-08-31). If eligible, add to waiting list and notify — DO NOT create a booking invite
     let invite = null;
+    let isAcademy = false;
     try {
-      invite = await createInviteForEnquiry(inserted.id, env);
-      // update enquiry to reference invite
-      try {
-        const client = getSupabaseAdmin(env);
-        await client.from('enquiries').update({ invite_id: invite.id }).eq('id', inserted.id);
-      } catch (err) {
-        console.error('Could not update enquiry with invite id', err);
+      const config = await getSystemConfigAll(env);
+      const academyMaxAge = config && config.academy_max_age ? parseInt(String(config.academy_max_age), 10) : 10;
+      if (inserted && inserted.dob) {
+        const ageOnAug31 = computeAgeOnDate(inserted.dob, '2026-08-31');
+        if (ageOnAug31 !== null && !Number.isNaN(ageOnAug31) && ageOnAug31 <= academyMaxAge) {
+          isAcademy = true;
+          try {
+            const acadInv = await createAcademyInvitation(inserted.id, env);
+            try { await appendEnquiryEvent(inserted.id, { type: 'academy_invitation_created', invite_id: acadInv.id, at: new Date().toISOString() }, env); } catch (e) { console.error('Failed to append academy_invitation_created', e); }
+            // Notify parent that they're on the waiting list
+            try {
+              const { sendAcademyWaitlistNotification } = await import('../../lib/notifications');
+              await sendAcademyWaitlistNotification({ enquiry: inserted, invitation: acadInv, env });
+            } catch (e) {
+              console.error('sendAcademyWaitlistNotification failed', e);
+            }
+          } catch (e) {
+            console.error('createAcademyInvitation failed', e);
+          }
+        }
       }
+    } catch (e) {
+      console.error('Failed to evaluate academy eligibility', e);
+    }
 
-      // Send invite email via notifications helper (records events and marks invite)
+    // If not Academy-eligible, proceed to create a normal booking invite and send invite email
+    if (!isAcademy) {
       try {
-        const { sendInviteNotification } = await import('../../lib/notifications');
-        const inviteUrl = `${env.SITE_BASE_URL || ''}/booking?invite=${encodeURIComponent(invite.token)}`;
-        await sendInviteNotification({ enquiryId: inserted.id, inviteId: invite.id, to: inserted.email, inviteUrl, env });
-      } catch (err) {
-        console.error('sendInviteNotification failed', err);
-      }
+        invite = await createInviteForEnquiry(inserted.id, env);
+        // update enquiry to reference invite
+        try {
+          const client = getSupabaseAdmin(env);
+          await client.from('enquiries').update({ invite_id: invite.id }).eq('id', inserted.id);
+        } catch (err) {
+          console.error('Could not update enquiry with invite id', err);
+        }
 
-    } catch (err) {
-      console.error('Failed to create invite record for enquiry', err);
+        // Send invite email via notifications helper (records events and marks invite)
+        try {
+          const { sendInviteNotification } = await import('../../lib/notifications');
+          const inviteUrl = `${env.SITE_BASE_URL || ''}/bookings?invite=${encodeURIComponent(invite.token)}`;
+          await sendInviteNotification({ enquiryId: inserted.id, inviteId: invite.id, to: inserted.email, inviteUrl, env });
+        } catch (err) {
+          console.error('sendInviteNotification failed', err);
+        }
+
+      } catch (err) {
+        console.error('Failed to create invite record for enquiry', err);
+      }
+    } else {
+      // For Academy-eligible enquiries we deliberately do not set invite_id and we add an event
+      try { await appendEnquiryEvent(inserted.id, { type: 'academy_waitlist_added', at: new Date().toISOString() }, env); } catch (e) { console.error('Failed to append academy_waitlist_added', e); }
+    }
+
+    // Check Academy eligibility (age as of 2026-08-31) and add to waiting list if eligible
+    try {
+      const config = await getSystemConfigAll(env);
+      const academyMaxAge = config && config.academy_max_age ? parseInt(String(config.academy_max_age), 10) : 10;
+      if (inserted && inserted.dob) {
+        const ageOnAug31 = computeAgeOnDate(inserted.dob, '2026-08-31');
+        if (ageOnAug31 !== null && !Number.isNaN(ageOnAug31) && ageOnAug31 <= academyMaxAge) {
+          try {
+            const acadInv = await createAcademyInvitation(inserted.id, env);
+            try { await appendEnquiryEvent(inserted.id, { type: 'academy_invitation_created', invite_id: acadInv.id, at: new Date().toISOString() }, env); } catch (e) { console.error('Failed to append academy_invitation_created', e); }
+          } catch (e) {
+            console.error('createAcademyInvitation failed', e);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Failed to evaluate academy eligibility', e);
     }
 
     // Forward to webhook (Make/automation) if configured, include canonical IDs

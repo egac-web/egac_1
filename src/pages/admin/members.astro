@@ -31,6 +31,7 @@ import '../../styles/forms.css';
         <button id="tab-btn-academy" class="tab-btn" data-tab="academy" role="tab" aria-selected="false" aria-controls="tab-academy" tabindex="-1">Academy (U11)</button>
         <button id="tab-btn-reports" class="tab-btn" data-tab="reports" role="tab" aria-selected="false" aria-controls="tab-reports" tabindex="-1">Reports</button>
         <button id="tab-btn-config" class="tab-btn" data-tab="config" role="tab" aria-selected="false" aria-controls="tab-config" tabindex="-1">Configuration</button>
+  <button id="tab-btn-memberships" class="tab-btn" data-tab="memberships" role="tab" aria-selected="false" aria-controls="tab-memberships" tabindex="-1">Memberships</button>
       </nav>
 
       <!-- Enquiries & Bookings Tab -->
@@ -50,6 +51,14 @@ import '../../styles/forms.css';
         </div>
         <div id="academy-stats"></div>
         <div id="academy-list"></div>
+
+        <!-- Academy invitation preview modal -->
+        <div id="academy-preview-modal" style="display:none;position:fixed;inset:0;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);z-index:9999">
+          <div style="background:white;max-width:900px;width:95%;max-height:90vh;overflow:auto;border-radius:8px;padding:1rem;position:relative">
+            <button id="academy-preview-close" aria-label="Close preview" style="position:absolute;top:8px;right:8px;border:none;background:#ef4444;color:white;padding:0.5rem;border-radius:6px;cursor:pointer">Close</button>
+            <div id="academy-preview-content" style="padding:1rem"></div>
+          </div>
+        </div>
       </div>
 
       <!-- Reports Tab -->
@@ -74,6 +83,53 @@ import '../../styles/forms.css';
           <div id="templates-config"></div>
         </section>
       </div>
+
+      <!-- Memberships Rendering Script -->
+      <script>
+        async function loadMemberships(){
+          const list = document.getElementById('memberships-list');
+          list.innerHTML = '<p>Loading...</p>';
+          try{
+            const res = await fetch('/api/admin/memberships.json?token=dev');
+            const json = await res.json();
+            if(!json.ok){ list.innerHTML = `<p class="status-error">${json.error}</p>`; return; }
+            if(!json.members || json.members.length===0){ list.innerHTML = '<p>No memberships found</p>'; return; }
+            let out = '';
+            json.members.forEach(m => {
+              const name = m.name || '';
+              const email = m.email || '';
+              const phone = m.phone || '';
+              const dob = m.dob || '';
+              const emergency = (m.additional && m.additional.emergency_contact) ? `${m.additional.emergency_contact.name} (${m.additional.emergency_contact.phone})` : '';
+              out += `<div class="card"><h3>${name}</h3><div><strong>Email:</strong> ${email} &nbsp; <strong>Phone:</strong> ${phone}</div><div><strong>DOB:</strong> ${dob} &nbsp; <strong>Emergency:</strong> ${emergency}</div><div style="margin-top:0.75rem"><button class="btn btn-sm" onclick="copyPresli('${m.id}')">Copy Presli CSV</button> <button class="btn btn-sm" onclick="copyJSON('${m.id}')">Copy JSON</button></div></div>`;
+            });
+            list.innerHTML = out;
+          }catch(e){ list.innerHTML = '<p class="status-error">Connection error</p>'; }
+        }
+
+        window.copyPresli = function(memberId){
+          const m = window._members && window._members.find(x => x.id===memberId);
+          if(!m){ navigator.clipboard.writeText(''); return; }
+          // Simple CSV: name,email,phone,dob
+          const row = `${m.name||''},${m.email||''},${m.phone||''},${m.dob||''}`;
+          navigator.clipboard.writeText(row);
+          alert('Presli CSV copied to clipboard');
+        }
+
+        window.copyJSON = function(memberId){
+          const m = window._members && window._members.find(x => x.id===memberId);
+          if(!m){ navigator.clipboard.writeText(''); return; }
+          navigator.clipboard.writeText(JSON.stringify(m, null, 2));
+          alert('Member JSON copied to clipboard');
+        }
+
+        // store members for copy helpers
+        (async()=>{ try{ const r = await fetch('/api/admin/memberships.json?token=dev'); const j = await r.json(); window._members = j.members || []; }catch(e){} })();
+
+        // Load when memberships tab is activated
+        document.querySelectorAll('.tab-btn').forEach(btn=>{ btn.addEventListener('click', ()=>{ if(btn.dataset.tab==='memberships'){ loadMemberships(); } }); });
+      </script>
+
     </div>
   </main>
 </Layout>
@@ -269,6 +325,27 @@ import '../../styles/forms.css';
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
     margin: 1.5rem 0;
+  }
+
+  /* Academy list responsive grid to make better use of space */
+  #tab-academy .academy-list-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 1rem;
+    align-items: start;
+  }
+
+  /* Ensure academy cards expand to fill column */
+  #tab-academy .card {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Improve spacing inside card for wider screens */
+  @media (min-width: 960px) {
+    #tab-academy .card > div:first-child { gap: 1.25rem; }
+    #tab-academy .card .hero { padding: 26px; }
   }
 
   .stat-card {
@@ -765,7 +842,7 @@ import '../../styles/forms.css';
         </button>
       </div>
       
-      <div style="display:grid;gap:1rem">
+      <div class="academy-list-grid">
         ${filtered.map(enquiry => {
           const age = calculateAge(enquiry.dob);
           const hasInvite = enquiry.invites && enquiry.invites.length > 0;
@@ -812,7 +889,10 @@ import '../../styles/forms.css';
                 ${status !== 'joined' ? `<button class="btn btn-sm" style="background:#10b981;color:white;border:none" onclick="updateAcademyStatus(${enquiry.id}, 'joined')">✓ Mark as Joined</button>` : ''}
                 ${status !== 'not_joined' ? `<button class="btn btn-sm" style="background:#ef4444;color:white;border:none" onclick="updateAcademyStatus(${enquiry.id}, 'not_joined')">✗ Mark as Not Joined</button>` : ''}
                 ${status !== 'pending' ? `<button class="btn btn-sm btn-outline" onclick="updateAcademyStatus(${enquiry.id}, 'pending')">Reset to Pending</button>` : ''}
-                ${!hasInvite ? `<button class="btn btn-sm btn-ghost" onclick="sendAcademyInvite(${enquiry.id})">📧 Send Invitation</button>` : ''}
+
+                <button class="btn btn-sm btn-outline" onclick="previewAcademyInvitation(${enquiry.id})">👁 Preview</button>
+
+                ${!hasInvite ? `<button class="btn btn-sm" style="background:#003DA5;color:white;border:none" onclick="sendAcademyInvite(${enquiry.id})">📧 Send Invitation</button>` : `<button class="btn btn-sm btn-ghost" onclick="viewAcademyInvitation(${enquiry.id})">🔗 View Invitation</button>`}
               </div>
             </div>
           `;
@@ -887,6 +967,45 @@ import '../../styles/forms.css';
       console.error('Send academy invite error:', err);
       showStatus('academy-stats', 'Connection error', 'error');
     }
+  };
+
+  // Preview an Academy invitation using the templates preview endpoint
+  window.previewAcademyInvitation = async function(enquiryId) {
+    try {
+      const enq = academyData.find(e => e.id === enquiryId);
+      if (!enq) { showStatus('academy-stats', 'Enquiry not found', 'error'); return; }
+
+      const vars = {
+        childName: enq.name || '',
+        responseYesUrl: `${location.origin}/academy-response?enquiry=${enq.id}&response=yes`,
+        responseNoUrl: `${location.origin}/academy-response?enquiry=${enq.id}&response=no`,
+        siteName: (window.SITE_NAME || document.title || 'EGAC')
+      };
+
+      const res = await fetch('/api/admin/templates/preview.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+        body: JSON.stringify({ key: 'academy_invitation', vars })
+      });
+
+      const data = await res.json();
+      if (data.ok) {
+        const modal = document.getElementById('academy-preview-modal');
+        const content = document.getElementById('academy-preview-content');
+        content.innerHTML = data.html || '<em>No HTML returned</em>';
+        modal.style.display = 'flex';
+        document.getElementById('academy-preview-close').onclick = () => { modal.style.display = 'none'; };
+      } else {
+        showStatus('academy-stats', data.error || 'Preview failed', 'error');
+      }
+    } catch (err) {
+      console.error('Preview error:', err);
+      showStatus('academy-stats', 'Connection error', 'error');
+    }
+  };
+
+  window.viewAcademyInvitation = function(enquiryId) {
+    window.open(`/admin/enquiry/${enquiryId}`, '_blank');
   };
 
   function calculateAge(dob) {
