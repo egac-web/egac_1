@@ -24,4 +24,20 @@ export function getDirectusClient(runtime?: any): DirectusClient<any> & RestClie
 }
 
 // Legacy export for compatibility (uses build-time env vars only)
-export const directus = getDirectusClient();
+// Initialize a build-time directus client if env vars are present; avoid throwing during module import.
+let _directus;
+try {
+  const BUILD_DIRECTUS_URL = (import.meta as any).env?.DIRECTUS_URL || process.env.DIRECTUS_URL;
+  const BUILD_DIRECTUS_TOKEN = (import.meta as any).env?.DIRECTUS_TOKEN || process.env.DIRECTUS_TOKEN;
+  if (BUILD_DIRECTUS_URL) {
+    _directus = createDirectus(BUILD_DIRECTUS_URL).with(rest());
+    if (BUILD_DIRECTUS_TOKEN) {
+      _directus = _directus.with(staticToken(BUILD_DIRECTUS_TOKEN));
+    }
+  } else {
+    console.warn('[EGAC] DIRECTUS_URL not set at import time; directus client not initialized.');
+  }
+} catch (err) {
+  console.warn('[EGAC] Failed to initialize build-time Directus client:', err);
+}
+export const directus = _directus;
