@@ -17,7 +17,7 @@ jobs:
           git config user.name "EGAC Wiki Bot"
           git config user.email "ci-bot@egac.local"
 
-      - name: Clone wiki repo
+      - name: Verify WIKI_PAT & wiki access
         env:
           WIKI_PAT: ${{ secrets.WIKI_PAT }}
         run: |
@@ -25,7 +25,32 @@ jobs:
             echo "Error: WIKI_PAT secret is not set";
             exit 1;
           fi
+          echo "Checking repo metadata for egac-web/egac_1 and egac-web/egac_1.wiki..."
+          echo "API call: /repos/egac-web/egac_1"
+          curl -s -H "Authorization: token $WIKI_PAT" "https://api.github.com/repos/egac-web/egac_1" | jq '{name: .name, has_wiki: .has_wiki, private: .private, full_name: .full_name}' || true
+          echo "API HEAD for wiki repo: /repos/egac-web/egac_1.wiki"
+          wiki_status=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token $WIKI_PAT" "https://api.github.com/repos/egac-web/egac_1.wiki")
+          echo "wiki repo HTTP status: $wiki_status"
+          echo "Trying to list refs via git ls-remote (will show error if access is denied)"
+          git ls-remote "https://x-access-token:$WIKI_PAT@github.com/egac-web/egac_1.wiki.git" || true
+
+      - name: Clone wiki repo
+        env:
+          WIKI_PAT: ${{ secrets.WIKI_PAT }}
+        run: |
           git clone https://x-access-token:${WIKI_PAT}@github.com/egac-web/egac_1.wiki.git wiki-temp
+
+      - name: Backup current wiki
+        env:
+          WIKI_PAT: ${{ secrets.WIKI_PAT }}
+        run: |
+          cd wiki-temp
+          # Create a timestamped backup branch of the current wiki state
+          current_branch=$(git rev-parse --abbrev-ref HEAD || echo main)
+          ts=$(date -u +"%Y%m%dT%H%M%SZ")
+          git checkout -b "wiki-backup/$ts"
+          git push origin "wiki-backup/$ts" || echo "Backup push failed; continuing"
+          git checkout "$current_branch"
 
       - name: Sync wiki content
         run: |
