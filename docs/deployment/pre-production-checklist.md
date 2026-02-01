@@ -78,7 +78,10 @@
   - Suggested remediation: (1) Open PR to upgrade `@astrojs/cloudflare` / `wrangler` (test thoroughly — may be breaking); (2) Assess `mjml` usage and mitigate (upgrade/replace/sandbox) — do not render untrusted MJML templates; (3) Re-run `npm audit` and push further fixes or PRs for direct fixes.
   - Completed by: GitHub Copilot (audit run)
   - Date: 2026-02-01
-- [ ] Create PR: upgrade `@astrojs/cloudflare` to 12.6.5 (or later) and verify build/runtime (addresses `undici`/`wrangler` chain)
+- [x] Create PR: upgrade `@astrojs/cloudflare` to 12.6.5 (or later) and verify build/runtime (addresses `undici`/`wrangler` chain)
+  - Evidence: PR: https://github.com/egac-web/egac_1/pull/39
+  - Completed by: Completed by: GitHub Copilot
+  - Date: 2026-02-01
   - Evidence/PR: 
   - Owner: 
   - Date: 
