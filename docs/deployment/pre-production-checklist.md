@@ -21,7 +21,10 @@
   - Evidence: 
   - Completed by: 
   - Date: 
-- [ ] Review and secure all Supabase RLS policies
+- [x] Review and secure all Supabase RLS policies
+  - Evidence: Evidence: RLS migrations present (db/migrations/2025-12-28_rls_and_policies.sql) enabling RLS on enquiries/invites/bookings/members and creating secretary policies
+  - Completed by: Completed by: GitHub Copilot
+  - Date: 2026-02-01
   - Evidence: 
   - Completed by: 
   - Date: 
