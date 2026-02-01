@@ -28,7 +28,7 @@ Modern athletics club website with comprehensive admin portal, built with Astro 
 - Responsive design for all devices
 
 ### Admin Portal
-- 🔐 Secure authentication with token-based access
+- 🔐 Secure authentication via Cloudflare Access (ZTNA) — no token fallback in staging/production
 - 📧 Email template management (preview, edit, test send)
 - 👥 Enquiry & booking management
 - ✅ Attendance tracking
@@ -69,7 +69,7 @@ Modern athletics club website with comprehensive admin portal, built with Astro 
 
 4. **Access the site**:
    - Public site: http://localhost:3000
-   - Admin portal: http://localhost:3000/admin/members?token=dev
+   - Admin portal (local dev only): http://localhost:3000/admin/members?token=dev
 
 ### Testing
 
