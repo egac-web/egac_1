@@ -44,7 +44,7 @@ RESEND_API_KEY=<your-resend-api-key>
 RESEND_FROM=EGAC Staging <noreply@eastgrinsteadac.co.uk>
 
 # Admin Portal Access
-ADMIN_TOKEN=<generate-new-secure-token-for-staging>
+Use Cloudflare Access (ZTNA) to protect the admin portal in staging and production. For authenticated CI smoke tests set `STAGING_ACCESS_JWT` with a valid Access JWT; for local development you may still use `?token=dev` for convenience (test only).
 
 # Email Recipients (use staging/test email addresses)
 MEMBERSHIP_SECRETARY_EMAIL=staging-membership@eastgrinsteadac.co.uk
@@ -187,7 +187,7 @@ Once deployed to test, verify:
 - [ ] Booking cancellation works
 
 ### 3. Admin Portal
-- [ ] Login with test token: `https://test-site.com/admin/members?token=<ADMIN_TOKEN>`
+- [ ] Protect the admin portal with Cloudflare Access (ZTNA). For CI/automated smoke tests use a valid Access JWT (set as `STAGING_ACCESS_JWT`). For local development you may still use `?token=dev` for convenience (test only).
 - [ ] View enquiries and bookings
 - [ ] Mark attendance
 - [ ] Send Academy invitations
@@ -238,7 +238,7 @@ Before deploying to production:
 - [ ] All test checklist items pass
 - [ ] Performance meets requirements
 - [ ] Security audit complete
-- [ ] Admin token rotated
+- [ ] Cloudflare Access configured & tested (rotate any Access-related secrets as needed)
 - [ ] Email templates reviewed
 - [ ] Age groups configured
 - [ ] Booking slots configured

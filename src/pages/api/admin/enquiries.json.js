@@ -1,25 +1,15 @@
 import { getSupabaseAdmin } from '../../../lib/supabase';
+import { ensureAdmin } from '../../../lib/admin-auth';
 
 export async function GET({ request, locals }) {
   try {
     const env = locals?.runtime?.env || process.env;
     const url = new URL(request.url);
-    const token = request.headers.get('x-admin-token') || url.searchParams.get('token') || '';
-    // Allow 'dev' token in development OR match ADMIN_TOKEN
-    // Debug: log token and admin env info (masked) to help investigate mismatches
-    console.log('admin-token-check', {
-      receivedPreview: token ? token.substring(0, 8) + '...' : 'none',
-      receivedLen: token ? token.length : 0,
-      adminPreview: env.ADMIN_TOKEN ? env.ADMIN_TOKEN.substring(0, 8) + '...' : 'none',
-      adminLen: env.ADMIN_TOKEN ? env.ADMIN_TOKEN.length : 0
-    });
 
-    if (token !== 'dev' && (!env.ADMIN_TOKEN || token !== env.ADMIN_TOKEN)) {
-      console.warn('Unauthorized admin request to /api/admin/enquiries.json - token present:', !!token, 'tokenPreview:', token ? token.substring(0, 4) + '...' : 'none');
-      return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
+    const auth = await ensureAdmin(request, locals);
+    if (!auth.ok) {
+      console.warn('Unauthorized admin request to /api/admin/enquiries.json - reason:', auth.reason || 'none');
+      return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
     }
 
     const client = getSupabaseAdmin(env);
@@ -76,13 +66,10 @@ export async function POST({ request, locals }) {
   try {
     const env = locals?.runtime?.env || process.env;
     const url = new URL(request.url);
-    const token = request.headers.get('x-admin-token') || url.searchParams.get('token') || '';
+    const auth = await ensureAdmin(request, locals);
 
-    if (token !== 'dev' && (!env.ADMIN_TOKEN || token !== env.ADMIN_TOKEN)) {
-      return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
+    if (!auth.ok) {
+      return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
     }
 
     const body = await request.json();

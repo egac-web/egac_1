@@ -90,7 +90,11 @@ import '../../styles/forms.css';
           const list = document.getElementById('memberships-list');
           list.innerHTML = '<p>Loading...</p>';
           try{
-            const res = await fetch('/api/admin/memberships.json?token=dev');
+            // Try unauthenticated fetch first (Cloudflare Access will inject auth headers at the edge)
+            let res = await fetch('/api/admin/memberships.json');
+            if (res.status === 401) {
+              res = await fetch('/api/admin/memberships.json?token=dev');
+            }
             const json = await res.json();
             if(!json.ok){ list.innerHTML = `<p class="status-error">${json.error}</p>`; return; }
             if(!json.members || json.members.length===0){ list.innerHTML = '<p>No memberships found</p>'; return; }
@@ -124,7 +128,7 @@ import '../../styles/forms.css';
         }
 
         // store members for copy helpers
-        (async()=>{ try{ const r = await fetch('/api/admin/memberships.json?token=dev'); const j = await r.json(); window._members = j.members || []; }catch(e){} })();
+        (async()=>{ try{ let r = await fetch('/api/admin/memberships.json'); if (r.status === 401) r = await fetch('/api/admin/memberships.json?token=dev'); const j = await r.json(); window._members = j.members || []; }catch(e){} })();
 
         // Load when memberships tab is activated
         document.querySelectorAll('.tab-btn').forEach(btn=>{ btn.addEventListener('click', ()=>{ if(btn.dataset.tab==='memberships'){ loadMemberships(); } }); });
@@ -418,21 +422,44 @@ import '../../styles/forms.css';
 <script>
   let adminToken = '';
 
-  // Check for token in URL query params
-  const urlParams = new URLSearchParams(window.location.search);
-  const urlToken = urlParams.get('token');
-  const storedToken = sessionStorage.getItem('adminToken');
-  
-  // Prefer URL token, then sessionStorage
-  if (urlToken) {
-    document.getElementById('admintoken').value = urlToken;
-    // Auto-login if token is present
-    setTimeout(() => document.getElementById('login-btn').click(), 100);
-  } else if (storedToken) {
-    document.getElementById('admintoken').value = storedToken;
-    // Auto-login using stored token
-    setTimeout(() => document.getElementById('login-btn').click(), 100);
-  }
+  // Attempt automatic sign-in via Cloudflare Access (no token) — will succeed when Access injects auth headers
+  (async () => {
+    try {
+      const res = await fetch('/api/admin/enquiries.json');
+      const data = await res.json().catch(() => ({}));
+      if (data && data.ok) {
+        // Access-authenticated: show portal
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('admin-portal').style.display = 'block';
+        const dbg = document.getElementById('admin-debug-info');
+        dbg.textContent = 'Admin UI - Access via Cloudflare';
+        document.getElementById('admin-open-config').addEventListener('click', () => setActiveTab('config', true));
+        // Initialize tab state (this will trigger the data loaders for active tab)
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        setActiveTabByElements(tabButtons, tabContents, document.querySelector('.tab-btn.active')?.dataset.tab || 'enquiries');
+        return;
+      }
+    } catch (e) {
+      // Ignore — fallback to token-based login below
+    }
+
+    // Check for token in URL query params for dev convenience
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlToken = urlParams.get('token');
+    const storedToken = sessionStorage.getItem('adminToken');
+    
+    // Prefer URL token, then sessionStorage
+    if (urlToken) {
+      document.getElementById('admintoken').value = urlToken;
+      // Auto-login if token is present
+      setTimeout(() => document.getElementById('login-btn').click(), 100);
+    } else if (storedToken) {
+      document.getElementById('admintoken').value = storedToken;
+      // Auto-login using stored token
+      setTimeout(() => document.getElementById('login-btn').click(), 100);
+    }
+  })();
 
   // Login handler
   document.getElementById('login-btn').addEventListener('click', async () => {
@@ -538,7 +565,7 @@ import '../../styles/forms.css';
 
     try {
       const res = await fetch('/api/admin/enquiries.json', {
-        headers: { 'x-admin-token': adminToken }
+        headers: (adminToken ? { 'x-admin-token': adminToken } : {})
       });
       const data = await res.json();
 
@@ -770,7 +797,7 @@ import '../../styles/forms.css';
 
     try {
       const res = await fetch('/api/admin/invite-stats.json', {
-        headers: { 'x-admin-token': adminToken }
+        headers: (adminToken ? { 'x-admin-token': adminToken } : {})
       });
       const data = await res.json();
 
@@ -795,7 +822,7 @@ import '../../styles/forms.css';
 
       // Load invitations list from enquiries with academy flag
       const enquiriesRes = await fetch('/api/admin/enquiries.json', {
-        headers: { 'x-admin-token': adminToken }
+        headers: (adminToken ? { 'x-admin-token': adminToken } : {})
       });
       const enquiriesData = await enquiriesRes.json();
 
@@ -984,7 +1011,7 @@ import '../../styles/forms.css';
 
       const res = await fetch('/api/admin/templates/preview.json', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+        headers: Object.assign({ 'Content-Type': 'application/json' }, (adminToken ? { 'x-admin-token': adminToken } : {})),
         body: JSON.stringify({ key: 'academy_invitation', vars })
       });
 
@@ -1026,8 +1053,8 @@ import '../../styles/forms.css';
 
     try {
       const [enquiriesRes, statsRes] = await Promise.all([
-        fetch('/api/admin/enquiries.json', { headers: { 'x-admin-token': adminToken } }),
-        fetch('/api/admin/invite-stats.json', { headers: { 'x-admin-token': adminToken } })
+        fetch('/api/admin/enquiries.json', { headers: (adminToken ? { 'x-admin-token': adminToken } : {}) }),
+        fetch('/api/admin/invite-stats.json', { headers: (adminToken ? { 'x-admin-token': adminToken } : {}) })
       ]);
 
       const enquiriesData = await enquiriesRes.json();
@@ -1212,7 +1239,7 @@ import '../../styles/forms.css';
 
     try {
       const res = await fetch('/api/admin/config.json', {
-        headers: { 'x-admin-token': adminToken }
+        headers: (adminToken ? { 'x-admin-token': adminToken } : {})
       });
       const data = await res.json();
 
@@ -1337,7 +1364,7 @@ import '../../styles/forms.css';
     try {
       const res = await fetch('/api/admin/config.json', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+        headers: Object.assign({ 'Content-Type': 'application/json' }, (adminToken ? { 'x-admin-token': adminToken } : {})),
         body: JSON.stringify({ action: 'create_age_group', code, label, min_age, max_age, session_day, session_time, capacity })
       });
       const data = await res.json();
@@ -1437,7 +1464,7 @@ import '../../styles/forms.css';
     try {
       const res = await fetch('/api/admin/config.json', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+        headers: Object.assign({ 'Content-Type': 'application/json' }, (adminToken ? { 'x-admin-token': adminToken } : {})),
         body: JSON.stringify({ action: 'update_age_group', id, code, label, min_age, max_age, session_day, session_time, capacity, active })
       });
       const data = await res.json();
@@ -1459,7 +1486,7 @@ import '../../styles/forms.css';
 
     try {
       const res = await fetch('/api/admin/templates.json', {
-        headers: { 'x-admin-token': adminToken }
+        headers: (adminToken ? { 'x-admin-token': adminToken } : {})
       });
       const data = await res.json();
 
@@ -1602,7 +1629,7 @@ import '../../styles/forms.css';
                   onSave: async ({ subject, html, text, vars }) => {
                     const res = await fetch('/api/admin/templates.json', {
                       method: 'POST',
-                      headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+                      headers: Object.assign({ 'Content-Type': 'application/json' }, (adminToken ? { 'x-admin-token': adminToken } : {})),
                       body: JSON.stringify({ action: 'update_template', id: template.id, subject, html, text, active: !!document.getElementById(`active-${template.id}`)?.checked })
                     });
                     const data = await res.json();
@@ -1611,7 +1638,7 @@ import '../../styles/forms.css';
                   onPreview: async ({ html, vars }) => {
                     const res = await fetch('/api/admin/templates/preview.json', {
                       method: 'POST',
-                      headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+                      headers: Object.assign({ 'Content-Type': 'application/json' }, (adminToken ? { 'x-admin-token': adminToken } : {})),
                       body: JSON.stringify({ html, vars, subject: document.getElementById(`subject-${template.id}`)?.value || template.subject })
                     });
                     const data = await res.json();
@@ -1620,7 +1647,7 @@ import '../../styles/forms.css';
                   onSendTest: async ({ to, html, subject, vars }) => {
                     const res = await fetch('/api/admin/templates/send.json', {
                       method: 'POST',
-                      headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+                      headers: Object.assign({ 'Content-Type': 'application/json' }, (adminToken ? { 'x-admin-token': adminToken } : {})),
                       body: JSON.stringify({ id: template.id, to, vars })
                     });
                     const data = await res.json();

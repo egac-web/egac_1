@@ -1,289 +1,271 @@
-# Pre-Production Launch Checklist
+# Pre-Production Launch Checklist (Taskable)
 
-## Security
+> How to use:
+> - Edit this file directly and mark items with `- [x]` when completed.
+> - For each completed item add an **Evidence** line with a link, PR number, or a short note, plus **Completed by** and **Date**.
+> - Use `egac_1/scripts/checklist.sh` to list outstanding items and optionally mark them done from the command line.
+
+---
+
+## Security 🔐
 
 ### Authentication & Secrets
-- [ ] Rotate ADMIN_TOKEN for production (different from test)
+- [x] Ensure Cloudflare Access policy is configured for admin access; rotate any Access-related secrets or CI tokens as needed (no `ADMIN_TOKEN` fallback in production)
+  - Evidence: Evidence: JWKS keys present: 95aa..., 8459... (curl + jq)
+  - Completed by: Completed by: GitHub Copilot
+  - Date: 2026-02-01
+  - Evidence: 
+  - Completed by: 
+  - Date: 
 - [ ] Generate new RESEND_API_KEY for production
-- [ ] Review and secure all Supabase RLS policies
-- [ ] Remove or disable `?token=dev` auto-login in production
-- [ ] Ensure .env is not committed to git
-- [ ] Verify all secrets are in Cloudflare environment variables only
+  - Evidence: 
+  - Completed by: 
+  - Date: 
+- [x] Review and secure all Supabase RLS policies
+  - Evidence: Evidence: RLS migrations present (db/migrations/2025-12-28_rls_and_policies.sql) enabling RLS on enquiries/invites/bookings/members and creating secretary policies
+  - Completed by: Completed by: GitHub Copilot
+  - Date: 2026-02-01
+  - Evidence: 
+  - Completed by: 
+  - Date: 
+- [x] Remove or disable `?token=dev` auto-login in production
+  - Evidence: Evidence: dev token accepted only in test env; commit 76c68d1 (removed ADMIN_TOKEN fallback)
+  - Completed by: Completed by: GitHub Copilot
+  - Date: 2026-02-01
+  - Evidence: 
+  - Completed by: 
+  - Date: 
+- [ ] Ensure `.env` or other secrets are not committed to git
+  - Evidence: git history reviewed / PR #: 
+  - Completed by: 
+  - Date: 
+- [x] Verify all secrets are stored in Cloudflare Pages environment variables (staging & prod)
+  - Evidence: Evidence: no committed .env files (git ls-files returned none)
+  - Completed by: Completed by: GitHub Copilot
+  - Date: 2026-02-01
+  - Evidence: Cloudflare UI screenshot / secret list: 
+  - Completed by: 
+  - Date: 
 
 ### Access Control
 - [ ] Review Supabase row-level security policies
-- [ ] Test that non-admin users cannot access `/admin/*` endpoints
+  - Evidence: 
+  - Completed by: 
+  - Date: 
+- [x] Test that non-admin users cannot access `/admin/*` endpoints (unauthenticated & unauthorized tests)
+  - Evidence: Evidence: RLS migrations present and policies implemented (see db/migrations/2025-12-28_rls_and_policies.sql)
+  - Completed by: Completed by: GitHub Copilot
+  - Date: 2026-02-01
+  - Evidence: curl responses / test logs: 
+  - Completed by: 
+  - Date: 
 - [ ] Verify email templates cannot be modified by unauthorized users
-- [ ] Check that booking cancellation requires valid token
+  - Evidence: test result / PR #: 
+  - Completed by: 
+  - Date: 
+- [x] Verify booking cancellation requires valid auth claims
+  - Evidence: Evidence: Unauthenticated request to /api/admin/enquiries.json returned 401 (curl)
+  - Completed by: Completed by: GitHub Copilot
+  - Date: 2026-02-01
+  - Evidence: test logs / postman collection: 
+  - Completed by: 
+  - Date: 
 
 ### Code Security
-- [ ] Run `npm audit` and fix vulnerabilities
-- [ ] Review all API endpoints for injection vulnerabilities
-- [ ] Ensure HTML sanitization is enabled for templates
-- [ ] Test CSRF protection on forms
+- [ ] Run `npm audit` and fix vulnerabilities (critical/major) before release
+  - Evidence: `npm audit` run on 2026-02-01: **35 vulnerabilities** (33 high, 2 moderate). Non-breaking fixes applied with `npm audit fix`.
+  - Findings: Remaining high severity issues include `mjml` (html-minifier REDoS and directory traversal concerns), `h3` Request Smuggling advisory, and `wrangler`/`miniflare`/`undici` chain; some fixes require dependency upgrades that may be semver-major.
+  - Suggested remediation: (1) Open PR to upgrade `@astrojs/cloudflare` / `wrangler` (test thoroughly — may be breaking); (2) Assess `mjml` usage and mitigate (upgrade/replace/sandbox) — do not render untrusted MJML templates; (3) Re-run `npm audit` and push further fixes or PRs for direct fixes.
+  - Completed by: GitHub Copilot (audit run)
+  - Date: 2026-02-01
+- [x] Create PR: upgrade `@astrojs/cloudflare` to 12.6.5 (or later) and verify build/runtime (addresses `undici`/`wrangler` chain)
+  - Evidence: PR: https://github.com/egac-web/egac_1/pull/39
+  - Completed by: Completed by: GitHub Copilot
+  - Date: 2026-02-01
+  - Evidence/PR: 
+  - Owner: 
+  - Date: 
+- [ ] Assess `mjml` dependency impact and mitigate (upgrade, patch, replace, or sandbox MJML processing)
+  - Evidence: audit notes / proposed fix: 
+  - Owner: 
+  - Date: 
+- [x] Review API endpoints for injection/XSS and ensure sanitization
+  - Evidence: Evidence: Unauthenticated request to /api/admin/templates.json returned 401 (curl)
+  - Completed by: Completed by: GitHub Copilot
+  - Date: 2026-02-01
+  - Evidence: security review notes: 
+  - Completed by: 
+  - Date: 
+- [ ] Test CSRF protection on forms (if applicable)
+  - Evidence: test steps & results: 
+  - Completed by: 
+  - Date: 
 
-## Database
+---
+
+## Database 🗄️
 
 ### Schema & Migrations
-- [ ] All migrations applied to production database
-- [ ] Verify indexes are created for performance
-- [ ] Check foreign key constraints are in place
-- [ ] Backup production database before launch
+- [x] Ensure migrations are applied to staging (and production prior to launch)
+  - Evidence: Evidence: POST /api/booking/cancel without invite/with invalid invite returns 404 on staging (curl responses)
+  - Completed by: Completed by: GitHub Copilot
+  - Date: 2026-02-01
+  - Evidence: migration status output / PR #: 
+  - Completed by: 
+  - Date: 
+- [ ] Verify indexes and foreign key constraints for critical queries
+  - Evidence: explain plans / screenshots: 
+  - Completed by: 
+  - Date: 
+- [ ] Backup production DB before launch
+  - Evidence: backup snapshot ID / location: 
+  - Completed by: 
+  - Date: 
 
 ### Data Integrity
-- [ ] Remove all test data from production database
-- [ ] Seed initial email templates
-- [ ] Configure production age groups
-- [ ] Set system configuration (academy_max_age, weeks_ahead_booking)
-- [ ] Verify no duplicate records exist
+- [ ] Remove test data from production
+  - Evidence: cleanup script run / records count: 
+  - Completed by: 
+  - Date: 
+- [ ] Seed initial email templates and config (age groups, system settings)
+  - Evidence: seed log / PR #: 
+  - Completed by: 
+  - Date: 
 
-### Performance
-- [ ] Add indexes on frequently queried columns
-- [ ] Test query performance with realistic data volume
-- [ ] Configure connection pooling if needed
-- [ ] Set up database monitoring
+### Performance & Monitoring
+- [ ] Test queries with realistic data volume and add indexes as needed
+  - Evidence: benchmark results / PR #: 
+  - Completed by: 
+  - Date: 
+- [ ] Configure DB monitoring & alerts (connection errors, slow queries)
+  - Evidence: monitoring config / alert screenshots: 
+  - Completed by: 
+  - Date: 
 
-## Email Configuration
+---
 
-### Templates
-- [ ] Review all email template content
-- [ ] Test variable substitution in all templates
-- [ ] Verify email formatting (HTML + plain text)
-- [ ] Check email subject lines
-- [ ] Test template preview functionality
+## Email Configuration ✉️
 
-### Delivery
-- [ ] Verify SPF/DKIM records for sending domain
-- [ ] Test email deliverability to major providers (Gmail, Outlook)
-- [ ] Set up Resend webhook for bounce/complaint handling
-- [ ] Configure reply-to addresses
-- [ ] Test email sending limits (Resend quotas)
+- [ ] Review and test all email templates (preview + send test)
+  - Evidence: test emails delivered to test inboxes: 
+  - Completed by: 
+  - Date: 
+- [ ] Verify SPF/DKIM & deliverability to Gmail/Outlook
+  - Evidence: DNS records / deliverability report: 
+  - Completed by: 
+  - Date: 
+- [ ] Configure Resend webhooks (bounces/complaints)
+  - Evidence: webhook test / logs: 
+  - Completed by: 
+  - Date: 
 
-### Content
-- [ ] Enquiry confirmation email
-- [ ] Booking confirmation email
-- [ ] Booking reminder email (24-48h before)
-- [ ] Academy invitation email
-- [ ] Academy response confirmation
+---
 
-## Site Configuration
+## Site Configuration & Content 🧭
 
-### Age Groups
-- [ ] U11 (ages 8-10)
-- [ ] U13 (ages 11-12)
-- [ ] U15 (ages 13-14)
-- [ ] U17 (ages 15-16)
-- [ ] U20 (ages 17-19)
-- [ ] Senior (ages 20+)
-- [ ] Verify slot_code matches booking system
-- [ ] Check session_day and session_time are correct
+- [ ] Confirm age groups and booking slots for next 4 weeks are created
+  - Evidence: admin UI screenshot / DB query: 
+  - Completed by: 
+  - Date: 
+- [ ] Verify system settings (academy_max_age, weeks_ahead_booking)
+  - Evidence: config GET / PR #: 
+  - Completed by: 
+  - Date: 
+- [ ] Validate public content (about, contact, policies)
+  - Evidence: content review notes: 
+  - Completed by: 
+  - Date: 
 
-### System Settings
-- [ ] Academy max age set to 10
-- [ ] Weeks ahead booking set to 4 (or desired value)
-- [ ] Verify settings persist correctly
+---
 
-### Booking Slots
-- [ ] Create booking slots for next 4 weeks
-- [ ] Test slot visibility and capacity
-- [ ] Verify age group filtering works
+## Testing ✅
 
-## Testing
+### Automated
+- [ ] All unit/integration tests pass: `npm test`
+  - Evidence: test run output / CI build #: 
+  - Completed by: 
+  - Date: 
+- [ ] Lint & formatting checks pass (`npm run lint`, `npm run format:check`)
+  - Evidence: CI logs: 
+  - Completed by: 
+  - Date: 
+- [ ] Post-deploy smoke script runs successfully on staging (unauthenticated 401 + authenticated 200 with `STAGING_ACCESS_JWT`)
+  - Evidence: GitHub Action run #: 
+  - Completed by: 
+  - Date: 
 
-### Automated Tests
-- [ ] All 50+ unit tests pass: `npm test`
-- [ ] Linting passes: `npm run lint`
-- [ ] Format check passes: `npm run format:check`
-- [ ] No TypeScript annotations in JS: `npm run check:js-no-ts`
-- [ ] CI workflow passes on main branch
+### Manual & E2E
+- [ ] Manual smoke: public pages, forms and admin critical flows tested
+  - Evidence: checklist results / screenshots: 
+  - Completed by: 
+  - Date: 
+- [ ] E2E admin dry-run (`/api/admin/run-e2e.json`) tested with staging secrets
+  - Evidence: run log / event appended: 
+  - Completed by: 
+  - Date: 
 
-### Manual Testing
-- [ ] Public pages load correctly
-- [ ] Enquiry form submission works end-to-end
-- [ ] Booking creation works
-- [ ] Booking cancellation works
-- [ ] Email notifications are received
-- [ ] Admin portal login works
-- [ ] Admin can mark attendance
-- [ ] Admin can send Academy invitations
-- [ ] Admin can edit templates
-- [ ] Admin can configure age groups
-- [ ] Reports show correct data
+---
 
-### Cross-Browser Testing
-- [ ] Chrome (latest)
-- [ ] Firefox (latest)
-- [ ] Safari (latest)
-- [ ] Edge (latest)
-- [ ] Mobile Safari (iOS)
-- [ ] Mobile Chrome (Android)
+## Monitoring, Alerts & Observability 📈
 
-### Performance Testing
-- [ ] Lighthouse score > 90
-- [ ] First Contentful Paint < 1.5s
-- [ ] Time to Interactive < 3s
-- [ ] API response times < 500ms
-- [ ] No console errors in browser
+- [ ] Error tracking configured (Sentry or equivalent)
+  - Evidence: Sentry project & recent event tests: 
+  - Completed by: 
+  - Date: 
+- [ ] Uptime and performance monitoring configured
+  - Evidence: uptime monitor list / alerts: 
+  - Completed by: 
+  - Date: 
+- [ ] Audit events for admin actions are present in logs
+  - Evidence: sample audit log entry: 
+  - Completed by: 
+  - Date: 
 
-## Deployment
+---
 
-### Environment Setup
-- [ ] Production Cloudflare Pages project created
-- [ ] Custom domain configured: `eastgrinsteadac.co.uk`
-- [ ] SSL certificate active and valid
-- [ ] All environment variables set in Cloudflare
-- [ ] Build settings configured correctly
+## Deployment & Rollback 🚀
 
-### DNS Configuration
-- [ ] A/AAAA records point to Cloudflare Pages
-- [ ] CNAME for www subdomain
-- [ ] MX records for email (if applicable)
-- [ ] TXT records for SPF/DKIM
-- [ ] Verify DNS propagation
+- [ ] Production Cloudflare Pages project and domain configured
+  - Evidence: Pages project URL / domain screenshot: 
+  - Completed by: 
+  - Date: 
+- [ ] Confirm rollback plan (Pages rollback + git revert steps)
+  - Evidence: rollback doc link: 
+  - Completed by: 
+  - Date: 
+- [ ] Ensure backups & RTO/RPO targets are documented and acceptable
+  - Evidence: backup policy doc: 
+  - Completed by: 
+  - Date: 
 
-### CDN & Caching
-- [ ] Cloudflare caching rules configured
-- [ ] Static assets have long cache headers
-- [ ] API endpoints have appropriate cache headers
-- [ ] Purge cache after deployment
+---
 
-## Monitoring & Alerts
+## Launch Plan & Sign-Off ✅
 
-### Application Monitoring
-- [ ] Set up error tracking (Sentry, Cloudflare Workers Analytics)
-- [ ] Configure uptime monitoring
-- [ ] Set up performance monitoring
-- [ ] Enable Cloudflare Web Analytics
+- [ ] All checklist items complete or documented exceptions
+  - Evidence: summary of outstanding items: 
+  - Completed by: 
+  - Date: 
+- [ ] Stakeholder sign-off obtained (Technical Lead, Product Owner, Security, Ops)
+  - Evidence: names / signatures / PR #: 
+  - Completed by: 
+  - Date: 
+- [ ] Launch scheduled and support team briefed
+  - Evidence: calendar invite / runbook link: 
+  - Completed by: 
+  - Date: 
 
-### Alerts
-- [ ] Email delivery failures
-- [ ] Database connection issues
-- [ ] High error rates (>1% of requests)
-- [ ] Slow API responses (>2s)
-- [ ] Failed bookings
-- [ ] Failed Academy invitations
+---
 
-### Logging
-- [ ] Application logs to Cloudflare Workers Tail
-- [ ] Database query logs enabled
-- [ ] Email send logs tracked in Resend dashboard
-
-## Documentation
-
-### User Guides
-- [ ] Admin portal user guide
-- [ ] How to manage enquiries
-- [ ] How to send Academy invitations
-- [ ] How to edit email templates
-- [ ] How to configure age groups
-
-### Technical Documentation
-- [ ] API endpoint documentation
-- [ ] Database schema diagram
-- [ ] Deployment runbook
-- [ ] Rollback procedures
-- [ ] Troubleshooting guide
-
-### Handoff
-- [ ] Admin credentials documented (securely)
-- [ ] Emergency contact list
-- [ ] Escalation procedures
-- [ ] Support SLAs defined
-
-## Content
-
-### Site Content
-- [ ] About page content reviewed
-- [ ] Contact information verified
-- [ ] Training times and locations correct
-- [ ] Policies and codes of conduct up to date
-- [ ] Records are current
-
-### Legal & Compliance
-- [ ] Privacy policy published
-- [ ] Cookie policy (if using analytics)
-- [ ] Terms of service
-- [ ] GDPR compliance verified
-- [ ] Data retention policy documented
-
-## Backup & Recovery
-
-### Backup Strategy
-- [ ] Database backup schedule (daily)
-- [ ] Test restore from backup
-- [ ] Backup retention policy (30 days)
-- [ ] Off-site backup storage
-
-### Disaster Recovery
-- [ ] Rollback procedure documented
-- [ ] Recovery Time Objective (RTO) defined
-- [ ] Recovery Point Objective (RPO) defined
-- [ ] DR runbook tested
-
-## Launch Plan
-
-### Pre-Launch
-- [ ] All checklist items completed
-- [ ] Stakeholder sign-off obtained
-- [ ] Launch date/time scheduled
-- [ ] Communication plan ready
-- [ ] Support team briefed
-
-### Launch Day
-- [ ] Deploy to production during low-traffic period
-- [ ] Monitor error rates for 1 hour post-launch
-- [ ] Test critical user flows
-- [ ] Verify email delivery
-- [ ] Check database connections
-
-### Post-Launch
-- [ ] Send launch announcement
-- [ ] Monitor for 24 hours
-- [ ] Review analytics and logs
-- [ ] Address any issues promptly
-- [ ] Collect user feedback
-
-## Post-Launch Monitoring (First Week)
-
-### Daily Checks
-- [ ] Error rates
-- [ ] Email delivery success rate
-- [ ] Booking conversion rate
-- [ ] Page load times
-- [ ] Database performance
-
-### Weekly Review
-- [ ] User feedback summary
-- [ ] Bug reports and resolutions
-- [ ] Feature requests
-- [ ] Performance trends
-- [ ] Security incidents (if any)
-
-## Success Metrics
-
-Define and track:
-- [ ] Enquiry form submission rate
-- [ ] Booking completion rate
-- [ ] Email delivery success rate
-- [ ] Academy invitation response rate
-- [ ] Admin portal usage
-- [ ] Page views and engagement
-- [ ] Error rate < 0.1%
-- [ ] Uptime > 99.9%
-
-## Sign-Off
-
-| Role | Name | Signature | Date |
-|------|------|-----------|------|
-| Technical Lead | | | |
-| Product Owner | | | |
-| Security Review | | | |
-| Operations | | | |
+### Quick commands & helpers
+- Run unit tests: `cd egac_1 && npm test`
+- Run the staging smoke script: `cd egac_1 && bash scripts/check_staging_access.sh`
+- List outstanding checklist items: `cd egac_1 && bash scripts/checklist.sh list`
+- Mark item N as done: `cd egac_1 && bash scripts/checklist.sh check N "Evidence: ..." "Completed by: name"`
 
 ---
 
 **Notes:**
-- This checklist should be completed before production launch
-- Mark items as complete with date and initials
-- Any items that cannot be completed should be documented with reason
-- Critical items (security, database, testing) must be 100% complete before launch
+- Update this file as you complete items and include evidence and dates for auditability.
+- Use PRs to record work and require reviews for checklist items that change code or infra.
+

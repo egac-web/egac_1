@@ -1,0 +1,26 @@
+name: Post-deploy Smoke Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - staging
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install deps
+        run: npm ci
+      - name: Run staging smoke script
+        env:
+          STAGING_HOST: https://staging.eastgrinsteadac.co.uk
+          ACCESS_JWT: ${{ secrets.STAGING_ACCESS_JWT }}
+        run: |
+          chmod +x ./scripts/check_staging_access.sh
+          ./scripts/check_staging_access.sh

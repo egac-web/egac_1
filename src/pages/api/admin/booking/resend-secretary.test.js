@@ -34,13 +34,13 @@ describe('resend-secretary endpoint', () => {
     expect(body.details).toBeDefined();
   });
 
-  it('returns generic error for non-dev token when notification throws', async () => {
+  it('returns generic error for authenticated user when notification throws', async () => {
     const { sendBookingConfirmationNotification } = await import('../../../../lib/notifications');
     sendBookingConfirmationNotification.mockImplementationOnce(async () => { throw new Error('simulated send failure'); });
 
-    // set ADMIN_TOKEN and call with that token to get through auth
-    process.env.ADMIN_TOKEN = 'admin-token';
-    const req = new Request('https://example.test/api/admin/booking/resend-secretary.json?token=admin-token', { method: 'POST', body: JSON.stringify({ booking_id: 'b1' }), headers: { 'Content-Type': 'application/json' } });
+    // Simulate Cloudflare Access authenticated user header
+    const cfUser = JSON.stringify({ email: 'user@example.com', id: 'u1' });
+    const req = new Request('https://example.test/api/admin/booking/resend-secretary.json', { method: 'POST', body: JSON.stringify({ booking_id: 'b1' }), headers: { 'Content-Type': 'application/json', 'Cf-Access-Authenticated-User': cfUser } });
     const res = await POST({ request: req, locals: { runtime: { env: process.env } } });
     expect(res.status).toBe(500);
     const body = JSON.parse(await res.text());

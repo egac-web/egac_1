@@ -5,11 +5,8 @@ export async function POST({ request, locals }) {
   try {
     const env = locals?.runtime?.env || process.env;
     const url = new URL(request.url);
-    const token = request.headers.get('x-admin-token') || url.searchParams.get('token') || '';
-    if (token !== 'dev' && (!env.ADMIN_TOKEN || token !== env.ADMIN_TOKEN)) return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    const auth = await import('../../../../lib/admin-auth').then(m => m.ensureAdmin(request, locals));
+    if (!auth.ok) return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
 
     const body = await request.json();
     const { booking_id, status, note, send_membership_link } = body || {};

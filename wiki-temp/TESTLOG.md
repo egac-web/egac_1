@@ -17,7 +17,7 @@ This log records smoke tests run against the staging site to validate:
 - APP_ENV=staging (Pages)
 - SITE_BASE_URL=https://staging.eastgrinsteadac.co.uk
 - CRON_SECRET (set in Pages)
-- ADMIN_TOKEN (rotate & set in Pages)
+- Admin access: protect `/admin` with Cloudflare Access (ZTNA) and do not rely on a production `ADMIN_TOKEN` fallback. For CI or smoke tests that need authentication, use a valid `ACCESS_JWT` (set as `STAGING_ACCESS_JWT` secret) or perform local dev checks with `?token=dev`.
 - RESEND_API_KEY, RESEND_FROM (set in Pages; keep RESEND_DRY_RUN=1 until domain verified)
 - STAGING_ALLOWED_EMAILS / STAGING_REDIRECT_EMAILS (set in Pages)
 

@@ -6,7 +6,8 @@
   const status = process.argv[3] || 'attended';
   const send_membership_link = process.argv[4] === 'true';
   const req = {
-    headers: { get: (k) => process.env.ADMIN_TOKEN },
+    // Local dev uses the dev auto-login token (only valid in test/local dev environment)
+    headers: { get: (k) => 'dev' },
     json: async () => ({ booking_id: bookingId, status, send_membership_link }),
   };
   try {
