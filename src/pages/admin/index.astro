@@ -1,0 +1,11 @@
+---
+export const prerender = false;
+export function get() {
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: '/admin/members'
+    }
+  });
+}
+---
