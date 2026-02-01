@@ -17,12 +17,11 @@ jobs:
           node-version: '18'
       - name: Install deps
         run: npm ci
-        working-directory: ./egac_1
       - name: Run staging smoke script
         env:
           STAGING_HOST: https://staging.eastgrinsteadac.co.uk
           ADMIN_TOKEN: ${{ secrets.STAGING_ADMIN_TOKEN }}
           ACCESS_JWT: ${{ secrets.STAGING_ACCESS_JWT }}
         run: |
-          chmod +x ./egac_1/scripts/check_staging_access.sh
-          ./egac_1/scripts/check_staging_access.sh
+          chmod +x ./scripts/check_staging_access.sh
+          ./scripts/check_staging_access.sh
