@@ -25,7 +25,10 @@
   - Evidence: 
   - Completed by: 
   - Date: 
-- [ ] Remove or disable `?token=dev` auto-login in production
+- [x] Remove or disable `?token=dev` auto-login in production
+  - Evidence: Evidence: dev token accepted only in test env; commit 76c68d1 (removed ADMIN_TOKEN fallback)
+  - Completed by: Completed by: GitHub Copilot
+  - Date: 2026-02-01
   - Evidence: 
   - Completed by: 
   - Date: 
