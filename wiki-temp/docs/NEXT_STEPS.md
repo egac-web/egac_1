@@ -48,7 +48,7 @@ Follow the guide: [`docs/deployment/test-site-setup.md`](./deployment/test-site-
    # NOTE: In Cloudflare Pages environment variables, do NOT include surrounding quotes. Use:
    #   RESEND_FROM=EGAC Staging <noreply@eastgrinsteadac.co.uk>
    RESEND_FROM=EGAC Staging <noreply@eastgrinsteadac.co.uk>
-   ADMIN_TOKEN=<generate-new-token>
+   # Configure Cloudflare Access or set `STAGING_ACCESS_JWT` for CI smoke tests. For local testing you may use `?token=dev` (test only).
    MEMBERSHIP_SECRETARY_EMAIL=staging-membership@eastgrinsteadac.co.uk
    SITE_BASE_URL=https://staging.eastgrinsteadac.co.uk
    ```
@@ -81,7 +81,7 @@ Follow the guide: [`docs/deployment/test-site-setup.md`](./deployment/test-site-
    - [ ] Enquiry form submission
    - [ ] Booking system functional
 
-2. **Admin Portal** (Access: `/admin/members?token=<ADMIN_TOKEN>`)
+2. **Admin Portal** (Protected by Cloudflare Access; for local testing use `/admin/members?token=dev`) 
    - [ ] Login works
    - [ ] View enquiries
    - [ ] Mark attendance

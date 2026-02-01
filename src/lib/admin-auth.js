@@ -1,6 +1,6 @@
 /*
  * Admin auth helper
- * - Accepts existing x-admin-token / token query param for backwards compatibility (dev & ADMIN_TOKEN)
+ * - Accepts existing x-admin-token / token query param for backwards compatibility (dev only in test env)
  * - Accepts Cloudflare Access headers: `Cf-Access-Jwt-Assertion` (JWT) or `Cf-Access-Authenticated-User` (JSON)
  * - If `CF_ACCESS_JWKS_URL` is configured, verifies JWT signature and claims using `jose`.
  * - Adds simple RBAC via `ADMIN_ALLOWED_EMAILS` or `ADMIN_ALLOWED_GROUPS` env vars and logs audit events to console.

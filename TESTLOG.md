@@ -17,7 +17,7 @@ This log records smoke tests run against the staging site to validate:
 - APP_ENV=staging (Pages)
 - SITE_BASE_URL=https://staging.eastgrinsteadac.co.uk
 - CRON_SECRET (set in Pages)
-- ADMIN_TOKEN (rotate & set in Pages)
+- STAGING_ACCESS_JWT (set as a Pages secret for authenticated smoke tests) 
 - RESEND_API_KEY, RESEND_FROM (set in Pages; keep RESEND_DRY_RUN=1 until domain verified)
 - STAGING_ALLOWED_EMAILS / STAGING_REDIRECT_EMAILS (set in Pages)
 

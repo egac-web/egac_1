@@ -3,7 +3,7 @@
 ## Security
 
 ### Authentication & Secrets
-- [ ] Rotate ADMIN_TOKEN for production (different from test)
+- [ ] Ensure Cloudflare Access policy is configured for admin access; rotate any Access-related secrets or CI tokens as needed (no `ADMIN_TOKEN` fallback in production).
 - [ ] Generate new RESEND_API_KEY for production
 - [ ] Review and secure all Supabase RLS policies
 - [ ] Remove or disable `?token=dev` auto-login in production

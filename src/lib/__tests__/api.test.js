@@ -2,8 +2,9 @@ import { describe, it, expect } from 'vitest';
 
 describe('API Endpoint Validations', () => {
   describe('Admin Token Authentication', () => {
-    it('should validate ADMIN_TOKEN format', () => {
-      const validTokens = ['dev', 'prod-secret-123', 'a1b2c3d4'];
+    it('should validate admin token format (legacy/dev token allowed in tests)', () => {
+      // 'dev' is allowed for local/test convenience; production should use Cloudflare Access JWTs
+      const validTokens = ['dev', 'a1b2c3d4'];
       const invalidTokens = ['', null, undefined];
 
       validTokens.forEach(token => {

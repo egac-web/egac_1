@@ -125,7 +125,7 @@ SITE_BASE_URL=https://staging.eastgrinsteadac.co.uk
 # NOTE: When adding to Cloudflare Pages environment variables, do NOT include surrounding quotes. Use:
 #   RESEND_FROM=EGAC Staging <noreply@eastgrinsteadac.co.uk>
 RESEND_FROM=EGAC Staging <noreply@eastgrinsteadac.co.uk>
-ADMIN_TOKEN=<staging-specific-token>
+# Admin access: protect via Cloudflare Access (ZTNA). For CI use `STAGING_ACCESS_JWT`.
 MEMBERSHIP_SECRETARY_EMAIL=staging-membership@eastgrinsteadac.co.uk
 # Staging Supabase database
 SUPABASE_URL=<staging-db-url>
@@ -137,7 +137,7 @@ SITE_BASE_URL=https://eastgrinsteadac.co.uk
 # NOTE: When adding to Cloudflare Pages environment variables, do NOT include surrounding quotes. Use:
 #   RESEND_FROM=EGAC <noreply@eastgrinsteadac.co.uk>
 RESEND_FROM=EGAC <noreply@eastgrinsteadac.co.uk>
-ADMIN_TOKEN=<production-specific-token>
+# Admin access: protect via Cloudflare Access (ZTNA) in production; do not use legacy ADMIN_TOKEN fallbacks.
 MEMBERSHIP_SECRETARY_EMAIL=membership@eastgrinsteadac.co.uk
 # Production Supabase database
 SUPABASE_URL=<production-db-url>
