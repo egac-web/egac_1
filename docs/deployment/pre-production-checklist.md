@@ -73,8 +73,18 @@
 
 ### Code Security
 - [ ] Run `npm audit` and fix vulnerabilities (critical/major) before release
-  - Evidence: `npm audit` report / PR #: 
-  - Completed by: 
+  - Evidence: `npm audit` run on 2026-02-01: **35 vulnerabilities** (33 high, 2 moderate). Non-breaking fixes applied with `npm audit fix`.
+  - Findings: Remaining high severity issues include `mjml` (html-minifier REDoS and directory traversal concerns), `h3` Request Smuggling advisory, and `wrangler`/`miniflare`/`undici` chain; some fixes require dependency upgrades that may be semver-major.
+  - Suggested remediation: (1) Open PR to upgrade `@astrojs/cloudflare` / `wrangler` (test thoroughly — may be breaking); (2) Assess `mjml` usage and mitigate (upgrade/replace/sandbox) — do not render untrusted MJML templates; (3) Re-run `npm audit` and push further fixes or PRs for direct fixes.
+  - Completed by: GitHub Copilot (audit run)
+  - Date: 2026-02-01
+- [ ] Create PR: upgrade `@astrojs/cloudflare` to 12.6.5 (or later) and verify build/runtime (addresses `undici`/`wrangler` chain)
+  - Evidence/PR: 
+  - Owner: 
+  - Date: 
+- [ ] Assess `mjml` dependency impact and mitigate (upgrade, patch, replace, or sandbox MJML processing)
+  - Evidence: audit notes / proposed fix: 
+  - Owner: 
   - Date: 
 - [x] Review API endpoints for injection/XSS and ensure sanitization
   - Evidence: Evidence: Unauthenticated request to /api/admin/templates.json returned 401 (curl)
