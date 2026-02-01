@@ -16,7 +16,7 @@
     "check:staging": "bash scripts/check_staging_access.sh"
   },
   "dependencies": {
-    "@astrojs/cloudflare": "^12.6.5",
+    "@astrojs/cloudflare": "12.6.12",
     "@astrojs/react": "^4.4.2",
     "@codemirror/lang-html": "^6.4.11",
     "@directus/sdk": "^20.2.0",
