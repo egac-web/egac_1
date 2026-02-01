@@ -14,8 +14,8 @@ export async function POST({ request, locals }) {
   try {
     const env = locals?.runtime?.env || process.env;
     const url = new URL(request.url);
-    const token = request.headers.get('x-admin-token') || url.searchParams.get('token');
-    if (!token || (token !== 'dev' && token !== env.ADMIN_TOKEN)) {
+    const auth = await import('../../../lib/admin-auth').then(m => m.ensureAdmin(request, locals));
+    if (!auth.ok) {
       return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
     }
 

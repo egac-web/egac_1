@@ -20,7 +20,6 @@ jobs:
       - name: Run staging smoke script
         env:
           STAGING_HOST: https://staging.eastgrinsteadac.co.uk
-          ADMIN_TOKEN: ${{ secrets.STAGING_ADMIN_TOKEN }}
           ACCESS_JWT: ${{ secrets.STAGING_ACCESS_JWT }}
         run: |
           chmod +x ./scripts/check_staging_access.sh

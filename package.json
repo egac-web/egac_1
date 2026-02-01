@@ -12,7 +12,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check:js-no-ts": "node scripts/check-js-no-ts-annotations.js"
+    "check:js-no-ts": "node scripts/check-js-no-ts-annotations.js",
+    "check:staging": "bash scripts/check_staging_access.sh"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.6.12",
@@ -34,7 +35,8 @@
     "react-dom": "^19.2.3",
     "react-icons": "^5.5.0",
     "sanitize-html": "^2.17.0",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.1.18",
+    "jose": "^4.16.0"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.21.0",

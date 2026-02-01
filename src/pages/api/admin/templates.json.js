@@ -7,13 +7,10 @@ export async function GET({ request, locals }) {
   try {
     const env = locals?.runtime?.env || process.env;
     const url = new URL(request.url);
-    const token = request.headers.get('x-admin-token') || url.searchParams.get('token');
 
-    if (!token || (token !== 'dev' && token !== env.ADMIN_TOKEN)) {
-      return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    const auth = await import('../../../lib/admin-auth').then(m => m.ensureAdmin(request, locals));
+    if (!auth.ok) {
+      return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
     }
 
     // Ensure Supabase credentials are available before making requests
@@ -51,12 +48,9 @@ export async function POST({ request, locals }) {
   try {
     const env = locals?.runtime?.env || process.env;
     const url = new URL(request.url);
-    const token = request.headers.get('x-admin-token') || url.searchParams.get('token');
-    if (!token || (token !== 'dev' && token !== env.ADMIN_TOKEN)) {
-      return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    const auth = await import('../../../lib/admin-auth').then(m => m.ensureAdmin(request, locals));
+    if (!auth.ok) {
+      return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
     }
 
     const body = await request.json();
@@ -71,7 +65,7 @@ export async function POST({ request, locals }) {
         });
 
       // Sanitize html before storing
-      const safeHtml = sanitizeHtml(html, { allowedSchemes: ['http','https','mailto','tel'] });
+      const safeHtml = sanitizeHtml(html, { allowedSchemes: ['http', 'https', 'mailto', 'tel'] });
       const safeText = sanitizeHtml(safeHtml, { allowedTags: [] });
 
       const tpl = await supabase.createEmailTemplate(
@@ -100,7 +94,7 @@ export async function POST({ request, locals }) {
         });
       const updates = {};
       if (subject !== undefined) updates.subject = subject;
-      if (html !== undefined) updates.html = sanitizeHtml(html, { allowedSchemes: ['http','https','mailto','tel'] });
+      if (html !== undefined) updates.html = sanitizeHtml(html, { allowedSchemes: ['http', 'https', 'mailto', 'tel'] });
       if (text !== undefined) updates.text = text;
       if (language !== undefined) updates.language = language;
       if (active !== undefined) updates.active = active;

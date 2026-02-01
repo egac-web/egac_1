@@ -6,18 +6,18 @@ export async function GET({ request, locals }) {
   try {
     const env = locals?.runtime?.env || process.env;
     const url = new URL(request.url);
-    const token = request.headers.get('x-admin-token') || url.searchParams.get('token');
 
     // Debug: surface token presence and supabase env for troubleshooting
-    console.debug('Config GET - token present:', !!token, 'tokenPreview:', token ? token.substring(0, 4) + '...' : 'none');
-    console.debug('Config GET - SUPABASE_URL present:', !!env.SUPABASE_URL, 'SERVICE_ROLE present:', !!env.SUPABASE_SERVICE_ROLE_KEY);
+    console.debug('Config GET requested');
 
-    if (!token || (token !== 'dev' && token !== env.ADMIN_TOKEN)) {
-      return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    const auth = await import('../../../lib/admin-auth').then(m => m.ensureAdmin(request, locals));
+    if (!auth.ok) {
+      // Audit log
+      console.warn('Unauthorized admin request (GET /api/admin/config.json)', { reason: auth.reason || 'none', ip: request.headers.get('x-forwarded-for') || request.headers.get('cf-connecting-ip') });
+      return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
     }
+    // Audit success
+    console.info('Authorized admin request (GET /api/admin/config.json)', { method: auth.method, email: auth.user && (auth.user.email || auth.user.preferred_username || auth.user.sub) });
 
     // Ensure Supabase credentials are available before making requests
     if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -68,14 +68,13 @@ export async function POST({ request, locals }) {
   try {
     const env = locals?.runtime?.env || process.env;
     const url = new URL(request.url);
-    const token = request.headers.get('x-admin-token') || url.searchParams.get('token');
 
-    if (!token || (token !== 'dev' && token !== env.ADMIN_TOKEN)) {
-      return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    const auth = await import('../../../lib/admin-auth').then(m => m.ensureAdmin(request, locals));
+    if (!auth.ok) {
+      console.warn('Unauthorized admin request (POST /api/admin/config.json)', { reason: auth.reason || 'none', ip: request.headers.get('x-forwarded-for') || request.headers.get('cf-connecting-ip') });
+      return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
     }
+    console.info('Authorized admin request (POST /api/admin/config.json)', { method: auth.method, email: auth.user && (auth.user.email || auth.user.preferred_username || auth.user.sub) });
 
     const body = await request.json();
     const { action } = body;

@@ -51,8 +51,10 @@ export async function ensureAdmin(request, locals) {
   const url = new URL(request.url);
   const token = request.headers.get('x-admin-token') || url.searchParams.get('token') || '';
 
-  if (token === 'dev' || (env.ADMIN_TOKEN && token === env.ADMIN_TOKEN)) {
-    console.info('Admin auth granted via token (dev/ADMIN_TOKEN)');
+  // Token-based admin fallback removed for staging/production.
+  // For unit tests we still accept `?token=dev` when running under NODE_ENV='test' to keep tests simple.
+  if (process.env.NODE_ENV === 'test' && token === 'dev') {
+    console.info('Admin auth granted via dev token (test env only)');
     return { ok: true, method: 'token' };
   }
 

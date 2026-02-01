@@ -10,12 +10,12 @@ function nowISO() {
 
 export async function POST({ request, locals }) {
   const url = new URL(request.url);
-  const reqToken = request.headers.get('x-admin-token') || url.searchParams.get('token');
   try {
     const env = locals?.runtime?.env || process.env;
-    const token = reqToken;
-    if (!token || (token !== 'dev' && token !== env.ADMIN_TOKEN))
+    const auth = await import('../../../../lib/admin-auth').then(m => m.ensureAdmin(request, locals));
+    if (!auth.ok) {
       return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+    }
 
     const body = await request.json().catch(() => ({}));
     const booking_id = body.booking_id || url.searchParams.get('booking_id');
@@ -40,8 +40,8 @@ export async function POST({ request, locals }) {
       try {
         await appendEnquiryEvent(enquiry.id, { type: 'booking_notify_secretary_failed', booking_id: booking.id, error: String(err), at: nowISO() }, env);
       } catch (e) { console.error('Failed to append booking_notify_secretary_failed', e); }
-      // Always return detailed error when dev token supplied
-      if (reqToken === 'dev') {
+      // Provide detailed errors only for test/dev token auth for easier debugging
+      if (auth && auth.method === 'token') {
         const details = (err && err.response) ? err.response : String(err);
         return new Response(JSON.stringify({ ok: false, error: 'exception', details, stack: err?.stack || null }), { status: 500, headers: { 'Content-Type': 'application/json' } });
       }
@@ -64,7 +64,7 @@ export async function POST({ request, locals }) {
 
   } catch (err) {
     console.error('Resend secretary error', err);
-    if (reqToken === 'dev') {
+    if (typeof auth !== 'undefined' && auth.method === 'token') {
       return new Response(JSON.stringify({ ok: false, error: 'Server error', details: err?.message || String(err), stack: err?.stack || null }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
     return new Response(JSON.stringify({ ok: false, error: 'Server error' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
