@@ -63,7 +63,10 @@
   - Evidence: test result / PR #: 
   - Completed by: 
   - Date: 
-- [ ] Verify booking cancellation requires valid auth claims
+- [x] Verify booking cancellation requires valid auth claims
+  - Evidence: Evidence: Unauthenticated request to /api/admin/enquiries.json returned 401 (curl)
+  - Completed by: Completed by: GitHub Copilot
+  - Date: 2026-02-01
   - Evidence: test logs / postman collection: 
   - Completed by: 
   - Date: 
