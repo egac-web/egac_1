@@ -2,6 +2,9 @@ name: Debug: Run tests with durations
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - debug-tests-run
 
 jobs:
   debug-tests:
