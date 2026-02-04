@@ -48,20 +48,29 @@ describe('ensureAdmin', () => {
       const jwk = await exportJWK(publicKey);
       jwk.kid = 'test-key-1';
 
-      // Mock fetch to return JWKS
-      const jwksUrl = 'https://example.test/.well-known/jwks.json';
-      globalThis.fetch = async (url) => {
-        if (String(url) === jwksUrl) {
-          return { ok: true, json: async () => ({ keys: [jwk] }) };
+      // Start a local HTTP server to return JWKS (avoids DNS/network resolution issues in tests)
+      const http = await import('node:http');
+      const server = http.createServer((req, res) => {
+        if (req.url === '/.well-known/jwks.json') {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ keys: [jwk] }));
+        } else {
+          res.writeHead(404);
+          res.end();
         }
-        return { ok: false };
-      };
+      });
+      await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+      const port = server.address().port;
+      const jwksUrl = `http://127.0.0.1:${port}/.well-known/jwks.json`;
 
       // sign a token with email claim
       const jwt = await new SignJWT({ sub: 'signed-user', email: 'signed@example.com' }).setProtectedHeader({ alg: 'RS256', kid: 'test-key-1' }).setIssuedAt().setExpirationTime('2h').sign(privateKey);
 
       const req = new Request('https://example.test/', { headers: { 'cf-access-jwt-assertion': jwt } });
       const res = await ensureAdmin(req, { runtime: { env: { CF_ACCESS_JWKS_URL: jwksUrl, ADMIN_ALLOWED_EMAILS: 'signed@example.com' } } });
+
+      server.close();
+
       expect(res.ok).toBe(true);
       expect(res.method).toBe('cf-jwt');
       expect(res.verified).toBe(true);
@@ -74,18 +83,28 @@ describe('ensureAdmin', () => {
       const jwk = await exportJWK(publicKey);
       jwk.kid = 'test-key-1';
 
-      const jwksUrl = 'https://example.test/.well-known/jwks.json';
-      globalThis.fetch = async (url) => {
-        if (String(url) === jwksUrl) {
-          return { ok: true, json: async () => ({ keys: [jwk] }) };
+      // Start a local HTTP server to return JWKS (avoids DNS/network resolution issues in tests)
+      const http = await import('node:http');
+      const server = http.createServer((req, res) => {
+        if (req.url === '/.well-known/jwks.json') {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ keys: [jwk] }));
+        } else {
+          res.writeHead(404);
+          res.end();
         }
-        return { ok: false };
-      };
+      });
+      await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+      const port = server.address().port;
+      const jwksUrl = `http://127.0.0.1:${port}/.well-known/jwks.json`;
 
       const jwt = await new SignJWT({ sub: 'signed-user', email: 'signed@example.com' }).setProtectedHeader({ alg: 'RS256', kid: 'test-key-1' }).setIssuedAt().setExpirationTime('2h').sign(privateKey);
 
       const req = new Request('https://example.test/', { headers: { 'cf-access-jwt-assertion': jwt } });
       const res = await ensureAdmin(req, { runtime: { env: { CF_ACCESS_JWKS_URL: jwksUrl, ADMIN_ALLOWED_EMAILS: 'other@example.com' } } });
+
+      server.close();
+
       expect(res.ok).toBe(false);
       expect(res.reason).toBe('rbac-deny');
     });

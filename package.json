@@ -16,7 +16,7 @@
     "check:staging": "bash scripts/check_staging_access.sh"
   },
   "dependencies": {
-    "@astrojs/cloudflare": "^12.6.12",
+    "@astrojs/cloudflare": "12.6.12",
     "@astrojs/react": "^4.4.2",
     "@codemirror/lang-html": "^6.4.11",
     "@directus/sdk": "^20.2.0",
@@ -28,6 +28,7 @@
     "@uiw/react-codemirror": "^4.25.4",
     "astro": "^5.16.6",
     "date-fns": "^4.1.0",
+    "jose": "^4.15.5",
     "lucide-react": "^0.561.0",
     "mjml": "^4.18.0",
     "puppeteer": "^24.36.0",
@@ -35,8 +36,7 @@
     "react-dom": "^19.2.3",
     "react-icons": "^5.5.0",
     "sanitize-html": "^2.17.0",
-    "tailwindcss": "^4.1.18",
-    "jose": "^4.15.5"
+    "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.21.0",
