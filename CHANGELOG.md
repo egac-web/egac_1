@@ -5,6 +5,47 @@ Development of the EGAC website with comprehensive admin portal, code quality to
 
 ---
 
+## [2026-02-05] - Staging Deployment Workflow
+
+### Added
+- **GitHub Actions Workflow**: `.github/workflows/deploy-pages.yml` — automated staging deployment to Cloudflare Pages
+  - Builds project using Node.js 20 and npm
+  - Deploys to Cloudflare Pages using `cloudflare/pages-action@v1`
+  - Runs authenticated smoke check using Cloudflare Access Service Token
+  - Triggers: `workflow_dispatch` (manual)
+- **Smoke Check Script**: `scripts/check_staging_access.sh` — validates staging deployment accessibility
+  - Supports Cloudflare Access Service Token authentication (CF-Access-Client-Id/Secret headers)
+  - Supports JWT authentication (CF-Access-JWT-Assertion header)
+  - Falls back to public access check if no auth configured
+  - Returns HTTP status code and provides clear success/failure messages
+- **GitHub Secrets Configuration**:
+  - `CF_PAGES_API_TOKEN` — Cloudflare API token for Pages deployments
+  - `CF_ACCOUNT_ID` — Cloudflare account identifier
+  - `CF_PAGES_PROJECT_NAME` — Target Cloudflare Pages project
+  - `CF_ACCESS_CLIENT_ID` — Service Token client ID for authenticated smoke checks
+  - `CF_ACCESS_CLIENT_SECRET` — Service Token client secret for authenticated smoke checks
+
+### Changed
+- Upgraded workflow to Node.js 20 for compatibility with Wrangler v4
+- Removed temporary `debug-tests.yml` workflow used during development
+
+### Fixed
+- Resolved Wrangler v2/v4 compatibility issues by using Node.js 20
+- Fixed missing smoke check script by creating and committing it to the repository
+
+### Deployment
+- **Snapshot Tag**: `staging-ready-2026-02-05` (commit: `e81f1b4`)
+- **Last Successful Run**: https://github.com/egac-web/egac_1/actions/runs/21693989705
+- **Deployment Time**: ~50 seconds (build + deploy + smoke check)
+- **Deploy Command**: `gh workflow run deploy-pages.yml --repo egac-web/egac_1 --ref main`
+
+### Notes
+- Staging environment uses Cloudflare Access Service Token for machine-to-machine authentication
+- Workflow ready for production use; can be extended to auto-deploy on push to `staging` branch
+- All secrets properly configured and validated via successful workflow runs
+
+---
+
 ## [2026-01-16] - Booking & Reminders, Environment columns
 
 ### Added
